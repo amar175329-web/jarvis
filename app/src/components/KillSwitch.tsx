@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import './kill-switch.css';
-import { canToggleKill, killButtonLabel, parseKillRead, parseKillWrite, type KillView } from './kill-switch-policy.ts';
+import { canToggleKill, killButtonLabel, parseKillRead, parseKillWrite, type KillView } from './kill-switch-policy';
 
 /** Appears only when an owner session exists or the API explicitly reports a safety outage. */
 export function KillSwitch() {
