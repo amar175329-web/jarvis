@@ -1,0 +1,14 @@
+{
+  "id": "library.apps.play-store",
+  "name": "play-store",
+  "kind": "app",
+  "group": "apps",
+  "owner_squad": "S16B",
+  "phase": 1,
+  "status": "planned",
+  "does": "apps install के लिए",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

@@ -1,0 +1,18 @@
+{
+  "id": "packages.model-gateway",
+  "name": "model-gateway",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "built",
+  "does": "AI model gateway with budgets/usage controls plus a type-only audio adapter interface for future S13/S07 work",
+  "uses": [
+    "packages.shared",
+    "packages.logging",
+    "packages.locale"
+  ],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.1.1"
+}

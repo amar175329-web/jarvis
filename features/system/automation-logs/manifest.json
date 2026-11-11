@@ -1,0 +1,14 @@
+{
+  "id": "features.system.automation-logs",
+  "name": "automation-logs",
+  "kind": "feature",
+  "group": "system",
+  "owner_squad": "S12",
+  "phase": 2,
+  "status": "planned",
+  "does": "Automation Logs",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

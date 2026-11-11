@@ -1,0 +1,14 @@
+{
+  "id": "library.tools.browser",
+  "name": "browser",
+  "kind": "tool",
+  "group": "tools",
+  "owner_squad": "S15",
+  "phase": 2,
+  "status": "planned",
+  "does": "browser चलाना",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

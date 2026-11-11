@@ -1,0 +1,14 @@
+{
+  "id": "features.customize.preferences",
+  "name": "preferences",
+  "kind": "feature",
+  "group": "customize",
+  "owner_squad": "S13",
+  "phase": 2,
+  "status": "planned",
+  "does": "Preferences",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "features.shell.power-off",
+  "name": "power-off",
+  "kind": "feature",
+  "owner_squad": "S22",
+  "phase": 2,
+  "status": "planned",
+  "autonomy_default": "L0",
+  "version": "0.0.1",
+  "group": "shell",
+  "does": "S22: power-off / kill button in the shell",
+  "uses": [],
+  "knows": []
+}

@@ -1,0 +1,14 @@
+{
+  "id": "packages.shared",
+  "name": "shared",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "built",
+  "does": "सबका साझा छोटा code: घड़ी, kill-switch reader (fail-closed), retry की प्रतीक्षा",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

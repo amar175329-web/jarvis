@@ -1,0 +1,14 @@
+{
+  "id": "library.bots.personal-assistant",
+  "name": "personal-assistant",
+  "kind": "bot",
+  "group": "bots",
+  "owner_squad": "S14",
+  "phase": 2,
+  "status": "planned",
+  "does": "Personal Assistant bot",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

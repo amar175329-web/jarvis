@@ -1,0 +1,14 @@
+{
+  "id": "features.workbench.agent-workspaces",
+  "name": "agent-workspaces",
+  "kind": "feature",
+  "group": "workbench",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "हर agent का कार्यक्षेत्र",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

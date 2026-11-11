@@ -1,0 +1,27 @@
+{
+  "name": "@jarvis/app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test:visual": "node tests/visual.test.mjs",
+    "test:behavior": "node tests/behavior.test.mjs",
+    "test": "node --test tests/kill-switch-policy.test.mjs",
+    "test:ui": "node tests/behavior.test.mjs && node tests/visual.test.mjs"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@vitejs/plugin-react": "4.3.3",
+    "typescript": "5.6.3",
+    "vite": "5.4.11",
+    "pixelmatch": "6.0.0",
+    "pngjs": "7.0.0"
+  }
+}

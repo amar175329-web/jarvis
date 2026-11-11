@@ -1,0 +1,14 @@
+{
+  "id": "features.system.safety-center",
+  "name": "safety-center",
+  "kind": "feature",
+  "owner_squad": "S22",
+  "phase": 2,
+  "status": "planned",
+  "autonomy_default": "L0",
+  "version": "0.0.1",
+  "group": "system",
+  "does": "S22: safety center (kill switch, audit view)",
+  "uses": [],
+  "knows": []
+}

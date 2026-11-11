@@ -1,0 +1,18 @@
+{
+  "id": "memory.profile",
+  "name": "profile",
+  "kind": "memory-category",
+  "group": "memory",
+  "owner_squad": "S09",
+  "phase": 1,
+  "status": "planned",
+  "does": "Tum kaun ho: naam, bhasha, kaam, bolne ka dhang (card)",
+  "uses": [
+    "packages.memory"
+  ],
+  "knows": [
+    "memory.rules"
+  ],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

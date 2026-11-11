@@ -1,0 +1,11 @@
+{
+  "name": "@jarvis/db",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/migration-acl-static.test.mjs && node tests/db.test.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.2.17"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "id": "command-center.policies",
+  "name": "policies",
+  "kind": "ops-part",
+  "group": "command-center",
+  "owner_squad": "S22",
+  "phase": 1,
+  "status": "planned",
+  "does": "कौन सा agent किस folder में क्या कर सकता है, कब पूछना है",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

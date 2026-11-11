@@ -1,0 +1,1 @@
+{ "name": "@jarvis/logging", "private": true, "type": "module", "scripts": { "test": "node --test tests/logging.test.ts" } }

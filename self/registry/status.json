@@ -1,0 +1,666 @@
+{
+  "api.auth": {
+    "status": "built",
+    "evidence": null
+  },
+  "api.system": {
+    "status": "built",
+    "evidence": null
+  },
+  "command-center.agents": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.agents.antigravity": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.agents.antigravity-sdk": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.agents.chatgpt": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.agents.claude": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.agents.claude-code": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.agents.codex": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.agents.gemini": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.agents.hermes": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.agents.opencode": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.approvals": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.policies": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.repairs": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.reviews": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.rules": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.runs": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.tasks": {
+    "status": "planned",
+    "evidence": null
+  },
+  "command-center.terminals": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.bots.bots-workspace": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.bots.orchestration": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.browser.browser-history": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.browser.cloud-browser": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.browser.downloads": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.browser.form-filling": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.browser.page-reading": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.browser.product-comparison": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.browser.saved-sessions": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.browser.tab-management": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.browser.web-navigation": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.core-workspace.activity-logs": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.core-workspace.boards": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.core-workspace.history": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.core-workspace.insights": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.core-workspace.knowledge-base": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.core-workspace.memory": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.core-workspace.notes-files": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.core-workspace.projects": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.core-workspace.reminders": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.core-workspace.task-manager": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.customize.automations": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.customize.calendar": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.customize.connectors": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.customize.model-providers": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.customize.plugins": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.customize.preferences": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.customize.skills": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.customize.themes-skins": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.customize.url-discover": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.devices.app-launcher": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.devices.connected-devices": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.devices.device-control": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.devices.device-pairing": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.devices.device-permissions": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.devices.smooth-jarvis": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.home.chat-compose": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.home.jarvis-insight": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.home.live-activity": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.home.news": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.home.quick-access": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.home.recent-activity": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.home.today-focus": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.home.todays-schedule": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.shell.boot-sequence": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.shell.connect": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.shell.global-search": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.shell.notifications": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.shell.power-off": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.shell.profile-status": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.shell.settings": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.shell.sidebar-nav": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.system.api-management": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.system.automation-logs": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.system.background-tasks": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.system.backup-restore": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.system.connected-accounts": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.system.data-export": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.system.diagnostics": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.system.model-config": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.system.performance": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.system.safety-center": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.system.security-privacy": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.system.usage-cost": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.voice.voice-mode": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.workbench.agent-workspaces": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.workbench.agents-hub": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.workbench.coding-tasks": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.workbench.file-project-ops": {
+    "status": "planned",
+    "evidence": null
+  },
+  "features.workbench.prompt-handoff": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.agents.antigravity": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.agents.antigravity-sdk": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.agents.chatgpt": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.agents.claude": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.agents.claude-code": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.agents.codex": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.agents.gemini": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.agents.hermes": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.agents.opencode": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.apps.free-fire": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.apps.play-store": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.apps.spotify": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.apps.youtube": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.bots.coding": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.bots.custom": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.bots.email-inbox": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.bots.personal-assistant": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.bots.research": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.bots.search": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.bots.shopping": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.bots.social-media": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.recipes.message-compose": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.recipes.open-app": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.recipes.play-media": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.recipes.search-in-app": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.recipes.youtube-control": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.tools.browser": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.tools.files": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.tools.phone": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.tools.shell": {
+    "status": "planned",
+    "evidence": null
+  },
+  "library.tools.web-search": {
+    "status": "planned",
+    "evidence": null
+  },
+  "memory.engine": {
+    "status": "planned",
+    "evidence": null
+  },
+  "memory.episodes": {
+    "status": "planned",
+    "evidence": null
+  },
+  "memory.facts": {
+    "status": "planned",
+    "evidence": null
+  },
+  "memory.graph": {
+    "status": "planned",
+    "evidence": null
+  },
+  "memory.knowledge": {
+    "status": "planned",
+    "evidence": null
+  },
+  "memory.people": {
+    "status": "planned",
+    "evidence": null
+  },
+  "memory.preferences": {
+    "status": "planned",
+    "evidence": null
+  },
+  "memory.profile": {
+    "status": "planned",
+    "evidence": null
+  },
+  "memory.projects": {
+    "status": "planned",
+    "evidence": null
+  },
+  "memory.routines": {
+    "status": "planned",
+    "evidence": null
+  },
+  "memory.rules": {
+    "status": "planned",
+    "evidence": null
+  },
+  "packages.brain": {
+    "status": "built",
+    "evidence": null
+  },
+  "packages.contracts": {
+    "status": "built",
+    "evidence": null
+  },
+  "packages.db": {
+    "status": "built",
+    "evidence": null
+  },
+  "packages.discovery": {
+    "status": "planned",
+    "evidence": null
+  },
+  "packages.events": {
+    "status": "built",
+    "evidence": null
+  },
+  "packages.harness": {
+    "status": "built",
+    "evidence": null
+  },
+  "packages.kinds": {
+    "status": "planned",
+    "evidence": null
+  },
+  "packages.locale": {
+    "status": "built",
+    "evidence": null
+  },
+  "packages.logging": {
+    "status": "built",
+    "evidence": null
+  },
+  "packages.mcp-server": {
+    "status": "planned",
+    "evidence": null
+  },
+  "packages.memory": {
+    "status": "built",
+    "evidence": null
+  },
+  "packages.model-gateway": {
+    "status": "built",
+    "evidence": null
+  },
+  "packages.models": {
+    "status": "planned",
+    "evidence": null
+  },
+  "packages.presence": {
+    "status": "planned",
+    "evidence": null
+  },
+  "packages.realtime": {
+    "status": "planned",
+    "evidence": null
+  },
+  "packages.registry-builder": {
+    "status": "planned",
+    "evidence": null
+  },
+  "packages.safety": {
+    "status": "built",
+    "evidence": null
+  },
+  "packages.scheduler": {
+    "status": "planned",
+    "evidence": null
+  },
+  "packages.shared": {
+    "status": "built",
+    "evidence": null
+  },
+  "packages.terminal-hub": {
+    "status": "planned",
+    "evidence": null
+  },
+  "packages.vault": {
+    "status": "planned",
+    "evidence": null
+  },
+  "packages.voice": {
+    "status": "built",
+    "evidence": null
+  },
+  "packages.watchers": {
+    "status": "planned",
+    "evidence": null
+  },
+  "self.health": {
+    "status": "planned",
+    "evidence": null
+  },
+  "self.identity": {
+    "status": "planned",
+    "evidence": null
+  },
+  "self.journal": {
+    "status": "planned",
+    "evidence": null
+  },
+  "self.ledger": {
+    "status": "planned",
+    "evidence": null
+  },
+  "self.live-state": {
+    "status": "planned",
+    "evidence": null
+  },
+  "self.proposals": {
+    "status": "planned",
+    "evidence": null
+  },
+  "self.registry": {
+    "status": "planned",
+    "evidence": null
+  },
+  "self.truth-rules": {
+    "status": "planned",
+    "evidence": null
+  },
+  "worker.gateway": {
+    "status": "planned",
+    "evidence": null
+  },
+  "worker.jobs": {
+    "status": "built",
+    "evidence": null
+  },
+  "worker.machine-agent": {
+    "status": "planned",
+    "evidence": null
+  }
+}

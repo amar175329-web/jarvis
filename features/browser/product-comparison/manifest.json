@@ -1,0 +1,14 @@
+{
+  "id": "features.browser.product-comparison",
+  "name": "product-comparison",
+  "kind": "feature",
+  "group": "browser",
+  "owner_squad": "S15",
+  "phase": 2,
+  "status": "planned",
+  "does": "Products की तुलना",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

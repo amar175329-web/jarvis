@@ -1,0 +1,19 @@
+{
+  "id": "features.core-workspace.knowledge-base",
+  "name": "knowledge-base",
+  "kind": "feature",
+  "group": "core-workspace",
+  "owner_squad": "S09",
+  "phase": 1,
+  "status": "planned",
+  "does": "Personal Knowledge Base (Second Brain: Capture, Organize, Distill, Express)",
+  "uses": [
+    "packages.memory",
+    "memory.knowledge"
+  ],
+  "knows": [
+    "memory.graph"
+  ],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

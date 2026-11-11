@@ -1,0 +1,14 @@
+{
+  "id": "library.recipes.search-in-app",
+  "name": "search-in-app",
+  "kind": "recipe",
+  "group": "recipes",
+  "owner_squad": "S16B",
+  "phase": 1,
+  "status": "planned",
+  "does": "app के अंदर ढूँढना",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

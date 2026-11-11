@@ -1,0 +1,14 @@
+{
+  "id": "features.browser.browser-history",
+  "name": "browser-history",
+  "kind": "feature",
+  "group": "browser",
+  "owner_squad": "S15",
+  "phase": 2,
+  "status": "planned",
+  "does": "Browser history",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

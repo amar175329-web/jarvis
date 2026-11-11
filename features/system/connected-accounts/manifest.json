@@ -1,0 +1,14 @@
+{
+  "id": "features.system.connected-accounts",
+  "name": "connected-accounts",
+  "kind": "feature",
+  "group": "system",
+  "owner_squad": "S19",
+  "phase": 3,
+  "status": "planned",
+  "does": "Accounts",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

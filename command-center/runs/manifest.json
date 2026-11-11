@@ -1,0 +1,14 @@
+{
+  "id": "command-center.runs",
+  "name": "runs",
+  "kind": "ops-part",
+  "group": "command-center",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "हर चलाई गई चीज़: command, नतीजा, exit code, बदलाव (diff), ख़र्च",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

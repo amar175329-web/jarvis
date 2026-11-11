@@ -1,0 +1,23 @@
+{
+  "id": "packages.voice",
+  "name": "voice",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S21",
+  "phase": 1,
+  "status": "built",
+  "does": "STT, TTS, streaming: आवाज़ से text और text से आवाज़, बीच में टोकना (barge-in), Hinglish को बोलने लायक बनाना",
+  "uses": [
+    "packages.locale",
+    "packages.model-gateway",
+    "packages.events"
+  ],
+  "knows": [
+    "self.identity",
+    "packages.brain",
+    "packages.safety",
+    "packages.vault"
+  ],
+  "autonomy_default": "L0",
+  "version": "0.7.0"
+}

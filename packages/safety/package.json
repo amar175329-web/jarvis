@@ -1,0 +1,1 @@
+{ "name": "@jarvis/safety", "private": true, "type": "module", "scripts": { "test": "node --test tests/safety.test.ts" } }

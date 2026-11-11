@@ -1,0 +1,1 @@
+{ "name": "@jarvis/brain", "private": true, "type": "module", "scripts": { "test": "node --test tests/brain.test.ts tests/scenarios.test.ts" } }

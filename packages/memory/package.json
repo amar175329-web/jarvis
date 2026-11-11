@@ -1,0 +1,1 @@
+{"name":"@jarvis/memory","private":true,"type":"module","scripts":{"test":"node --test tests/*.test.ts tests/*.test.mjs"},"devDependencies":{"@electric-sql/pglite":"^0.2.17"}}

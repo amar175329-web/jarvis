@@ -1,0 +1,14 @@
+{
+  "id": "self.live-state",
+  "name": "live-state",
+  "kind": "self-part",
+  "group": "self",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "अभी की हालत: कौन सा device online, कौन से apps installed, कौन सा काम चल रहा",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

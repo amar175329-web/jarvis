@@ -1,0 +1,17 @@
+{
+  "id": "packages.contracts",
+  "name": "contracts",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "built",
+  "does": "Zod API request/response contracts, unified errors, Kotlin/JSON Schema generator, owner session, event idempotency and approved S21 voice API contracts",
+  "uses": [
+    "packages.events",
+    "packages.shared"
+  ],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.2.0"
+}

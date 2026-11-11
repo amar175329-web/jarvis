@@ -1,0 +1,14 @@
+{
+  "id": "packages.locale",
+  "name": "locale",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "built",
+  "does": "समय (UTC में रखना, IST में दिखाना) और भाषा (हिंदी/Hinglish/English) के नियम",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

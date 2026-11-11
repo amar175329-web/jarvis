@@ -1,0 +1,14 @@
+{
+  "id": "library.tools.web-search",
+  "name": "web-search",
+  "kind": "tool",
+  "group": "tools",
+  "owner_squad": "S11",
+  "phase": 2,
+  "status": "planned",
+  "does": "search और news",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

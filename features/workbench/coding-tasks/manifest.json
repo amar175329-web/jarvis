@@ -1,0 +1,14 @@
+{
+  "id": "features.workbench.coding-tasks",
+  "name": "coding-tasks",
+  "kind": "feature",
+  "group": "workbench",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "Coding tasks",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

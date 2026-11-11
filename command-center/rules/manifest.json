@@ -1,0 +1,14 @@
+{
+  "id": "command-center.rules",
+  "name": "rules",
+  "kind": "ops-part",
+  "group": "command-center",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "सबके लिए नियम-किताब (AGENTS.md, CLAUDE.md, GEMINI.md यहीं से बनती हैं)",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

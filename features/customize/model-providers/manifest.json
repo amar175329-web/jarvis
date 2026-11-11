@@ -1,0 +1,14 @@
+{
+  "id": "features.customize.model-providers",
+  "name": "model-providers",
+  "kind": "feature",
+  "group": "customize",
+  "owner_squad": "S13",
+  "phase": 2,
+  "status": "planned",
+  "does": "AI Model Providers",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

@@ -1,0 +1,124 @@
+{
+  "$id": "jarvis/manifest.schema.json",
+  "title": "JARVIS manifest.json (the ONE schema every manifest is validated against)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "kind",
+    "group",
+    "owner_squad",
+    "phase",
+    "status",
+    "does",
+    "uses",
+    "knows",
+    "autonomy_default",
+    "version"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+(\\.[a-z0-9-]+)*$",
+      "note": "must equal the folder path with / replaced by ."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "feature",
+        "tool",
+        "app",
+        "recipe",
+        "skill",
+        "plugin",
+        "mcp",
+        "integration",
+        "model",
+        "agent",
+        "bot",
+        "device",
+        "theme",
+        "automation",
+        "package",
+        "self-part",
+        "memory-category",
+        "ops-part",
+        "agent-office",
+        "worker-part"
+      ]
+    },
+    "group": {
+      "type": "string",
+      "minLength": 1,
+      "note": "feature group, library kind, or area name. No group = orphan = FAIL"
+    },
+    "owner_squad": {
+      "type": "string",
+      "pattern": "^(S\\d\\d[AB]?|LEAD|UNASSIGNED)$"
+    },
+    "phase": {
+      "type": "integer",
+      "enum": [
+        1,
+        2,
+        3
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "built",
+        "tested",
+        "live",
+        "broken",
+        "deprecated"
+      ]
+    },
+    "does": {
+      "type": "string",
+      "minLength": 1
+    },
+    "uses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "note": "ids that must exist"
+    },
+    "knows": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "note": "ids that must exist"
+    },
+    "autonomy_default": {
+      "type": "string",
+      "enum": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+      ],
+      "note": "L0-L4 ONLY. There is no separate risk field. Dangerous powers are capped at L0-L2 by S22"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "evidence": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "note": "test result that justifies status above planned. When present it MUST have test_id, commit (7-40 hex) and ci_run (https link). Filled by CI, never by hand"
+    }
+  }
+}

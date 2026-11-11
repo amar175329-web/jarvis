@@ -1,0 +1,14 @@
+{
+  "id": "self.ledger",
+  "name": "ledger",
+  "kind": "self-part",
+  "group": "self",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "सिर्फ जुड़ने वाला रिकॉर्ड: क्या कब जुड़ा, बदला, टूटा, ठीक हुआ",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

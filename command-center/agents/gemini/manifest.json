@@ -1,0 +1,16 @@
+{
+  "id": "command-center.agents.gemini",
+  "name": "gemini office",
+  "kind": "agent-office",
+  "group": "agents",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "Work office for gemini: what was handed over, what it did, what we learned.",
+  "uses": [
+    "library.agents.gemini"
+  ],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

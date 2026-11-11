@@ -1,0 +1,17 @@
+{
+  "id": "packages.logging",
+  "name": "logging",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "built",
+  "does": "structured logs, secrets छिपाना, एक error format और health की रिपोर्ट",
+  "uses": [
+    "packages.shared",
+    "packages.contracts"
+  ],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

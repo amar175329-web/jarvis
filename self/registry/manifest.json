@@ -1,0 +1,14 @@
+{
+  "id": "self.registry",
+  "name": "registry",
+  "kind": "self-part",
+  "group": "self",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "सब कुछ की master list, build से अपने-आप बनती है",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

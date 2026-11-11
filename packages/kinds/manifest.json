@@ -1,0 +1,14 @@
+{
+  "id": "packages.kinds",
+  "name": "kinds",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "हर तरह की चीज़ का नियम (schema)",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

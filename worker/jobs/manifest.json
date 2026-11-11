@@ -1,0 +1,18 @@
+{
+  "id": "worker.jobs",
+  "name": "jobs",
+  "kind": "worker-part",
+  "group": "worker",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "built",
+  "does": "लंबे/पीछे के काम: jobs कतार, सुरक्षित worker, keep-alive और purge",
+  "uses": [
+    "packages.shared",
+    "packages.logging",
+    "packages.db"
+  ],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.1.0"
+}

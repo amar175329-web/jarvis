@@ -1,0 +1,14 @@
+{
+  "id": "packages.models",
+  "name": "models",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S13",
+  "phase": 2,
+  "status": "planned",
+  "does": "model router का code",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

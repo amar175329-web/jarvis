@@ -1,0 +1,14 @@
+{
+  "id": "features.browser.page-reading",
+  "name": "page-reading",
+  "kind": "feature",
+  "group": "browser",
+  "owner_squad": "S15",
+  "phase": 2,
+  "status": "planned",
+  "does": "Page पढ़ना",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

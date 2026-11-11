@@ -1,0 +1,19 @@
+{
+  "id": "memory.rules",
+  "name": "rules",
+  "kind": "memory-category",
+  "group": "memory",
+  "owner_squad": "S09",
+  "phase": 1,
+  "status": "planned",
+  "does": "Yaad rakhne ke niyam: kya, kab poochna, kya kabhi nahi; source/why/private/expires_at",
+  "uses": [
+    "packages.memory"
+  ],
+  "knows": [
+    "self.identity",
+    "packages.brain"
+  ],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

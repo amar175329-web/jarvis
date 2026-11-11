@@ -1,0 +1,14 @@
+{
+  "id": "features.browser.tab-management",
+  "name": "tab-management",
+  "kind": "feature",
+  "group": "browser",
+  "owner_squad": "S15",
+  "phase": 2,
+  "status": "planned",
+  "does": "Tabs",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

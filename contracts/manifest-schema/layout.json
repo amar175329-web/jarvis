@@ -1,0 +1,37 @@
+{
+  "areas": [
+    "self",
+    "memory",
+    "features",
+    "library",
+    "command-center",
+    "packages",
+    "worker",
+    "app",
+    "api",
+    "android",
+    "contracts",
+    "config",
+    "infra",
+    "scripts",
+    "tests",
+    "docs",
+    "squads"
+  ],
+  "containers": [
+    "*",
+    "features/*",
+    "library/*"
+  ],
+  "units": [
+    "features/*/*",
+    "library/*/*",
+    "packages/*",
+    "self/*",
+    "memory/*",
+    "command-center/*",
+    "command-center/agents/*",
+    "worker/*",
+    "api/*"
+  ]
+}

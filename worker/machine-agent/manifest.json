@@ -1,0 +1,14 @@
+{
+  "id": "worker.machine-agent",
+  "name": "machine-agent",
+  "kind": "worker-part",
+  "group": "worker",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "हर machine पर चलने वाला छोटा सेवक: terminals सौंपता है और वहाँ नए agents/tools ढूँढकर बताता है",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

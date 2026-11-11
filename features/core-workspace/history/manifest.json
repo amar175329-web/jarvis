@@ -1,0 +1,14 @@
+{
+  "id": "features.core-workspace.history",
+  "name": "history",
+  "kind": "feature",
+  "group": "core-workspace",
+  "owner_squad": "S05",
+  "phase": 1,
+  "status": "planned",
+  "does": "पुरानी chats और activity",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

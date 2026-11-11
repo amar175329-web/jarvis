@@ -1,0 +1,14 @@
+{
+  "id": "library.tools.files",
+  "name": "files",
+  "kind": "tool",
+  "group": "tools",
+  "owner_squad": "S11",
+  "phase": 2,
+  "status": "planned",
+  "does": "फ़ाइल पढ़ना/लिखना",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

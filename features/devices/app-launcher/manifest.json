@@ -1,0 +1,14 @@
+{
+  "id": "features.devices.app-launcher",
+  "name": "app-launcher",
+  "kind": "feature",
+  "group": "devices",
+  "owner_squad": "S06",
+  "phase": 1,
+  "status": "planned",
+  "does": "App Launcher",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

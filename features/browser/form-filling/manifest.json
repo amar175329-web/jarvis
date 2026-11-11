@@ -1,0 +1,14 @@
+{
+  "id": "features.browser.form-filling",
+  "name": "form-filling",
+  "kind": "feature",
+  "group": "browser",
+  "owner_squad": "S15",
+  "phase": 2,
+  "status": "planned",
+  "does": "Forms भरना",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

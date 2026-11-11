@@ -1,0 +1,739 @@
+
+> test:all
+> node scripts/test-all.mjs
+
+
+===== api/auth · PASS =====
+TAP version 13
+# (node:4121) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: session create verifies token and sets Secure HttpOnly SameSite cookie without returning token
+ok 1 - session create verifies token and sets Secure HttpOnly SameSite cookie without returning token
+  ---
+  duration_ms: 26.853741
+  type: 'test'
+  ...
+# Subtest: session create refuses non-owner account even when Supabase signup is enabled
+ok 2 - session create refuses non-owner account even when Supabase signup is enabled
+  ---
+  duration_ms: 0.916328
+  type: 'test'
+  ...
+# Subtest: session create refuses invalid token and malformed input
+ok 3 - session create refuses invalid token and malformed input
+  ---
+  duration_ms: 1.125071
+  type: 'test'
+  ...
+# Subtest: session create rejects cross-origin browser requests
+ok 4 - session create rejects cross-origin browser requests
+  ---
+  duration_ms: 0.462756
+  type: 'test'
+  ...
+# Subtest: session create fails safely when auth env is incomplete
+ok 5 - session create fails safely when auth env is incomplete
+  ---
+  duration_ms: 0.346121
+  type: 'test'
+  ...
+# Subtest: owner session can be read from cookie
+ok 6 - owner session can be read from cookie
+  ---
+  duration_ms: 1.232883
+  type: 'test'
+  ...
+# Subtest: expired access token refreshes and rotates the cookie
+ok 7 - expired access token refreshes and rotates the cookie
+  ---
+  duration_ms: 1.034084
+  type: 'test'
+  ...
+# Subtest: missing cookie is unauthorized and explicitly cleared
+ok 8 - missing cookie is unauthorized and explicitly cleared
+  ---
+  duration_ms: 0.329726
+  type: 'test'
+  ...
+# Subtest: delete clears local cookie and signs out remotely
+ok 9 - delete clears local cookie and signs out remotely
+  ---
+  duration_ms: 0.490217
+  type: 'test'
+  ...
+# Subtest: wrong HTTP methods are rejected
+ok 10 - wrong HTTP methods are rejected
+  ---
+  duration_ms: 0.520352
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 137.550487
+
+
+===== api/system · FAIL =====
+TAP version 13
+# (node:4150) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# node:internal/modules/package_json_reader:256
+#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+#         ^
+# Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'zod' imported from /mnt/data/jarvis_work/jarvis/packages/events/src/envelope.ts
+#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:256:9)
+#     at packageResolve (node:internal/modules/esm/resolve:768:81)
+#     at moduleResolve (node:internal/modules/esm/resolve:854:18)
+#     at defaultResolve (node:internal/modules/esm/resolve:984:11)
+#     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+#     at \#cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+#     at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+#     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+#     at ModuleJob._link (node:internal/modules/esm/module_job:137:49) {
+#   code: 'ERR_MODULE_NOT_FOUND'
+# }
+# Node.js v22.16.0
+# Subtest: tests/system.test.ts
+not ok 1 - tests/system.test.ts
+  ---
+  duration_ms: 120.036596
+  type: 'test'
+  location: '/mnt/data/jarvis_work/jarvis/api/system/tests/system.test.ts:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 126.214984
+
+
+===== app · PASS =====
+TAP version 13
+# (node:4179) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: anonymous and absent API routes hide the owner-only control
+ok 1 - anonymous and absent API routes hide the owner-only control
+  ---
+  duration_ms: 0.760844
+  type: 'test'
+  ...
+# Subtest: verified switch state is shown with the server epoch
+ok 2 - verified switch state is shown with the server epoch
+  ---
+  duration_ms: 0.535565
+  type: 'test'
+  ...
+# Subtest: server outage, malformed response and invalid epoch fail closed as ON
+ok 3 - server outage, malformed response and invalid epoch fail closed as ON
+  ---
+  duration_ms: 0.168212
+  type: 'test'
+  ...
+# Subtest: a verified ON state is not mistaken for an unavailable state
+ok 4 - a verified ON state is not mistaken for an unavailable state
+  ---
+  duration_ms: 0.098969
+  type: 'test'
+  ...
+# Subtest: any failed or unverifiable write returns a disabled fail-closed view
+ok 5 - any failed or unverifiable write returns a disabled fail-closed view
+  ---
+  duration_ms: 0.231588
+  type: 'test'
+  ...
+# Subtest: only a valid server confirmation changes the displayed state after write
+ok 6 - only a valid server confirmation changes the displayed state after write
+  ---
+  duration_ms: 0.097116
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 101.669881
+
+
+===== packages/contracts · FAIL =====
+TAP version 13
+# (node:4208) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# node:internal/modules/package_json_reader:256
+#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+#         ^
+# Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'zod-to-json-schema' imported from /mnt/data/jarvis_work/jarvis/packages/contracts/scripts/generate.ts
+#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:256:9)
+#     at packageResolve (node:internal/modules/esm/resolve:768:81)
+#     at moduleResolve (node:internal/modules/esm/resolve:854:18)
+#     at defaultResolve (node:internal/modules/esm/resolve:984:11)
+#     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+#     at \#cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+#     at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+#     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+#     at ModuleJob._link (node:internal/modules/esm/module_job:137:49) {
+#   code: 'ERR_MODULE_NOT_FOUND'
+# }
+# Node.js v22.16.0
+# Subtest: tests/contracts.test.ts
+not ok 1 - tests/contracts.test.ts
+  ---
+  duration_ms: 99.923361
+  type: 'test'
+  location: '/mnt/data/jarvis_work/jarvis/packages/contracts/tests/contracts.test.ts:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 105.968739
+
+
+===== packages/db · FAIL =====
+TAP version 13
+# Subtest: migration 0004 defines exactly the four protected job functions
+ok 1 - migration 0004 defines exactly the four protected job functions
+  ---
+  duration_ms: 1.623631
+  type: 'test'
+  ...
+# Subtest: migration 0004 revokes PUBLIC/anon/authenticated EXECUTE from claim_job
+ok 2 - migration 0004 revokes PUBLIC/anon/authenticated EXECUTE from claim_job
+  ---
+  duration_ms: 0.399851
+  type: 'test'
+  ...
+# Subtest: migration 0004 grants EXECUTE on claim_job only to service_role
+ok 3 - migration 0004 grants EXECUTE on claim_job only to service_role
+  ---
+  duration_ms: 0.427243
+  type: 'test'
+  ...
+# Subtest: migration 0004 revokes PUBLIC/anon/authenticated EXECUTE from heartbeat_job
+ok 4 - migration 0004 revokes PUBLIC/anon/authenticated EXECUTE from heartbeat_job
+  ---
+  duration_ms: 0.229565
+  type: 'test'
+  ...
+# Subtest: migration 0004 grants EXECUTE on heartbeat_job only to service_role
+ok 5 - migration 0004 grants EXECUTE on heartbeat_job only to service_role
+  ---
+  duration_ms: 0.379801
+  type: 'test'
+  ...
+# Subtest: migration 0004 revokes PUBLIC/anon/authenticated EXECUTE from finish_job
+ok 6 - migration 0004 revokes PUBLIC/anon/authenticated EXECUTE from finish_job
+  ---
+  duration_ms: 0.222845
+  type: 'test'
+  ...
+# Subtest: migration 0004 grants EXECUTE on finish_job only to service_role
+ok 7 - migration 0004 grants EXECUTE on finish_job only to service_role
+  ---
+  duration_ms: 0.298159
+  type: 'test'
+  ...
+# Subtest: migration 0004 revokes PUBLIC/anon/authenticated EXECUTE from purge_old_jobs
+ok 8 - migration 0004 revokes PUBLIC/anon/authenticated EXECUTE from purge_old_jobs
+  ---
+  duration_ms: 0.214883
+  type: 'test'
+  ...
+# Subtest: migration 0004 grants EXECUTE on purge_old_jobs only to service_role
+ok 9 - migration 0004 grants EXECUTE on purge_old_jobs only to service_role
+  ---
+  duration_ms: 0.444949
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 59.95374
+node:internal/modules/package_json_reader:256
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@electric-sql/pglite' imported from /mnt/data/jarvis_work/jarvis/packages/db/tests/db.test.mjs
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:256:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:854:18)
+    at defaultResolve (node:internal/modules/esm/resolve:984:11)
+    at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+    at ModuleJob._link (node:internal/modules/esm/module_job:137:49) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+
+Node.js v22.16.0
+
+
+===== packages/events · FAIL =====
+TAP version 13
+# (node:4277) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# node:internal/modules/package_json_reader:256
+#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+#         ^
+# Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'zod' imported from /mnt/data/jarvis_work/jarvis/packages/events/src/envelope.ts
+#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:256:9)
+#     at packageResolve (node:internal/modules/esm/resolve:768:81)
+#     at moduleResolve (node:internal/modules/esm/resolve:854:18)
+#     at defaultResolve (node:internal/modules/esm/resolve:984:11)
+#     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+#     at \#cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+#     at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+#     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+#     at ModuleJob._link (node:internal/modules/esm/module_job:137:49) {
+#   code: 'ERR_MODULE_NOT_FOUND'
+# }
+# Node.js v22.16.0
+# Subtest: tests/events.test.ts
+not ok 1 - tests/events.test.ts
+  ---
+  duration_ms: 121.500657
+  type: 'test'
+  location: '/mnt/data/jarvis_work/jarvis/packages/events/tests/events.test.ts:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# (node:4288) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# node:internal/modules/package_json_reader:256
+#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+#         ^
+# Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'zod' imported from /mnt/data/jarvis_work/jarvis/packages/events/src/envelope.ts
+#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:256:9)
+#     at packageResolve (node:internal/modules/esm/resolve:768:81)
+#     at moduleResolve (node:internal/modules/esm/resolve:854:18)
+#     at defaultResolve (node:internal/modules/esm/resolve:984:11)
+#     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+#     at \#cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+#     at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+#     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+#     at ModuleJob._link (node:internal/modules/esm/module_job:137:49) {
+#   code: 'ERR_MODULE_NOT_FOUND'
+# }
+# Node.js v22.16.0
+# Subtest: tests/outbox.test.ts
+not ok 2 - tests/outbox.test.ts
+  ---
+  duration_ms: 110.537875
+  type: 'test'
+  location: '/mnt/data/jarvis_work/jarvis/packages/events/tests/outbox.test.ts:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 0
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 238.740688
+
+
+===== packages/locale · PASS =====
+TAP version 13
+# (node:4317) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: UTC -> IST parts
+ok 1 - UTC -> IST parts
+  ---
+  duration_ms: 1.260976
+  type: 'test'
+  ...
+# Subtest: IST -> UTC round trip and real-date check
+ok 2 - IST -> UTC round trip and real-date check
+  ---
+  duration_ms: 0.69855
+  type: 'test'
+  ...
+# Subtest: day and month boundaries are in India time, not UTC
+ok 3 - day and month boundaries are in India time, not UTC
+  ---
+  duration_ms: 0.181994
+  type: 'test'
+  ...
+# Subtest: parseISTDateTime
+ok 4 - parseISTDateTime
+  ---
+  duration_ms: 0.34607
+  type: 'test'
+  ...
+# Subtest: dates in three languages
+ok 5 - dates in three languages
+  ---
+  duration_ms: 0.155334
+  type: 'test'
+  ...
+# Subtest: times in three languages
+ok 6 - times in three languages
+  ---
+  duration_ms: 0.194101
+  type: 'test'
+  ...
+# Subtest: parts of the day and greeting
+ok 7 - parts of the day and greeting
+  ---
+  duration_ms: 0.182565
+  type: 'test'
+  ...
+# Subtest: today / tomorrow / yesterday
+ok 8 - today / tomorrow / yesterday
+  ---
+  duration_ms: 0.227973
+  type: 'test'
+  ...
+# Subtest: digits and rupees
+ok 9 - digits and rupees
+  ---
+  duration_ms: 1.127425
+  type: 'test'
+  ...
+# Subtest: language detection: Hindi, Hinglish, English
+ok 10 - language detection: Hindi, Hinglish, English
+  ---
+  duration_ms: 1.049789
+  type: 'test'
+  ...
+1..10
+# tests 10
+# suites 0
+# pass 10
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 116.443558
+
+
+===== packages/logging · FAIL =====
+TAP version 13
+# (node:4346) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# node:internal/modules/package_json_reader:256
+#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+#         ^
+# Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'zod' imported from /mnt/data/jarvis_work/jarvis/packages/contracts/src/errors.ts
+#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:256:9)
+#     at packageResolve (node:internal/modules/esm/resolve:768:81)
+#     at moduleResolve (node:internal/modules/esm/resolve:854:18)
+#     at defaultResolve (node:internal/modules/esm/resolve:984:11)
+#     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+#     at \#cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+#     at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+#     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+#     at ModuleJob._link (node:internal/modules/esm/module_job:137:49) {
+#   code: 'ERR_MODULE_NOT_FOUND'
+# }
+# Node.js v22.16.0
+# Subtest: tests/logging.test.ts
+not ok 1 - tests/logging.test.ts
+  ---
+  duration_ms: 122.481332
+  type: 'test'
+  location: '/mnt/data/jarvis_work/jarvis/packages/logging/tests/logging.test.ts:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 128.598038
+
+
+===== packages/model-gateway · FAIL =====
+TAP version 13
+# (node:4375) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# node:internal/modules/package_json_reader:256
+#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+#         ^
+# Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'zod' imported from /mnt/data/jarvis_work/jarvis/packages/contracts/src/errors.ts
+#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:256:9)
+#     at packageResolve (node:internal/modules/esm/resolve:768:81)
+#     at moduleResolve (node:internal/modules/esm/resolve:854:18)
+#     at defaultResolve (node:internal/modules/esm/resolve:984:11)
+#     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+#     at \#cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+#     at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+#     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+#     at ModuleJob._link (node:internal/modules/esm/module_job:137:49) {
+#   code: 'ERR_MODULE_NOT_FOUND'
+# }
+# Node.js v22.16.0
+# Subtest: tests/gateway.test.ts
+not ok 1 - tests/gateway.test.ts
+  ---
+  duration_ms: 134.75214
+  type: 'test'
+  location: '/mnt/data/jarvis_work/jarvis/packages/model-gateway/tests/gateway.test.ts:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 0
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 142.189293
+
+
+===== packages/safety · PASS =====
+TAP version 13
+# (node:4404) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: read returns the real kill state
+ok 1 - read returns the real kill state
+  ---
+  duration_ms: 1.139753
+  type: 'test'
+  ...
+# Subtest: missing/unreadable kill state fails closed as ON
+ok 2 - missing/unreadable kill state fails closed as ON
+  ---
+  duration_ms: 0.544619
+  type: 'test'
+  ...
+# Subtest: device can turn kill ON
+ok 3 - device can turn kill ON
+  ---
+  duration_ms: 0.211138
+  type: 'test'
+  ...
+# Subtest: device can never turn kill OFF
+ok 4 - device can never turn kill OFF
+  ---
+  duration_ms: 0.19326
+  type: 'test'
+  ...
+# Subtest: only owner can turn kill OFF
+ok 5 - only owner can turn kill OFF
+  ---
+  duration_ms: 0.506191
+  type: 'test'
+  ...
+# Subtest: write failure never reports kill OFF
+ok 6 - write failure never reports kill OFF
+  ---
+  duration_ms: 0.190707
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 116.242401
+
+
+===== packages/shared · PASS =====
+TAP version 13
+# (node:4433) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: kill switch OFF passes
+ok 1 - kill switch OFF passes
+  ---
+  duration_ms: 0.771029
+  type: 'test'
+  ...
+# Subtest: kill switch ON throws KilledError
+ok 2 - kill switch ON throws KilledError
+  ---
+  duration_ms: 0.403126
+  type: 'test'
+  ...
+# Subtest: fail-closed: unreadable kill switch counts as ON
+ok 3 - fail-closed: unreadable kill switch counts as ON
+  ---
+  duration_ms: 0.243737
+  type: 'test'
+  ...
+# Subtest: backoff grows, is capped, and has jitter between half and full
+ok 4 - backoff grows, is capped, and has jitter between half and full
+  ---
+  duration_ms: 0.151217
+  type: 'test'
+  ...
+# Subtest: sleep ends early when aborted
+ok 5 - sleep ends early when aborted
+  ---
+  duration_ms: 21.723461
+  type: 'test'
+  ...
+# Subtest: fixed clock and NonRetryableError
+ok 6 - fixed clock and NonRetryableError
+  ---
+  duration_ms: 0.839863
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 155.641878
+
+
+===== worker/jobs · FAIL =====
+TAP version 13
+# (node:4462) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: claim: right URL, key in headers, body; null / all-null rows mean "no job"
+ok 1 - claim: right URL, key in headers, body; null / all-null rows mean "no job"
+  ---
+  duration_ms: 2.223813
+  type: 'test'
+  ...
+# Subtest: heartbeat and finish send the right arguments
+ok 2 - heartbeat and finish send the right arguments
+  ---
+  duration_ms: 0.445781
+  type: 'test'
+  ...
+# Subtest: enqueue: created vs duplicate, with ignore-duplicates header
+ok 3 - enqueue: created vs duplicate, with ignore-duplicates header
+  ---
+  duration_ms: 0.95158
+  type: 'test'
+  ...
+# Subtest: kill switch reader: reads own row; missing row or HTTP error => fail-closed ON
+ok 4 - kill switch reader: reads own row; missing row or HTTP error => fail-closed ON
+  ---
+  duration_ms: 0.577218
+  type: 'test'
+  ...
+# Subtest: errors name the status and path but never the key
+ok 5 - errors name the status and path but never the key
+  ---
+  duration_ms: 0.642617
+  type: 'test'
+  ...
+# Subtest: ping is a real request; purge returns the number
+ok 6 - ping is a real request; purge returns the number
+  ---
+  duration_ms: 0.317467
+  type: 'test'
+  ...
+# Subtest: discoverOwner: exactly one owner or a clear error
+ok 7 - discoverOwner: exactly one owner or a clear error
+  ---
+  duration_ms: 1.251872
+  type: 'test'
+  ...
+# (node:4473) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# node:internal/modules/package_json_reader:256
+#   throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+#         ^
+# Error [ERR_MODULE_NOT_FOUND]: Cannot find package '@electric-sql/pglite' imported from /mnt/data/jarvis_work/jarvis/worker/jobs/tests/pglite-store.ts
+#     at Object.getPackageJSONURL (node:internal/modules/package_json_reader:256:9)
+#     at packageResolve (node:internal/modules/esm/resolve:768:81)
+#     at moduleResolve (node:internal/modules/esm/resolve:854:18)
+#     at defaultResolve (node:internal/modules/esm/resolve:984:11)
+#     at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+#     at \#cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+#     at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+#     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+#     at ModuleJob._link (node:internal/modules/esm/module_job:137:49) {
+#   code: 'ERR_MODULE_NOT_FOUND'
+# }
+# Node.js v22.16.0
+# Subtest: tests/worker.test.ts
+not ok 2 - tests/worker.test.ts
+  ---
+  duration_ms: 106.282341
+  type: 'test'
+  location: '/mnt/data/jarvis_work/jarvis/worker/jobs/tests/worker.test.ts:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 7
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 235.122157
+
+
+PASS  api/auth                 10 passed, 0 failed
+FAIL  api/system               0 passed, 1 failed
+PASS  app                      6 passed, 0 failed
+FAIL  packages/contracts       0 passed, 1 failed
+FAIL  packages/db              9 passed, 0 failed
+FAIL  packages/events          0 passed, 2 failed
+PASS  packages/locale          10 passed, 0 failed
+FAIL  packages/logging         0 passed, 1 failed
+FAIL  packages/model-gateway   0 passed, 1 failed
+PASS  packages/safety          6 passed, 0 failed
+PASS  packages/shared          6 passed, 0 failed
+FAIL  worker/jobs              7 passed, 1 failed
+
+7 PACKAGE(S) FAILED: 54 tests in 12 packages

@@ -1,0 +1,14 @@
+{
+  "id": "features.system.backup-restore",
+  "name": "backup-restore",
+  "kind": "feature",
+  "group": "system",
+  "owner_squad": "S19",
+  "phase": 3,
+  "status": "planned",
+  "does": "Backup & Restore",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

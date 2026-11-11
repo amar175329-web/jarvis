@@ -1,0 +1,14 @@
+{
+  "id": "packages.vault",
+  "name": "vault",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "secrets सुरक्षित पढ़ना",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

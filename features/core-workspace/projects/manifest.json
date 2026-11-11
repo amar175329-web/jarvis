@@ -1,0 +1,19 @@
+{
+  "id": "features.core-workspace.projects",
+  "name": "projects",
+  "kind": "feature",
+  "group": "core-workspace",
+  "owner_squad": "S09",
+  "phase": 1,
+  "status": "planned",
+  "does": "Projects (goal, status, agla kadam, notes/files/tasks se link)",
+  "uses": [
+    "packages.memory",
+    "memory.projects"
+  ],
+  "knows": [
+    "memory.graph"
+  ],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "features.home.jarvis-insight",
+  "name": "jarvis-insight",
+  "kind": "feature",
+  "group": "home",
+  "owner_squad": "S04",
+  "phase": 2,
+  "status": "planned",
+  "does": "आदतों से सुझाव",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

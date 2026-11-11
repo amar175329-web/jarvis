@@ -1,0 +1,14 @@
+{
+  "id": "features.devices.smooth-jarvis",
+  "name": "smooth-jarvis",
+  "kind": "feature",
+  "group": "devices",
+  "owner_squad": "S17",
+  "phase": 3,
+  "status": "planned",
+  "does": "Smooth Jarvis: Android पर तैरता overlay (S17)",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

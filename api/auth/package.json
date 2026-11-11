@@ -1,0 +1,1 @@
+{ "name": "@jarvis/api-auth", "private": true, "type": "module", "scripts": { "test": "node --test tests/auth.test.ts" } }

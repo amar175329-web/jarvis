@@ -1,0 +1,14 @@
+{
+  "id": "features.browser.cloud-browser",
+  "name": "cloud-browser",
+  "kind": "feature",
+  "group": "browser",
+  "owner_squad": "S15",
+  "phase": 2,
+  "status": "planned",
+  "does": "JARVIS का अपना browser",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

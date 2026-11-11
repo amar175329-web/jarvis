@@ -1,0 +1,14 @@
+{
+  "id": "features.home.quick-access",
+  "name": "quick-access",
+  "kind": "feature",
+  "group": "home",
+  "owner_squad": "S06",
+  "phase": 1,
+  "status": "planned",
+  "does": "YouTube, Browser, Projects, Claude, ChatGPT, Gemini, Instagram shortcuts",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

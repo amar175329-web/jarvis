@@ -1,0 +1,14 @@
+{
+  "id": "library.recipes.open-app",
+  "name": "open-app",
+  "kind": "recipe",
+  "group": "recipes",
+  "owner_squad": "S16B",
+  "phase": 1,
+  "status": "planned",
+  "does": "app खोलो: installed? → app, नहीं → fallback",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

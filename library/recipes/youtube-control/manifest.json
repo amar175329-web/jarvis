@@ -1,0 +1,14 @@
+{
+  "id": "library.recipes.youtube-control",
+  "name": "youtube-control",
+  "kind": "recipe",
+  "group": "recipes",
+  "owner_squad": "S16B",
+  "phase": 1,
+  "status": "planned",
+  "does": "play, pause, next, like, subscribe (confirm के साथ)",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

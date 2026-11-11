@@ -1,0 +1,14 @@
+{
+  "id": "features.shell.connect",
+  "name": "connect",
+  "kind": "feature",
+  "group": "shell",
+  "owner_squad": "S17",
+  "phase": 3,
+  "status": "planned",
+  "does": "Connect devices बटन",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

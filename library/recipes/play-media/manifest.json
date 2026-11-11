@@ -1,0 +1,14 @@
+{
+  "id": "library.recipes.play-media",
+  "name": "play-media",
+  "kind": "recipe",
+  "group": "recipes",
+  "owner_squad": "S16B",
+  "phase": 1,
+  "status": "planned",
+  "does": "गाना या video चलाना",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

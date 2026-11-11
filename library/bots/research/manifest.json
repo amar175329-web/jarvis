@@ -1,0 +1,14 @@
+{
+  "id": "library.bots.research",
+  "name": "research",
+  "kind": "bot",
+  "group": "bots",
+  "owner_squad": "S14",
+  "phase": 2,
+  "status": "planned",
+  "does": "Research bot",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

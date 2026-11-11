@@ -1,0 +1,14 @@
+{
+  "id": "self.health",
+  "name": "health",
+  "kind": "self-part",
+  "group": "self",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "smoke tests के नतीजे, status.json इन्हीं से बदलता है",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

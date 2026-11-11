@@ -1,0 +1,19 @@
+{
+  "id": "features.core-workspace.notes-files",
+  "name": "notes-files",
+  "kind": "feature",
+  "group": "core-workspace",
+  "owner_squad": "S09",
+  "phase": 1,
+  "status": "planned",
+  "does": "Notes aur Files (tags, search, project se jodna)",
+  "uses": [
+    "packages.memory",
+    "memory.knowledge"
+  ],
+  "knows": [
+    "memory.graph"
+  ],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

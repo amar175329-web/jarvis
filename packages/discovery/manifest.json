@@ -1,0 +1,14 @@
+{
+  "id": "packages.discovery",
+  "name": "discovery",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "नई चीज़ ढूँढना: machine पर या नेट पर मिले agents, tools, MCP का draft manifest बनाना (सीधे live नहीं करता)",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

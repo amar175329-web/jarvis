@@ -1,0 +1,19 @@
+{
+  "id": "features.core-workspace.memory",
+  "name": "memory",
+  "kind": "feature",
+  "group": "core-workspace",
+  "owner_squad": "S09",
+  "phase": 1,
+  "status": "planned",
+  "does": "Memory screen: Amit apni memory dekhe, badle, mitaye, export kare, privacy chalaye (asli memory memory/ mein nahi, DB mein)",
+  "uses": [
+    "packages.memory"
+  ],
+  "knows": [
+    "memory.rules",
+    "memory.engine"
+  ],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

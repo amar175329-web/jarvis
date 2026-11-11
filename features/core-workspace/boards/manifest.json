@@ -1,0 +1,14 @@
+{
+  "id": "features.core-workspace.boards",
+  "name": "boards",
+  "kind": "feature",
+  "group": "core-workspace",
+  "owner_squad": "S10",
+  "phase": 2,
+  "status": "planned",
+  "does": "Boards",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

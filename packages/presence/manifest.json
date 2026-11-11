@@ -1,0 +1,14 @@
+{
+  "id": "packages.presence",
+  "name": "presence",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S17",
+  "phase": 3,
+  "status": "planned",
+  "does": "कौन सी जगह (web, phone, orb, TV) अभी चालू है: एक समय पर एक ही JARVIS",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

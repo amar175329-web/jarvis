@@ -1,0 +1,14 @@
+{
+  "id": "packages.db",
+  "name": "db",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "built",
+  "does": "Supabase schema/migrations, RLS, jobs and service-role-only atomic event rate limit plus kill-switch audit RPC",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.1.3"
+}

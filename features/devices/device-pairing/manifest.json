@@ -1,0 +1,14 @@
+{
+  "id": "features.devices.device-pairing",
+  "name": "device-pairing",
+  "kind": "feature",
+  "group": "devices",
+  "owner_squad": "S17",
+  "phase": 3,
+  "status": "planned",
+  "does": "Pairing",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

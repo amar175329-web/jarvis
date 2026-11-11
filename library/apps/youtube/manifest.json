@@ -1,0 +1,14 @@
+{
+  "id": "library.apps.youtube",
+  "name": "youtube",
+  "kind": "app",
+  "group": "apps",
+  "owner_squad": "S16B",
+  "phase": 1,
+  "status": "planned",
+  "does": "उदाहरण: पहले app, नहीं तो website",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

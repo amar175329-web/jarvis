@@ -1,0 +1,1111 @@
+{
+  "generated": "DO NOT EDIT. Run: npm run generate (packages/contracts)",
+  "errorStatus": {
+    "bad_request": 400,
+    "unauthorized": 401,
+    "forbidden": 403,
+    "not_found": 404,
+    "conflict": 409,
+    "payload_too_large": 413,
+    "kill_switch_on": 423,
+    "rate_limited": 429,
+    "internal": 500,
+    "unavailable": 503
+  },
+  "routes": [
+    {
+      "name": "auth.session.create",
+      "path": "/api/auth/session.create",
+      "method": "POST",
+      "auth": "none",
+      "summary": "Exchange an existing Supabase Auth token for the owner-only HttpOnly session. Passwords are not handled here.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "unauthorized",
+        "forbidden",
+        "unavailable"
+      ],
+      "request": "AuthSessionCreateRequest",
+      "response": "AuthSessionCreateResponse"
+    },
+    {
+      "name": "auth.session.get",
+      "path": "/api/auth/session.get",
+      "method": "GET",
+      "auth": "none",
+      "summary": "Read and refresh the owner session cookie.",
+      "killSensitive": false,
+      "errors": [
+        "unauthorized",
+        "forbidden",
+        "unavailable"
+      ],
+      "request": "AuthSessionGetRequest",
+      "response": "AuthSessionGetResponse"
+    },
+    {
+      "name": "auth.session.delete",
+      "path": "/api/auth/session.delete",
+      "method": "POST",
+      "auth": "none",
+      "summary": "Clear the owner session cookie and ask Supabase Auth to sign out.",
+      "killSensitive": false,
+      "errors": [
+        "unavailable"
+      ],
+      "request": "AuthSessionDeleteRequest",
+      "response": "AuthSessionDeleteResponse"
+    },
+    {
+      "name": "system.health",
+      "path": "/api/system/health",
+      "method": "GET",
+      "auth": "none",
+      "summary": "Real database query (keeps the free Supabase project awake). Returns nothing private.",
+      "killSensitive": false,
+      "errors": [
+        "unavailable"
+      ],
+      "request": "SystemHealthRequest",
+      "response": "SystemHealthResponse"
+    },
+    {
+      "name": "system.kill.get",
+      "path": "/api/system/kill.get",
+      "method": "GET",
+      "auth": "owner_or_device",
+      "summary": "Read the global kill switch.",
+      "killSensitive": false,
+      "errors": [],
+      "request": "SystemKillGetRequest",
+      "response": "SystemKillGetResponse"
+    },
+    {
+      "name": "system.kill.set",
+      "path": "/api/system/kill.set",
+      "method": "POST",
+      "auth": "owner_or_device",
+      "summary": "Turn the kill switch on or off. A device may only turn it ON; only the owner may turn it OFF.",
+      "killSensitive": false,
+      "errors": [
+        "forbidden"
+      ],
+      "request": "SystemKillSetRequest",
+      "response": "SystemKillSetResponse"
+    },
+    {
+      "name": "system.events.emit",
+      "path": "/api/system/events.emit",
+      "method": "POST",
+      "auth": "owner_or_device",
+      "summary": "Send one event. Same idempotency_key again returns the first one (duplicate: true).",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "payload_too_large",
+        "rate_limited"
+      ],
+      "request": "SystemEventsEmitRequest",
+      "response": "SystemEventsEmitResponse"
+    },
+    {
+      "name": "system.events.list",
+      "path": "/api/system/events.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Read stored events, newest first.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request"
+      ],
+      "request": "SystemEventsListRequest",
+      "response": "SystemEventsListResponse"
+    },
+    {
+      "name": "auth.devices.pair",
+      "path": "/api/auth/devices.pair",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Pair a new device. The token is shown ONCE; only its hash is stored.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request"
+      ],
+      "request": "AuthDevicesPairRequest",
+      "response": "AuthDevicesPairResponse"
+    },
+    {
+      "name": "auth.devices.list",
+      "path": "/api/auth/devices.list",
+      "method": "GET",
+      "auth": "owner",
+      "summary": "List paired devices (never returns tokens).",
+      "killSensitive": false,
+      "errors": [],
+      "request": "AuthDevicesListRequest",
+      "response": "AuthDevicesListResponse"
+    },
+    {
+      "name": "auth.devices.revoke",
+      "path": "/api/auth/devices.revoke",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Revoke a device. Its token stops working at once.",
+      "killSensitive": false,
+      "errors": [
+        "not_found"
+      ],
+      "request": "AuthDevicesRevokeRequest",
+      "response": "AuthDevicesRevokeResponse"
+    },
+    {
+      "name": "phone.commands.create",
+      "path": "/api/phone/commands.create",
+      "method": "POST",
+      "auth": "owner_or_device",
+      "summary": "Queue a command for a phone. Risky ops need confirmation first (S22 policy).",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "not_found",
+        "conflict",
+        "rate_limited"
+      ],
+      "request": "PhoneCommandsCreateRequest",
+      "response": "PhoneCommandsCreateResponse"
+    },
+    {
+      "name": "phone.commands.claim",
+      "path": "/api/phone/commands.claim",
+      "method": "POST",
+      "auth": "device",
+      "summary": "The phone asks for its next fresh command (state becomes sent). command: null = nothing to do.",
+      "killSensitive": true,
+      "errors": [],
+      "request": "PhoneCommandsClaimRequest",
+      "response": "PhoneCommandsClaimResponse"
+    },
+    {
+      "name": "phone.commands.ack",
+      "path": "/api/phone/commands.ack",
+      "method": "POST",
+      "auth": "device",
+      "summary": "The phone reports progress: running, done or failed.",
+      "killSensitive": false,
+      "errors": [
+        "not_found",
+        "conflict"
+      ],
+      "request": "PhoneCommandsAckRequest",
+      "response": "PhoneCommandsAckResponse"
+    },
+    {
+      "name": "phone.commands.cancel",
+      "path": "/api/phone/commands.cancel",
+      "method": "POST",
+      "auth": "owner_or_device",
+      "summary": "Cancel a command that has not finished.",
+      "killSensitive": false,
+      "errors": [
+        "not_found",
+        "conflict"
+      ],
+      "request": "PhoneCommandsCancelRequest",
+      "response": "PhoneCommandsCancelResponse"
+    },
+    {
+      "name": "phone.commands.list",
+      "path": "/api/phone/commands.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Recent commands, newest first.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request"
+      ],
+      "request": "PhoneCommandsListRequest",
+      "response": "PhoneCommandsListResponse"
+    },
+    {
+      "name": "voice.transcribe",
+      "path": "/api/voice/transcribe",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Transcribe an already-uploaded audio reference. Audio provider adapter is supplied later by S13/S07.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "not_found",
+        "unavailable"
+      ],
+      "request": "VoiceTranscribeRequest",
+      "response": "VoiceTranscribeResponse"
+    },
+    {
+      "name": "voice.speak",
+      "path": "/api/voice/speak",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Synthesize speech and return an audio reference. Audio provider adapter is supplied later by S13/S07.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "unavailable"
+      ],
+      "request": "VoiceSpeakRequest",
+      "response": "VoiceSpeakResponse"
+    }
+  ],
+  "definitions": {
+    "ApiErrorBody": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean",
+          "const": false
+        },
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "enum": [
+                "bad_request",
+                "unauthorized",
+                "forbidden",
+                "not_found",
+                "conflict",
+                "payload_too_large",
+                "kill_switch_on",
+                "rate_limited",
+                "internal",
+                "unavailable"
+              ]
+            },
+            "message": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "request_id": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "details": {}
+          },
+          "required": [
+            "code",
+            "message"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "ok",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "AuthDevicesListRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "AuthDevicesListResponse": {
+      "type": "object",
+      "properties": {
+        "devices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Device"
+          }
+        }
+      },
+      "required": [
+        "devices"
+      ],
+      "additionalProperties": false
+    },
+    "AuthDevicesPairRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "kind": {
+          "$ref": "#/definitions/DeviceKind"
+        }
+      },
+      "required": [
+        "name",
+        "kind"
+      ],
+      "additionalProperties": false
+    },
+    "AuthDevicesPairResponse": {
+      "type": "object",
+      "properties": {
+        "device": {
+          "$ref": "#/definitions/Device"
+        },
+        "token": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 200
+        }
+      },
+      "required": [
+        "device",
+        "token"
+      ],
+      "additionalProperties": false
+    },
+    "AuthDevicesRevokeRequest": {
+      "type": "object",
+      "properties": {
+        "device_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        }
+      },
+      "required": [
+        "device_id"
+      ],
+      "additionalProperties": false
+    },
+    "AuthDevicesRevokeResponse": {
+      "type": "object",
+      "properties": {
+        "device": {
+          "$ref": "#/definitions/Device"
+        }
+      },
+      "required": [
+        "device"
+      ],
+      "additionalProperties": false
+    },
+    "AuthSessionCreateRequest": {
+      "type": "object",
+      "properties": {
+        "access_token": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 4096
+        },
+        "refresh_token": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "access_token"
+      ],
+      "additionalProperties": false
+    },
+    "AuthSessionCreateResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            }
+          },
+          "required": [
+            "id",
+            "email"
+          ],
+          "additionalProperties": false
+        },
+        "expires_in": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "user",
+        "expires_in"
+      ],
+      "additionalProperties": false
+    },
+    "AuthSessionDeleteRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "AuthSessionDeleteResponse": {
+      "type": "object",
+      "properties": {
+        "signed_out": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "required": [
+        "signed_out"
+      ],
+      "additionalProperties": false
+    },
+    "AuthSessionGetRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "AuthSessionGetResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            }
+          },
+          "required": [
+            "id",
+            "email"
+          ],
+          "additionalProperties": false
+        },
+        "expires_in": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "user",
+        "expires_in"
+      ],
+      "additionalProperties": false
+    },
+    "Device": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "kind": {
+          "$ref": "#/definitions/DeviceKind"
+        },
+        "paired_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_seen": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        },
+        "revoked_at": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "paired_at"
+      ],
+      "additionalProperties": false
+    },
+    "DeviceKind": {
+      "type": "string",
+      "enum": [
+        "phone",
+        "tv",
+        "computer",
+        "agent",
+        "machine-agent"
+      ]
+    },
+    "Envelope": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "type": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(\\.[a-z0-9-]+)+$"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "ts": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "correlation_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "version": {
+          "type": "number",
+          "const": 1
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "source",
+        "ts",
+        "payload",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "KillState": {
+      "type": "object",
+      "properties": {
+        "kill": {
+          "type": "boolean"
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "changed_at": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        }
+      },
+      "required": [
+        "kill",
+        "epoch"
+      ],
+      "additionalProperties": false
+    },
+    "PhoneCommand": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "device_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "command": {
+          "$ref": "#/definitions/PhoneCommandBody"
+        },
+        "state": {
+          "$ref": "#/definitions/PhoneCommandState"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "kill_epoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "created_at": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        },
+        "expires_at": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        },
+        "claimed_at": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        },
+        "finished_at": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "error": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      },
+      "required": [
+        "id",
+        "device_id",
+        "command",
+        "state",
+        "kill_epoch",
+        "created_at",
+        "expires_at"
+      ],
+      "additionalProperties": false
+    },
+    "PhoneCommandBody": {
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false
+    },
+    "PhoneCommandsAckRequest": {
+      "type": "object",
+      "properties": {
+        "command_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "running",
+            "done",
+            "failed"
+          ]
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": {}
+        },
+        "error": {
+          "type": "string",
+          "maxLength": 1000
+        }
+      },
+      "required": [
+        "command_id",
+        "state"
+      ],
+      "additionalProperties": false
+    },
+    "PhoneCommandsAckResponse": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "$ref": "#/definitions/PhoneCommand"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "additionalProperties": false
+    },
+    "PhoneCommandsCancelRequest": {
+      "type": "object",
+      "properties": {
+        "command_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        }
+      },
+      "required": [
+        "command_id"
+      ],
+      "additionalProperties": false
+    },
+    "PhoneCommandsCancelResponse": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "$ref": "#/definitions/PhoneCommand"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "additionalProperties": false
+    },
+    "PhoneCommandsClaimRequest": {
+      "type": "object",
+      "properties": {
+        "device_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        }
+      },
+      "required": [
+        "device_id"
+      ],
+      "additionalProperties": false
+    },
+    "PhoneCommandsClaimResponse": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/PhoneCommand"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "additionalProperties": false
+    },
+    "PhoneCommandsCreateRequest": {
+      "type": "object",
+      "properties": {
+        "device_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "command": {
+          "$ref": "#/definitions/PhoneCommandBody"
+        },
+        "idempotency_key": {
+          "$ref": "#/definitions/PhoneCommand/properties/idempotency_key"
+        },
+        "ttl_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 3600
+        }
+      },
+      "required": [
+        "device_id",
+        "command"
+      ],
+      "additionalProperties": false
+    },
+    "PhoneCommandsCreateResponse": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "$ref": "#/definitions/PhoneCommand"
+        }
+      },
+      "required": [
+        "command"
+      ],
+      "additionalProperties": false
+    },
+    "PhoneCommandsListRequest": {
+      "type": "object",
+      "properties": {
+        "device_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "state": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 50
+        }
+      },
+      "additionalProperties": false
+    },
+    "PhoneCommandsListResponse": {
+      "type": "object",
+      "properties": {
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PhoneCommand"
+          }
+        }
+      },
+      "required": [
+        "commands"
+      ],
+      "additionalProperties": false
+    },
+    "PhoneCommandState": {
+      "type": "string",
+      "enum": [
+        "queued",
+        "sent",
+        "running",
+        "done",
+        "failed",
+        "cancelled",
+        "expired"
+      ]
+    },
+    "SystemEventsEmitRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Envelope/properties/id"
+        },
+        "type": {
+          "$ref": "#/definitions/Envelope/properties/type"
+        },
+        "source": {
+          "$ref": "#/definitions/Envelope/properties/source"
+        },
+        "ts": {
+          "$ref": "#/definitions/Envelope/properties/ts"
+        },
+        "payload": {
+          "$ref": "#/definitions/Envelope/properties/payload"
+        },
+        "correlation_id": {
+          "$ref": "#/definitions/Envelope/properties/correlation_id"
+        },
+        "version": {
+          "$ref": "#/definitions/Envelope/properties/version"
+        },
+        "idempotency_key": {
+          "$ref": "#/definitions/PhoneCommand/properties/idempotency_key"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "source",
+        "ts",
+        "payload",
+        "version",
+        "idempotency_key"
+      ],
+      "additionalProperties": false
+    },
+    "SystemEventsEmitResponse": {
+      "type": "object",
+      "properties": {
+        "event_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "duplicate": {
+          "type": "boolean"
+        },
+        "live": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "event_id",
+        "duplicate",
+        "live"
+      ],
+      "additionalProperties": false
+    },
+    "SystemEventsListRequest": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "before": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200,
+          "default": 50
+        }
+      },
+      "additionalProperties": false
+    },
+    "SystemEventsListResponse": {
+      "type": "object",
+      "properties": {
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Envelope"
+          }
+        }
+      },
+      "required": [
+        "events"
+      ],
+      "additionalProperties": false
+    },
+    "SystemHealthRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "SystemHealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "const": "ok"
+        },
+        "ts": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        }
+      },
+      "required": [
+        "status",
+        "ts"
+      ],
+      "additionalProperties": false
+    },
+    "SystemKillGetRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "SystemKillGetResponse": {
+      "$ref": "#/definitions/KillState"
+    },
+    "SystemKillSetRequest": {
+      "type": "object",
+      "properties": {
+        "kill": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "kill"
+      ],
+      "additionalProperties": false
+    },
+    "SystemKillSetResponse": {
+      "$ref": "#/definitions/KillState"
+    },
+    "VoiceSpeakRequest": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000
+        },
+        "language": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 35
+        },
+        "persona_mode": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "voice_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        }
+      },
+      "required": [
+        "session_id",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "VoiceSpeakResponse": {
+      "type": "object",
+      "properties": {
+        "audio_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "mime_type": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "audio_ref",
+        "mime_type"
+      ],
+      "additionalProperties": false
+    },
+    "VoiceTranscribeRequest": {
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "audio_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "mime_type": {
+          "type": "string",
+          "enum": [
+            "audio/webm",
+            "audio/wav",
+            "audio/mp4",
+            "audio/mpeg",
+            "audio/ogg"
+          ]
+        },
+        "language": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 35
+        }
+      },
+      "required": [
+        "session_id",
+        "audio_ref",
+        "mime_type"
+      ],
+      "additionalProperties": false
+    },
+    "VoiceTranscribeResponse": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 12000
+        },
+        "language": {
+          "type": "string",
+          "maxLength": 35
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

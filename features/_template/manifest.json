@@ -1,0 +1,14 @@
+{
+  "id": "REPLACE.with.path",
+  "name": "REPLACE",
+  "kind": "feature",
+  "group": "REPLACE",
+  "owner_squad": "UNASSIGNED",
+  "phase": 1,
+  "status": "planned",
+  "does": "REPLACE with one plain line",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

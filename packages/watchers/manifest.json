@@ -1,0 +1,14 @@
+{
+  "id": "packages.watchers",
+  "name": "watchers",
+  "kind": "package",
+  "owner_squad": "S22",
+  "phase": 2,
+  "status": "planned",
+  "autonomy_default": "L0",
+  "version": "0.0.1",
+  "group": "packages",
+  "does": "S22: watchers that make JARVIS speak first (proactivity triggers)",
+  "uses": [],
+  "knows": []
+}

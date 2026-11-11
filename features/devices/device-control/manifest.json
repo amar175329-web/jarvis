@@ -1,0 +1,14 @@
+{
+  "id": "features.devices.device-control",
+  "name": "device-control",
+  "kind": "feature",
+  "group": "devices",
+  "owner_squad": "S16A",
+  "phase": 1,
+  "status": "planned",
+  "does": "Android Phone, Smart TV, Computer का नियंत्रण",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

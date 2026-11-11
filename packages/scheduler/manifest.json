@@ -1,0 +1,14 @@
+{
+  "id": "packages.scheduler",
+  "name": "scheduler",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S12",
+  "phase": 2,
+  "status": "planned",
+  "does": "timed jobs: reminders, automations",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

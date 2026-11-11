@@ -1,0 +1,14 @@
+{
+  "id": "features.shell.sidebar-nav",
+  "name": "sidebar-nav",
+  "kind": "feature",
+  "group": "shell",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "Home, Chat, Today, Tasks, Memory, Insights, Boards, History, More",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

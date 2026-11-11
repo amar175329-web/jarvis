@@ -1,0 +1,14 @@
+{
+  "id": "library.recipes.message-compose",
+  "name": "message-compose",
+  "kind": "recipe",
+  "group": "recipes",
+  "owner_squad": "S16B",
+  "phase": 1,
+  "status": "planned",
+  "does": "call/SMS/WhatsApp का draft (भेजने से पहले confirm)",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

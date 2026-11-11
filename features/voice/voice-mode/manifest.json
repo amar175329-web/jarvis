@@ -1,0 +1,14 @@
+{
+  "id": "features.voice.voice-mode",
+  "name": "voice-mode",
+  "kind": "feature",
+  "group": "voice",
+  "owner_squad": "S21",
+  "phase": 1,
+  "status": "planned",
+  "does": "बोलकर बात (UI के Voice बटन से)",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

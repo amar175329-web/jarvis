@@ -1,0 +1,14 @@
+{
+  "id": "packages.terminal-hub",
+  "name": "terminal-hub",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "terminals का इंजन: खोलना, output पढ़ना, input भेजना, निगरानी",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

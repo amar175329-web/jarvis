@@ -1,0 +1,21 @@
+{
+  "id": "packages.memory",
+  "name": "memory",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S09",
+  "phase": 1,
+  "status": "built",
+  "does": "Memory ka code: store interface (Supabase pehle), rules/redaction, hybrid search, chat recall, export, size alarm",
+  "uses": [
+    "packages.db",
+    "packages.model-gateway",
+    "packages.events"
+  ],
+  "knows": [
+    "memory.rules",
+    "memory.engine"
+  ],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

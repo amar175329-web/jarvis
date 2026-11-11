@@ -1,0 +1,17 @@
+{
+  "id": "packages.harness",
+  "name": "harness",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S07",
+  "phase": 1,
+  "status": "built",
+  "does": "JARVIS runtime permissions enforcement (gate check before every power, safety kill state translation)",
+  "uses": [
+    "packages.brain",
+    "packages.safety"
+  ],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.1.0"
+}

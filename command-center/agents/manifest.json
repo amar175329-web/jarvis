@@ -1,0 +1,14 @@
+{
+  "id": "command-center.agents",
+  "name": "agents",
+  "kind": "ops-part",
+  "group": "command-center",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "हर agent की अपनी फ़ाइलें (नीचे देखो)",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "features.system.model-config",
+  "name": "model-config",
+  "kind": "feature",
+  "group": "system",
+  "owner_squad": "S13",
+  "phase": 2,
+  "status": "planned",
+  "does": "Model Configuration",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "self.truth-rules",
+  "name": "truth-rules",
+  "kind": "self-part",
+  "group": "self",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "जो registry में नहीं, वो \"पता नहीं / बना नहीं\" कहना। manifest खुद नहीं लिखना",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

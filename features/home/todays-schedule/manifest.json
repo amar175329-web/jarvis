@@ -1,0 +1,14 @@
+{
+  "id": "features.home.todays-schedule",
+  "name": "todays-schedule",
+  "kind": "feature",
+  "group": "home",
+  "owner_squad": "S02",
+  "phase": 1,
+  "status": "planned",
+  "does": "आज का schedule",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

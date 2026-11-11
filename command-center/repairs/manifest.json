@@ -1,0 +1,14 @@
+{
+  "id": "command-center.repairs",
+  "name": "repairs",
+  "kind": "ops-part",
+  "group": "command-center",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "कुछ टूटा (status = broken) तो ठीक करने का काम अपने-आप यहाँ बनता है",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

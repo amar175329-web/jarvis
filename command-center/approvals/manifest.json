@@ -1,0 +1,14 @@
+{
+  "id": "command-center.approvals",
+  "name": "approvals",
+  "kind": "feature",
+  "owner_squad": "S22",
+  "phase": 2,
+  "status": "planned",
+  "autonomy_default": "L0",
+  "version": "0.0.1",
+  "group": "command-center",
+  "does": "S22: approval requests (confirm before risky powers)",
+  "uses": [],
+  "knows": []
+}

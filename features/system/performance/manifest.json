@@ -1,0 +1,14 @@
+{
+  "id": "features.system.performance",
+  "name": "performance",
+  "kind": "feature",
+  "group": "system",
+  "owner_squad": "S19",
+  "phase": 3,
+  "status": "planned",
+  "does": "System Performance",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

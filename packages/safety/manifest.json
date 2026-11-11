@@ -1,0 +1,14 @@
+{
+  "id": "packages.safety",
+  "name": "safety",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "built",
+  "does": "Fail-closed kill-switch read/write policy; owner may turn OFF, paired device may only turn ON",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

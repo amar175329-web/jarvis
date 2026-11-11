@@ -1,0 +1,19 @@
+{
+  "id": "api.system",
+  "name": "system API",
+  "kind": "ops-part",
+  "group": "api",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "built",
+  "does": "Owner/device-authenticated kill-switch and event endpoints with fail-closed safety, idempotent database writes and service-side rate limiting",
+  "uses": [
+    "api.auth",
+    "packages.events",
+    "packages.safety",
+    "packages.db"
+  ],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

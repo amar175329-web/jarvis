@@ -1,0 +1,14 @@
+{
+  "id": "features.shell.settings",
+  "name": "settings",
+  "kind": "feature",
+  "group": "shell",
+  "owner_squad": "S13",
+  "phase": 2,
+  "status": "planned",
+  "does": "Settings page",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "features.home.news",
+  "name": "news",
+  "kind": "feature",
+  "group": "home",
+  "owner_squad": "S06",
+  "phase": 1,
+  "status": "planned",
+  "does": "Indrani news का card",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

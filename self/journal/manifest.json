@@ -1,0 +1,14 @@
+{
+  "id": "self.journal",
+  "name": "journal",
+  "kind": "self-part",
+  "group": "self",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "गलतियों और सीखों की डायरी",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

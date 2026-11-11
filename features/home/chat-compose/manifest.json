@@ -1,0 +1,14 @@
+{
+  "id": "features.home.chat-compose",
+  "name": "chat-compose",
+  "kind": "feature",
+  "group": "home",
+  "owner_squad": "S07",
+  "phase": 1,
+  "status": "planned",
+  "does": "Talk to Jarvis: टाइप, voice, attach",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

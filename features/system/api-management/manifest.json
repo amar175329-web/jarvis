@@ -1,0 +1,14 @@
+{
+  "id": "features.system.api-management",
+  "name": "api-management",
+  "kind": "feature",
+  "group": "system",
+  "owner_squad": "S11",
+  "phase": 2,
+  "status": "planned",
+  "does": "API keys",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

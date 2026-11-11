@@ -1,0 +1,14 @@
+{
+  "id": "features.bots.bots-workspace",
+  "name": "bots-workspace",
+  "kind": "feature",
+  "group": "bots",
+  "owner_squad": "S14",
+  "phase": 2,
+  "status": "planned",
+  "does": "सब bots का केंद्र, + Add Bot",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "self.proposals",
+  "name": "proposals",
+  "kind": "self-part",
+  "group": "self",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "JARVIS कुछ बदलना चाहे तो सिर्फ सुझाव यहाँ, मंज़ूरी के बाद ही असर",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

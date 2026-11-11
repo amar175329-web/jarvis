@@ -1,0 +1,14 @@
+{
+  "id": "packages.mcp-server",
+  "name": "mcp-server",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S11",
+  "phase": 2,
+  "status": "planned",
+  "does": "JARVIS का अपना MCP दरवाज़ा (self.describe सहित)",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

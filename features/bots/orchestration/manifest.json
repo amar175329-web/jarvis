@@ -1,0 +1,14 @@
+{
+  "id": "features.bots.orchestration",
+  "name": "orchestration",
+  "kind": "feature",
+  "group": "bots",
+  "owner_squad": "S14",
+  "phase": 2,
+  "status": "planned",
+  "does": "Multi-Agent Orchestration का view",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

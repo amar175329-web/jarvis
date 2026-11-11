@@ -1,0 +1,1 @@
+{ "name": "@jarvis/locale", "private": true, "type": "module", "scripts": { "test": "node --test tests/locale.test.ts" } }

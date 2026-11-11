@@ -1,0 +1,14 @@
+{
+  "id": "features.home.recent-activity",
+  "name": "recent-activity",
+  "kind": "feature",
+  "group": "home",
+  "owner_squad": "S05",
+  "phase": 1,
+  "status": "planned",
+  "does": "हाल का काम",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

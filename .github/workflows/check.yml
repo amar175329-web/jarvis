@@ -1,0 +1,39 @@
+name: check
+on:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --experimental-strip-types
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22.18', cache: 'npm', cache-dependency-path: '**/package-lock.json' }
+      - name: Install locked dependencies
+        run: |
+          npm ci --prefix packages/contracts
+          npm ci --prefix packages/events
+          npm ci --prefix packages/db
+          npm ci --prefix worker/jobs
+          npm ci --prefix app
+      - name: Build app for browser behavior tests
+        run: npm run build --prefix app
+      - name: Folder-First and type-safe repository checks
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npm run check -- --base origin/${{ github.base_ref }}
+          else
+            npm run check
+          fi
+      - name: Registry is up to date
+        run: npm run register && git diff --exit-code self/registry
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run all package, worker, API and app tests
+        run: npm run test:all

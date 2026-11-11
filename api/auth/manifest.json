@@ -1,0 +1,14 @@
+{
+  "id": "api.auth",
+  "name": "auth API",
+  "kind": "ops-part",
+  "group": "api",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "built",
+  "does": "Owner-only Supabase Auth session bridge using secure HttpOnly cookies; no password login or credential storage",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

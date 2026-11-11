@@ -1,0 +1,14 @@
+{
+  "id": "command-center.reviews",
+  "name": "reviews",
+  "kind": "ops-part",
+  "group": "command-center",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "काम \"पूरा\" मानने से पहले JARVIS की जाँच (tests)",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

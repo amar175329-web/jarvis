@@ -1,0 +1,14 @@
+{
+  "id": "features.home.today-focus",
+  "name": "today-focus",
+  "kind": "feature",
+  "group": "home",
+  "owner_squad": "S01",
+  "phase": 1,
+  "status": "planned",
+  "does": "आज के 3 tasks",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

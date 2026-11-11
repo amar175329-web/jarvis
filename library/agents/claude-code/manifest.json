@@ -1,0 +1,14 @@
+{
+  "id": "library.agents.claude-code",
+  "name": "claude-code",
+  "kind": "agent",
+  "group": "agents",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "CLI adapter",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

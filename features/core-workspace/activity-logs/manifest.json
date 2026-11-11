@@ -1,0 +1,14 @@
+{
+  "id": "features.core-workspace.activity-logs",
+  "name": "activity-logs",
+  "kind": "feature",
+  "group": "core-workspace",
+  "owner_squad": "S05",
+  "phase": 1,
+  "status": "planned",
+  "does": "Activity Logs",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

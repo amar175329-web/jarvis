@@ -1,0 +1,14 @@
+{
+  "id": "features.browser.web-navigation",
+  "name": "web-navigation",
+  "kind": "feature",
+  "group": "browser",
+  "owner_squad": "S15",
+  "phase": 2,
+  "status": "planned",
+  "does": "साइटों पर चलना",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

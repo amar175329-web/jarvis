@@ -1,0 +1,14 @@
+{
+  "id": "library.agents.chatgpt",
+  "name": "chatgpt",
+  "kind": "agent",
+  "group": "agents",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "ChatGPT adapter",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

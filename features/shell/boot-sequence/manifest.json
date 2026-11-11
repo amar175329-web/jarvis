@@ -1,0 +1,14 @@
+{
+  "id": "features.shell.boot-sequence",
+  "name": "boot-sequence",
+  "kind": "feature",
+  "group": "shell",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "शुरुआती INITIALIZING CORE स्क्रीन",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

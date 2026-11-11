@@ -1,0 +1,14 @@
+{
+  "id": "packages.realtime",
+  "name": "realtime",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "events को UI और phone तक पहुँचाना",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

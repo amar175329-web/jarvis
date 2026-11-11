@@ -1,0 +1,14 @@
+{
+  "id": "library.tools.phone",
+  "name": "phone",
+  "kind": "tool",
+  "group": "tools",
+  "owner_squad": "S16A",
+  "phase": 1,
+  "status": "planned",
+  "does": "phone control",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L1",
+  "version": "0.0.1"
+}

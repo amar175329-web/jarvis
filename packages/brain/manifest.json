@@ -1,0 +1,19 @@
+{
+  "id": "packages.brain",
+  "name": "brain",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S22",
+  "phase": 1,
+  "status": "built",
+  "does": "S22 policy: thinking loop, depth router, power registry, L0-L4 gate, confirmation wording",
+  "uses": [
+    "packages.safety",
+    "packages.db"
+  ],
+  "knows": [
+    "packages.events"
+  ],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

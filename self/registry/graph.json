@@ -1,0 +1,1087 @@
+{
+  "api.auth": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "api.system"
+    ]
+  },
+  "api.system": {
+    "uses": [
+      "api.auth",
+      "packages.events",
+      "packages.safety",
+      "packages.db"
+    ],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.agents": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.agents.antigravity": {
+    "uses": [
+      "library.agents.antigravity"
+    ],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.agents.antigravity-sdk": {
+    "uses": [
+      "library.agents.antigravity-sdk"
+    ],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.agents.chatgpt": {
+    "uses": [
+      "library.agents.chatgpt"
+    ],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.agents.claude": {
+    "uses": [
+      "library.agents.claude"
+    ],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.agents.claude-code": {
+    "uses": [
+      "library.agents.claude-code"
+    ],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.agents.codex": {
+    "uses": [
+      "library.agents.codex"
+    ],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.agents.gemini": {
+    "uses": [
+      "library.agents.gemini"
+    ],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.agents.hermes": {
+    "uses": [
+      "library.agents.hermes"
+    ],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.agents.opencode": {
+    "uses": [
+      "library.agents.opencode"
+    ],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.approvals": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.policies": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.repairs": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.reviews": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.rules": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.runs": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.tasks": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "command-center.terminals": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.bots.bots-workspace": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.bots.orchestration": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.browser.browser-history": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.browser.cloud-browser": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.browser.downloads": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.browser.form-filling": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.browser.page-reading": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.browser.product-comparison": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.browser.saved-sessions": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.browser.tab-management": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.browser.web-navigation": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.core-workspace.activity-logs": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.core-workspace.boards": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.core-workspace.history": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.core-workspace.insights": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.core-workspace.knowledge-base": {
+    "uses": [
+      "packages.memory",
+      "memory.knowledge"
+    ],
+    "knows": [
+      "memory.graph"
+    ],
+    "used_by": []
+  },
+  "features.core-workspace.memory": {
+    "uses": [
+      "packages.memory"
+    ],
+    "knows": [
+      "memory.rules",
+      "memory.engine"
+    ],
+    "used_by": []
+  },
+  "features.core-workspace.notes-files": {
+    "uses": [
+      "packages.memory",
+      "memory.knowledge"
+    ],
+    "knows": [
+      "memory.graph"
+    ],
+    "used_by": []
+  },
+  "features.core-workspace.projects": {
+    "uses": [
+      "packages.memory",
+      "memory.projects"
+    ],
+    "knows": [
+      "memory.graph"
+    ],
+    "used_by": []
+  },
+  "features.core-workspace.reminders": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.core-workspace.task-manager": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.customize.automations": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.customize.calendar": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.customize.connectors": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.customize.model-providers": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.customize.plugins": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.customize.preferences": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.customize.skills": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.customize.themes-skins": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.customize.url-discover": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.devices.app-launcher": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.devices.connected-devices": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.devices.device-control": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.devices.device-pairing": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.devices.device-permissions": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.devices.smooth-jarvis": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.home.chat-compose": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.home.jarvis-insight": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.home.live-activity": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.home.news": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.home.quick-access": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.home.recent-activity": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.home.today-focus": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.home.todays-schedule": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.shell.boot-sequence": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.shell.connect": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.shell.global-search": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.shell.notifications": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.shell.power-off": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.shell.profile-status": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.shell.settings": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.shell.sidebar-nav": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.system.api-management": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.system.automation-logs": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.system.background-tasks": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.system.backup-restore": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.system.connected-accounts": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.system.data-export": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.system.diagnostics": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.system.model-config": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.system.performance": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.system.safety-center": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.system.security-privacy": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.system.usage-cost": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.voice.voice-mode": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.workbench.agent-workspaces": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.workbench.agents-hub": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.workbench.coding-tasks": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.workbench.file-project-ops": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "features.workbench.prompt-handoff": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.agents.antigravity": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "command-center.agents.antigravity"
+    ]
+  },
+  "library.agents.antigravity-sdk": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "command-center.agents.antigravity-sdk"
+    ]
+  },
+  "library.agents.chatgpt": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "command-center.agents.chatgpt"
+    ]
+  },
+  "library.agents.claude": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "command-center.agents.claude"
+    ]
+  },
+  "library.agents.claude-code": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "command-center.agents.claude-code"
+    ]
+  },
+  "library.agents.codex": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "command-center.agents.codex"
+    ]
+  },
+  "library.agents.gemini": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "command-center.agents.gemini"
+    ]
+  },
+  "library.agents.hermes": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "command-center.agents.hermes"
+    ]
+  },
+  "library.agents.opencode": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "command-center.agents.opencode"
+    ]
+  },
+  "library.apps.free-fire": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.apps.play-store": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.apps.spotify": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.apps.youtube": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.bots.coding": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.bots.custom": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.bots.email-inbox": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.bots.personal-assistant": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.bots.research": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.bots.search": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.bots.shopping": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.bots.social-media": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.recipes.message-compose": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.recipes.open-app": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.recipes.play-media": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.recipes.search-in-app": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.recipes.youtube-control": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.tools.browser": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.tools.files": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.tools.phone": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.tools.shell": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "library.tools.web-search": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "memory.engine": {
+    "uses": [
+      "packages.memory",
+      "packages.db",
+      "packages.model-gateway",
+      "packages.events"
+    ],
+    "knows": [
+      "packages.brain",
+      "packages.safety"
+    ],
+    "used_by": [
+      "features.core-workspace.memory",
+      "packages.memory"
+    ]
+  },
+  "memory.episodes": {
+    "uses": [
+      "packages.memory"
+    ],
+    "knows": [
+      "memory.rules"
+    ],
+    "used_by": []
+  },
+  "memory.facts": {
+    "uses": [
+      "packages.memory"
+    ],
+    "knows": [
+      "memory.rules"
+    ],
+    "used_by": []
+  },
+  "memory.graph": {
+    "uses": [
+      "packages.memory"
+    ],
+    "knows": [
+      "memory.rules"
+    ],
+    "used_by": [
+      "features.core-workspace.knowledge-base",
+      "features.core-workspace.notes-files",
+      "features.core-workspace.projects"
+    ]
+  },
+  "memory.knowledge": {
+    "uses": [
+      "packages.memory"
+    ],
+    "knows": [
+      "memory.rules"
+    ],
+    "used_by": [
+      "features.core-workspace.knowledge-base",
+      "features.core-workspace.notes-files"
+    ]
+  },
+  "memory.people": {
+    "uses": [
+      "packages.memory"
+    ],
+    "knows": [
+      "memory.rules"
+    ],
+    "used_by": []
+  },
+  "memory.preferences": {
+    "uses": [
+      "packages.memory"
+    ],
+    "knows": [
+      "memory.rules"
+    ],
+    "used_by": []
+  },
+  "memory.profile": {
+    "uses": [
+      "packages.memory"
+    ],
+    "knows": [
+      "memory.rules"
+    ],
+    "used_by": []
+  },
+  "memory.projects": {
+    "uses": [
+      "packages.memory"
+    ],
+    "knows": [
+      "memory.rules"
+    ],
+    "used_by": [
+      "features.core-workspace.projects"
+    ]
+  },
+  "memory.routines": {
+    "uses": [
+      "packages.memory"
+    ],
+    "knows": [
+      "memory.rules"
+    ],
+    "used_by": []
+  },
+  "memory.rules": {
+    "uses": [
+      "packages.memory"
+    ],
+    "knows": [
+      "self.identity",
+      "packages.brain"
+    ],
+    "used_by": [
+      "features.core-workspace.memory",
+      "memory.episodes",
+      "memory.facts",
+      "memory.graph",
+      "memory.knowledge",
+      "memory.people",
+      "memory.preferences",
+      "memory.profile",
+      "memory.projects",
+      "memory.routines",
+      "packages.memory",
+      "self.identity"
+    ]
+  },
+  "packages.brain": {
+    "uses": [
+      "packages.safety",
+      "packages.db"
+    ],
+    "knows": [
+      "packages.events"
+    ],
+    "used_by": [
+      "memory.engine",
+      "memory.rules",
+      "packages.harness",
+      "packages.voice",
+      "self.identity"
+    ]
+  },
+  "packages.contracts": {
+    "uses": [
+      "packages.events",
+      "packages.shared"
+    ],
+    "knows": [],
+    "used_by": [
+      "packages.logging"
+    ]
+  },
+  "packages.db": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "api.system",
+      "memory.engine",
+      "packages.brain",
+      "packages.events",
+      "packages.memory",
+      "worker.jobs"
+    ]
+  },
+  "packages.discovery": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "packages.events": {
+    "uses": [
+      "packages.db",
+      "packages.shared"
+    ],
+    "knows": [],
+    "used_by": [
+      "api.system",
+      "memory.engine",
+      "packages.brain",
+      "packages.contracts",
+      "packages.memory",
+      "packages.voice"
+    ]
+  },
+  "packages.harness": {
+    "uses": [
+      "packages.brain",
+      "packages.safety"
+    ],
+    "knows": [],
+    "used_by": []
+  },
+  "packages.kinds": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "packages.locale": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "packages.model-gateway",
+      "packages.voice",
+      "self.identity"
+    ]
+  },
+  "packages.logging": {
+    "uses": [
+      "packages.shared",
+      "packages.contracts"
+    ],
+    "knows": [],
+    "used_by": [
+      "packages.model-gateway",
+      "worker.jobs"
+    ]
+  },
+  "packages.mcp-server": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "packages.memory": {
+    "uses": [
+      "packages.db",
+      "packages.model-gateway",
+      "packages.events"
+    ],
+    "knows": [
+      "memory.rules",
+      "memory.engine"
+    ],
+    "used_by": [
+      "features.core-workspace.knowledge-base",
+      "features.core-workspace.memory",
+      "features.core-workspace.notes-files",
+      "features.core-workspace.projects",
+      "memory.engine",
+      "memory.episodes",
+      "memory.facts",
+      "memory.graph",
+      "memory.knowledge",
+      "memory.people",
+      "memory.preferences",
+      "memory.profile",
+      "memory.projects",
+      "memory.routines",
+      "memory.rules"
+    ]
+  },
+  "packages.model-gateway": {
+    "uses": [
+      "packages.shared",
+      "packages.logging",
+      "packages.locale"
+    ],
+    "knows": [],
+    "used_by": [
+      "memory.engine",
+      "packages.memory",
+      "packages.voice"
+    ]
+  },
+  "packages.models": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "packages.presence": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "packages.realtime": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "packages.registry-builder": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "packages.safety": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "api.system",
+      "memory.engine",
+      "packages.brain",
+      "packages.harness",
+      "packages.voice"
+    ]
+  },
+  "packages.scheduler": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "packages.shared": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "packages.contracts",
+      "packages.events",
+      "packages.logging",
+      "packages.model-gateway",
+      "worker.jobs"
+    ]
+  },
+  "packages.terminal-hub": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "packages.vault": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "packages.voice"
+    ]
+  },
+  "packages.voice": {
+    "uses": [
+      "packages.locale",
+      "packages.model-gateway",
+      "packages.events"
+    ],
+    "knows": [
+      "self.identity",
+      "packages.brain",
+      "packages.safety",
+      "packages.vault"
+    ],
+    "used_by": [
+      "self.identity"
+    ]
+  },
+  "packages.watchers": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "self.health": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "self.identity": {
+    "uses": [
+      "packages.locale"
+    ],
+    "knows": [
+      "packages.brain",
+      "packages.voice",
+      "memory.rules",
+      "self.truth-rules"
+    ],
+    "used_by": [
+      "memory.rules",
+      "packages.voice"
+    ]
+  },
+  "self.journal": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "self.ledger": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "self.live-state": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "self.proposals": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "self.registry": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "self.truth-rules": {
+    "uses": [],
+    "knows": [],
+    "used_by": [
+      "self.identity"
+    ]
+  },
+  "worker.gateway": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  },
+  "worker.jobs": {
+    "uses": [
+      "packages.shared",
+      "packages.logging",
+      "packages.db"
+    ],
+    "knows": [],
+    "used_by": []
+  },
+  "worker.machine-agent": {
+    "uses": [],
+    "knows": [],
+    "used_by": []
+  }
+}

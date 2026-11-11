@@ -1,0 +1,21 @@
+{
+  "id": "self.identity",
+  "name": "identity",
+  "kind": "self-part",
+  "group": "self",
+  "owner_squad": "S21",
+  "phase": 1,
+  "status": "planned",
+  "does": "मैं कौन हूँ: JARVIS का स्वभाव, बोलने का ढंग, भाषा, और याददाश्त का व्यवहार (persona.md = system prompt)",
+  "uses": [
+    "packages.locale"
+  ],
+  "knows": [
+    "packages.brain",
+    "packages.voice",
+    "memory.rules",
+    "self.truth-rules"
+  ],
+  "autonomy_default": "L0",
+  "version": "0.1.4"
+}

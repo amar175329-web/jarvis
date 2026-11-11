@@ -1,0 +1,14 @@
+{
+  "id": "features.workbench.prompt-handoff",
+  "name": "prompt-handoff",
+  "kind": "feature",
+  "group": "workbench",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "एक agent से दूसरे को काम",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

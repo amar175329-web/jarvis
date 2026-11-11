@@ -1,0 +1,14 @@
+{
+  "id": "command-center.terminals",
+  "name": "terminals",
+  "kind": "ops-part",
+  "group": "command-center",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "सारे चालू terminals: कहाँ, कौन, क्या चल रहा। JARVIS खोल, देख, input दे, बंद कर सकता है",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

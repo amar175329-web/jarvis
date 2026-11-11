@@ -1,0 +1,14 @@
+{
+  "id": "command-center.tasks",
+  "name": "tasks",
+  "kind": "ops-part",
+  "group": "command-center",
+  "owner_squad": "S18",
+  "phase": 3,
+  "status": "planned",
+  "does": "सब agents के काम एक board पर: दिया → चल रहा → जाँच → पूरा",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

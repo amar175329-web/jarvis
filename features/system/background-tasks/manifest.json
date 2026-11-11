@@ -1,0 +1,14 @@
+{
+  "id": "features.system.background-tasks",
+  "name": "background-tasks",
+  "kind": "feature",
+  "group": "system",
+  "owner_squad": "S12",
+  "phase": 2,
+  "status": "planned",
+  "does": "Background tasks",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

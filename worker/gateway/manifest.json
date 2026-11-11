@@ -1,0 +1,14 @@
+{
+  "id": "worker.gateway",
+  "name": "gateway",
+  "kind": "worker-part",
+  "group": "worker",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "planned",
+  "does": "realtime और voice के connections",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

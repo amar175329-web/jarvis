@@ -1,0 +1,14 @@
+{
+  "id": "features.shell.profile-status",
+  "name": "profile-status",
+  "kind": "feature",
+  "group": "shell",
+  "owner_squad": "S17",
+  "phase": 3,
+  "status": "planned",
+  "does": "तुम्हारा card और Phone Connected की हालत",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

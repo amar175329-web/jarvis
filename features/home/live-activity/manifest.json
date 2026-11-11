@@ -1,0 +1,14 @@
+{
+  "id": "features.home.live-activity",
+  "name": "live-activity",
+  "kind": "feature",
+  "group": "home",
+  "owner_squad": "S03",
+  "phase": 1,
+  "status": "planned",
+  "does": "JARVIS अभी क्या कर रहा है",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

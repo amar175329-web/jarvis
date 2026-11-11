@@ -1,0 +1,14 @@
+{
+  "id": "features.core-workspace.reminders",
+  "name": "reminders",
+  "kind": "feature",
+  "group": "core-workspace",
+  "owner_squad": "S08",
+  "phase": 1,
+  "status": "planned",
+  "does": "Reminders",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

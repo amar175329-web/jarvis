@@ -1,0 +1,22 @@
+{
+  "id": "memory.engine",
+  "name": "engine",
+  "kind": "memory-category",
+  "group": "memory",
+  "owner_squad": "S09",
+  "phase": 1,
+  "status": "planned",
+  "does": "ingest, recall, bhoolna, redaction, embeddings (MemoryStore ke peeche; code packages/memory)",
+  "uses": [
+    "packages.memory",
+    "packages.db",
+    "packages.model-gateway",
+    "packages.events"
+  ],
+  "knows": [
+    "packages.brain",
+    "packages.safety"
+  ],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

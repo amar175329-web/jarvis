@@ -1,0 +1,14 @@
+{
+  "id": "features.core-workspace.insights",
+  "name": "insights",
+  "kind": "feature",
+  "group": "core-workspace",
+  "owner_squad": "S10",
+  "phase": 2,
+  "status": "planned",
+  "does": "Insights",
+  "uses": [],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.0.1"
+}

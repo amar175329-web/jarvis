@@ -1,0 +1,998 @@
+{
+  "api.auth": {
+    "status": "built",
+    "what_it_is": "Server-side Supabase Auth session bridge and one-owner guard. It accepts a token already issued by Supabase Auth; it does not receive or store passwords.",
+    "can_do": "- `POST /api/auth/session.create`: verifies the access token with Supabase Auth, requires exact configured `OWNER_EMAIL`, then sets a Secure, HttpOnly, SameSite=Lax cookie.\n- `GET /api/auth/session.get`: validates the owner cookie, refreshes an expired session when a refresh token is present, and rotates the cookie.\n- `POST /api/auth/session.delete`: revokes the remote session when possible and always clears the local cookie.\n- Rejects invalid/non-owner identities, cross-origin session creation, malformed/oversized body and incomplete configuration; tokens never appear in JSON responses or logs.",
+    "limits": "- Password login, signup UI, password reset, OAuth UI and password storage are intentionally not implemented. Supabase Auth owns credential handling.\n- Signup remains enabled by Amit's accepted decision; `OWNER_EMAIL` still restricts JARVIS API access to one owner identity.\n- Session cookies require HTTPS because they are Secure. There is no separate server-side session table."
+  },
+  "api.system": {
+    "status": "built",
+    "what_it_is": "Server-side system endpoints for owner/device identity, kill-switch control and durable event intake/history.",
+    "can_do": "- `GET /api/system/kill.get` returns the current state to the owner or a paired device. Missing/unreadable/malformed state returns 503 with all actions treated as blocked.\n- `POST /api/system/kill.set` writes state and an activity audit atomically via `set_system_kill`; a device can only set `kill=true`, owner alone can set false.\n- Auth accepts the owner HttpOnly session or a paired device Bearer token; device token is pepper-hashed and looked up server-side. Service-role credentials never go to app/phone.\n- `POST /api/system/events.emit` validates registered event schemas, requires `idempotency_key`, forces device source on server, checks a database-backed 60/minute owner limit, and persists duplicates idempotently.\n- `POST /api/system/events.list` is owner-only and returns bounded, filtered event history.",
+    "limits": "- It does not execute phone commands or turn the kill switch OFF from a device.\n- Migration `0005_event_rate_limits.sql` is a new local migration draft and must be applied by Antigravity to the real project before event intake/rate limiting and atomic kill audit work in production.\n- The events table remains outside Realtime publication; `realtime=true` is only metadata for event classification. Realtime stays on `phone_commands`, `system_state`, `tasks`, `reminders`.\n- Android secure token storage and native kill UI remain the Android squad's client-side responsibility."
+  },
+  "command-center.agents": {
+    "status": "planned",
+    "what_it_is": "हर agent की अपनी फ़ाइलें (नीचे देखो)",
+    "can_do": "- (planned) हर agent की अपनी फ़ाइलें (नीचे देखो)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.agents.antigravity": {
+    "status": "planned",
+    "what_it_is": "Work office for antigravity: what was handed over, what it did, what we learned.",
+    "can_do": "- (planned) Keep the work log, inbox/outbox and lessons for this agent (folders are created when real work arrives)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.agents.antigravity-sdk": {
+    "status": "planned",
+    "what_it_is": "Work office for antigravity-sdk: what was handed over, what it did, what we learned.",
+    "can_do": "- (planned) Keep the work log, inbox/outbox and lessons for this agent (folders are created when real work arrives)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.agents.chatgpt": {
+    "status": "planned",
+    "what_it_is": "Work office for chatgpt: what was handed over, what it did, what we learned.",
+    "can_do": "- (planned) Keep the work log, inbox/outbox and lessons for this agent (folders are created when real work arrives)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.agents.claude": {
+    "status": "planned",
+    "what_it_is": "Work office for claude: what was handed over, what it did, what we learned.",
+    "can_do": "- (planned) Keep the work log, inbox/outbox and lessons for this agent (folders are created when real work arrives)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.agents.claude-code": {
+    "status": "planned",
+    "what_it_is": "Work office for claude-code: what was handed over, what it did, what we learned.",
+    "can_do": "- (planned) Keep the work log, inbox/outbox and lessons for this agent (folders are created when real work arrives)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.agents.codex": {
+    "status": "planned",
+    "what_it_is": "Work office for codex: what was handed over, what it did, what we learned.",
+    "can_do": "- (planned) Keep the work log, inbox/outbox and lessons for this agent (folders are created when real work arrives)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.agents.gemini": {
+    "status": "planned",
+    "what_it_is": "Work office for gemini: what was handed over, what it did, what we learned.",
+    "can_do": "- (planned) Keep the work log, inbox/outbox and lessons for this agent (folders are created when real work arrives)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.agents.hermes": {
+    "status": "planned",
+    "what_it_is": "Work office for hermes: what was handed over, what it did, what we learned.",
+    "can_do": "- (planned) Keep the work log, inbox/outbox and lessons for this agent (folders are created when real work arrives)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.agents.opencode": {
+    "status": "planned",
+    "what_it_is": "Work office for opencode: what was handed over, what it did, what we learned.",
+    "can_do": "- (planned) Keep the work log, inbox/outbox and lessons for this agent (folders are created when real work arrives)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.approvals": {
+    "status": "planned (folder created first, per Folder-First rule; no code yet)\nOWNER: S22 BRAIN (policy). Enforcement = harness/permissions. Kill switch + audit = safety/.",
+    "what_it_is": "Approvals: the place where \"karun?\" requests wait for Amit's yes (voice/tap). Policy: S22_POLICY.md.",
+    "can_do": "Nothing yet (planned). Will follow the L0-L4 rules in S22_POLICY.md.",
+    "limits": "Nothing here runs yet. Never changes the kill switch from here without S19/safety."
+  },
+  "command-center.policies": {
+    "status": "planned",
+    "what_it_is": "कौन सा agent किस folder में क्या कर सकता है, कब पूछना है",
+    "can_do": "- (planned) कौन सा agent किस folder में क्या कर सकता है, कब पूछना है",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.repairs": {
+    "status": "planned",
+    "what_it_is": "कुछ टूटा (status = broken) तो ठीक करने का काम अपने-आप यहाँ बनता है",
+    "can_do": "- (planned) कुछ टूटा (status = broken) तो ठीक करने का काम अपने-आप यहाँ बनता है",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.reviews": {
+    "status": "planned",
+    "what_it_is": "काम \"पूरा\" मानने से पहले JARVIS की जाँच (tests)",
+    "can_do": "- (planned) काम \"पूरा\" मानने से पहले JARVIS की जाँच (tests)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.rules": {
+    "status": "planned",
+    "what_it_is": "सबके लिए नियम-किताब (AGENTS.md, CLAUDE.md, GEMINI.md यहीं से बनती हैं)",
+    "can_do": "- (planned) सबके लिए नियम-किताब (AGENTS.md, CLAUDE.md, GEMINI.md यहीं से बनती हैं)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.runs": {
+    "status": "planned",
+    "what_it_is": "हर चलाई गई चीज़: command, नतीजा, exit code, बदलाव (diff), ख़र्च",
+    "can_do": "- (planned) हर चलाई गई चीज़: command, नतीजा, exit code, बदलाव (diff), ख़र्च",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.tasks": {
+    "status": "planned",
+    "what_it_is": "सब agents के काम एक board पर: दिया → चल रहा → जाँच → पूरा",
+    "can_do": "- (planned) सब agents के काम एक board पर: दिया → चल रहा → जाँच → पूरा",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "command-center.terminals": {
+    "status": "planned",
+    "what_it_is": "सारे चालू terminals: कहाँ, कौन, क्या चल रहा। JARVIS खोल, देख, input दे, बंद कर सकता है",
+    "can_do": "- (planned) सारे चालू terminals: कहाँ, कौन, क्या चल रहा। JARVIS खोल, देख, input दे, बंद कर सकता है",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.bots.bots-workspace": {
+    "status": "planned",
+    "what_it_is": "सब bots का केंद्र, + Add Bot",
+    "can_do": "- (planned) सब bots का केंद्र, + Add Bot",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.bots.orchestration": {
+    "status": "planned",
+    "what_it_is": "Multi-Agent Orchestration का view",
+    "can_do": "- (planned) Multi-Agent Orchestration का view",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.browser.browser-history": {
+    "status": "planned",
+    "what_it_is": "Browser history",
+    "can_do": "- (planned) Browser history",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.browser.cloud-browser": {
+    "status": "planned",
+    "what_it_is": "JARVIS का अपना browser",
+    "can_do": "- (planned) JARVIS का अपना browser",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.browser.downloads": {
+    "status": "planned",
+    "what_it_is": "Downloads",
+    "can_do": "- (planned) Downloads",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.browser.form-filling": {
+    "status": "planned",
+    "what_it_is": "Forms भरना",
+    "can_do": "- (planned) Forms भरना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.browser.page-reading": {
+    "status": "planned",
+    "what_it_is": "Page पढ़ना",
+    "can_do": "- (planned) Page पढ़ना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.browser.product-comparison": {
+    "status": "planned",
+    "what_it_is": "Products की तुलना",
+    "can_do": "- (planned) Products की तुलना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.browser.saved-sessions": {
+    "status": "planned",
+    "what_it_is": "Saved sessions",
+    "can_do": "- (planned) Saved sessions",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.browser.tab-management": {
+    "status": "planned",
+    "what_it_is": "Tabs",
+    "can_do": "- (planned) Tabs",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.browser.web-navigation": {
+    "status": "planned",
+    "what_it_is": "साइटों पर चलना",
+    "can_do": "- (planned) साइटों पर चलना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.core-workspace.activity-logs": {
+    "status": "planned",
+    "what_it_is": "Activity Logs",
+    "can_do": "- (planned) Activity Logs",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.core-workspace.boards": {
+    "status": "planned",
+    "what_it_is": "Boards",
+    "can_do": "- (planned) Boards",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.core-workspace.history": {
+    "status": "planned",
+    "what_it_is": "पुरानी chats और activity",
+    "can_do": "- (planned) पुरानी chats और activity",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.core-workspace.insights": {
+    "status": "planned",
+    "what_it_is": "Insights",
+    "can_do": "- (planned) Insights",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.core-workspace.knowledge-base": {
+    "status": "planned",
+    "what_it_is": "Personal Knowledge Base: Amit ka apna \"Second Brain\". Notes aur files ek jagah, search se milte hain.",
+    "can_do": "- (planned) Capture: note/clip/file jodna. Organize: PARA (Projects, Areas, Resources, Archive) jaise tags. Distill: chhota saaransh. Express: chat mein jawab ke saath source dikhana.\n- (planned) Search: shabd + (agar Amit ne haan kaha) semantic.\n- (planned) Obsidian export baad mein (sirf plan: packages/memory/docs/OBSIDIAN_EXPORT_PLAN.md).",
+    "limits": "- Abhi kuch bana nahi hai.\n- Folder-vault sync, Obsidian plugin, web clipper v1 mein nahi.\n- Poora note kisi bahari service ko nahi jaata."
+  },
+  "features.core-workspace.memory": {
+    "status": "planned",
+    "what_it_is": "Memory screen: Amit dekhta hai JARVIS ne kya yaad rakha, kyun (why), kahan se (source), aur sab control uske haath mein.",
+    "can_do": "- (planned) Category ke hisaab se list; private wali alag; \"kyun yaad hai?\" har row par.\n- (planned) Edit (revision check), delete (confirm), \"sab bhool jao\" (2 kadam + app tap), export (JSON).\n- (planned) Size meter: kitni yaadein, kitne MB, aur 400 MB / 30k par banner.",
+    "limits": "- Abhi kuch bana nahi hai.\n- UI approved look se alag nahi banega: wahi cards, tokens, icons. Naya design nahi.\n- Voice se \"sab bhool jao\" nahi: app par tap chahiye."
+  },
+  "features.core-workspace.notes-files": {
+    "status": "planned",
+    "what_it_is": "Notes aur Files: likho, tag lagao, dhoondo, project se jodo.",
+    "can_do": "- (planned) Notes: markdown, tags, pin, archive, project se link, shabd-search.\n- (planned) Files: private Storage bucket mein, metadata `files` table mein, size/type allow-list, naam badal kar rakhna, kabhi execute nahi.\n- (planned) Delete = row + Storage object + pointer row.",
+    "limits": "- Abhi kuch bana nahi hai.\n- Note body max 100 KB, file max 10 MB (free tier 1 GB Storage), type allow-list: txt, md, pdf, png, jpg, csv, docx.\n- File ke andar likha hukm data hai."
+  },
+  "features.core-workspace.projects": {
+    "status": "planned",
+    "what_it_is": "Projects: Amit ke kaam, unka goal, status, agla kadam, aur judi hui cheezein.",
+    "can_do": "- (planned) Project: naam, goal, status (active/paused/done/archived), agla kadam, due_at, tags.\n- (planned) Links: notes, files, tasks (task table nahi badalti; `memory_links` se jodte hain).\n- (planned) Project ka chhota saaransh memory/projects mein aata hai.",
+    "limits": "- Abhi kuch bana nahi hai.\n- Tasks ka asli data S08 ka (task-manager); yahan sirf link.\n- Gantt/board nahi (boards S10)."
+  },
+  "features.core-workspace.reminders": {
+    "status": "planned",
+    "what_it_is": "Reminders",
+    "can_do": "- (planned) Reminders",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.core-workspace.task-manager": {
+    "status": "planned",
+    "what_it_is": "Task Manager",
+    "can_do": "- (planned) Task Manager",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.customize.automations": {
+    "status": "planned",
+    "what_it_is": "Automations screen",
+    "can_do": "- (planned) Automations screen",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.customize.calendar": {
+    "status": "planned",
+    "what_it_is": "Calendar & Scheduling",
+    "can_do": "- (planned) Calendar & Scheduling",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.customize.connectors": {
+    "status": "planned",
+    "what_it_is": "Connectors & Integrations screen",
+    "can_do": "- (planned) Connectors & Integrations screen",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.customize.model-providers": {
+    "status": "planned",
+    "what_it_is": "AI Model Providers",
+    "can_do": "- (planned) AI Model Providers",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.customize.plugins": {
+    "status": "planned",
+    "what_it_is": "Plugins screen",
+    "can_do": "- (planned) Plugins screen",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.customize.preferences": {
+    "status": "planned",
+    "what_it_is": "Preferences",
+    "can_do": "- (planned) Preferences",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.customize.skills": {
+    "status": "planned",
+    "what_it_is": "Skills screen",
+    "can_do": "- (planned) Skills screen",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.customize.themes-skins": {
+    "status": "planned",
+    "what_it_is": "Themes & Skins",
+    "can_do": "- (planned) Themes & Skins",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.customize.url-discover": {
+    "status": "planned",
+    "what_it_is": "URL Discover",
+    "can_do": "- (planned) URL Discover",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.devices.app-launcher": {
+    "status": "planned",
+    "what_it_is": "App Launcher",
+    "can_do": "- (planned) App Launcher",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.devices.connected-devices": {
+    "status": "planned",
+    "what_it_is": "जुड़े devices",
+    "can_do": "- (planned) जुड़े devices",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.devices.device-control": {
+    "status": "planned",
+    "what_it_is": "Android Phone, Smart TV, Computer का नियंत्रण",
+    "can_do": "- (planned) Android Phone, Smart TV, Computer का नियंत्रण",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.devices.device-pairing": {
+    "status": "planned",
+    "what_it_is": "Pairing",
+    "can_do": "- (planned) Pairing",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.devices.device-permissions": {
+    "status": "planned",
+    "what_it_is": "Permissions",
+    "can_do": "- (planned) Permissions",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.devices.smooth-jarvis": {
+    "status": "planned",
+    "what_it_is": "Smooth Jarvis: Android पर तैरता overlay (S17)",
+    "can_do": "- (planned) Smooth Jarvis: Android पर तैरता overlay (S17)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.home.chat-compose": {
+    "status": "planned",
+    "what_it_is": "Talk to Jarvis: टाइप, voice, attach",
+    "can_do": "- (planned) Talk to Jarvis: टाइप, voice, attach",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.home.jarvis-insight": {
+    "status": "planned",
+    "what_it_is": "आदतों से सुझाव",
+    "can_do": "- (planned) आदतों से सुझाव",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.home.live-activity": {
+    "status": "planned",
+    "what_it_is": "JARVIS अभी क्या कर रहा है",
+    "can_do": "- (planned) JARVIS अभी क्या कर रहा है",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.home.news": {
+    "status": "planned",
+    "what_it_is": "Indrani news का card",
+    "can_do": "- (planned) Indrani news का card",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.home.quick-access": {
+    "status": "planned",
+    "what_it_is": "YouTube, Browser, Projects, Claude, ChatGPT, Gemini, Instagram shortcuts",
+    "can_do": "- (planned) YouTube, Browser, Projects, Claude, ChatGPT, Gemini, Instagram shortcuts",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.home.recent-activity": {
+    "status": "planned",
+    "what_it_is": "हाल का काम",
+    "can_do": "- (planned) हाल का काम",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.home.today-focus": {
+    "status": "planned",
+    "what_it_is": "आज के 3 tasks",
+    "can_do": "- (planned) आज के 3 tasks",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.home.todays-schedule": {
+    "status": "planned",
+    "what_it_is": "आज का schedule",
+    "can_do": "- (planned) आज का schedule",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.shell.boot-sequence": {
+    "status": "planned",
+    "what_it_is": "शुरुआती INITIALIZING CORE स्क्रीन",
+    "can_do": "- (planned) शुरुआती INITIALIZING CORE स्क्रीन",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.shell.connect": {
+    "status": "planned",
+    "what_it_is": "Connect devices बटन",
+    "can_do": "- (planned) Connect devices बटन",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.shell.global-search": {
+    "status": "planned",
+    "what_it_is": "Search anything / Search features",
+    "can_do": "- (planned) Search anything / Search features",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.shell.notifications": {
+    "status": "planned",
+    "what_it_is": "घंटी",
+    "can_do": "- (planned) घंटी",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.shell.power-off": {
+    "status": "planned (folder created first, per Folder-First rule; no code yet)\nOWNER: S22 BRAIN (policy). Enforcement = harness/permissions. Kill switch + audit = safety/.",
+    "what_it_is": "Power-off: the shell button that turns JARVIS off (kill switch). Policy: S22_POLICY.md; kill switch itself lives in safety/.",
+    "can_do": "Nothing yet (planned). Will follow the L0-L4 rules in S22_POLICY.md.",
+    "limits": "Nothing here runs yet. Never changes the kill switch from here without S19/safety."
+  },
+  "features.shell.profile-status": {
+    "status": "planned",
+    "what_it_is": "तुम्हारा card और Phone Connected की हालत",
+    "can_do": "- (planned) तुम्हारा card और Phone Connected की हालत",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.shell.settings": {
+    "status": "planned",
+    "what_it_is": "Settings page",
+    "can_do": "- (planned) Settings page",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.shell.sidebar-nav": {
+    "status": "planned",
+    "what_it_is": "Home, Chat, Today, Tasks, Memory, Insights, Boards, History, More",
+    "can_do": "- (planned) Home, Chat, Today, Tasks, Memory, Insights, Boards, History, More",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.system.api-management": {
+    "status": "planned",
+    "what_it_is": "API keys",
+    "can_do": "- (planned) API keys",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.system.automation-logs": {
+    "status": "planned",
+    "what_it_is": "Automation Logs",
+    "can_do": "- (planned) Automation Logs",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.system.background-tasks": {
+    "status": "planned",
+    "what_it_is": "Background tasks",
+    "can_do": "- (planned) Background tasks",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.system.backup-restore": {
+    "status": "planned",
+    "what_it_is": "Backup & Restore",
+    "can_do": "- (planned) Backup & Restore",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.system.connected-accounts": {
+    "status": "planned",
+    "what_it_is": "Accounts",
+    "can_do": "- (planned) Accounts",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.system.data-export": {
+    "status": "planned",
+    "what_it_is": "Data Export",
+    "can_do": "- (planned) Data Export",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.system.diagnostics": {
+    "status": "planned",
+    "what_it_is": "System Diagnostics",
+    "can_do": "- (planned) System Diagnostics",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.system.model-config": {
+    "status": "planned",
+    "what_it_is": "Model Configuration",
+    "can_do": "- (planned) Model Configuration",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.system.performance": {
+    "status": "planned",
+    "what_it_is": "System Performance",
+    "can_do": "- (planned) System Performance",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.system.safety-center": {
+    "status": "planned (folder created first, per Folder-First rule; no code yet)\nOWNER: S22 BRAIN (policy). Enforcement = harness/permissions. Kill switch + audit = safety/.",
+    "what_it_is": "Safety center: screen to see kill state, power levels and the audit log. Policy: S22_POLICY.md.",
+    "can_do": "Nothing yet (planned). Will follow the L0-L4 rules in S22_POLICY.md.",
+    "limits": "Nothing here runs yet. Never changes the kill switch from here without S19/safety."
+  },
+  "features.system.security-privacy": {
+    "status": "planned",
+    "what_it_is": "Security & Privacy",
+    "can_do": "- (planned) Security & Privacy",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.system.usage-cost": {
+    "status": "planned",
+    "what_it_is": "कौन सा model कितना चला और ख़र्च",
+    "can_do": "- (planned) कौन सा model कितना चला और ख़र्च",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.voice.voice-mode": {
+    "status": "planned",
+    "what_it_is": "बोलकर बात (UI के Voice बटन से)",
+    "can_do": "- (planned) बोलकर बात (UI के Voice बटन से)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.workbench.agent-workspaces": {
+    "status": "planned",
+    "what_it_is": "हर agent का कार्यक्षेत्र",
+    "can_do": "- (planned) हर agent का कार्यक्षेत्र",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.workbench.agents-hub": {
+    "status": "planned",
+    "what_it_is": "सब agents की सूची, हालत, चुनाव",
+    "can_do": "- (planned) सब agents की सूची, हालत, चुनाव",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.workbench.coding-tasks": {
+    "status": "planned",
+    "what_it_is": "Coding tasks",
+    "can_do": "- (planned) Coding tasks",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.workbench.file-project-ops": {
+    "status": "planned",
+    "what_it_is": "File और Project operations",
+    "can_do": "- (planned) File और Project operations",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "features.workbench.prompt-handoff": {
+    "status": "planned",
+    "what_it_is": "एक agent से दूसरे को काम",
+    "can_do": "- (planned) एक agent से दूसरे को काम",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.agents.antigravity": {
+    "status": "planned",
+    "what_it_is": "IDE/app adapter",
+    "can_do": "- (planned) IDE/app adapter",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.agents.antigravity-sdk": {
+    "status": "planned",
+    "what_it_is": "SDK adapter",
+    "can_do": "- (planned) SDK adapter",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.agents.chatgpt": {
+    "status": "planned",
+    "what_it_is": "ChatGPT adapter",
+    "can_do": "- (planned) ChatGPT adapter",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.agents.claude": {
+    "status": "planned",
+    "what_it_is": "Claude adapter",
+    "can_do": "- (planned) Claude adapter",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.agents.claude-code": {
+    "status": "planned",
+    "what_it_is": "CLI adapter",
+    "can_do": "- (planned) CLI adapter",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.agents.codex": {
+    "status": "planned",
+    "what_it_is": "Codex adapter",
+    "can_do": "- (planned) Codex adapter",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.agents.gemini": {
+    "status": "planned",
+    "what_it_is": "Gemini adapter",
+    "can_do": "- (planned) Gemini adapter",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.agents.hermes": {
+    "status": "planned",
+    "what_it_is": "Hermes adapter",
+    "can_do": "- (planned) Hermes adapter",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.agents.opencode": {
+    "status": "planned",
+    "what_it_is": "OpenCode adapter",
+    "can_do": "- (planned) OpenCode adapter",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.apps.free-fire": {
+    "status": "planned",
+    "what_it_is": "उदाहरण: पहले app, नहीं तो Play Store (web पर खेल नहीं सकते)",
+    "can_do": "- (planned) उदाहरण: पहले app, नहीं तो Play Store (web पर खेल नहीं सकते)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.apps.play-store": {
+    "status": "planned",
+    "what_it_is": "apps install के लिए",
+    "can_do": "- (planned) apps install के लिए",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.apps.spotify": {
+    "status": "planned",
+    "what_it_is": "उदाहरण: app खोलना, गाना चलाना",
+    "can_do": "- (planned) उदाहरण: app खोलना, गाना चलाना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.apps.youtube": {
+    "status": "planned",
+    "what_it_is": "उदाहरण: पहले app, नहीं तो website",
+    "can_do": "- (planned) उदाहरण: पहले app, नहीं तो website",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.bots.coding": {
+    "status": "planned",
+    "what_it_is": "Coding bot",
+    "can_do": "- (planned) Coding bot",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.bots.custom": {
+    "status": "planned",
+    "what_it_is": "तुम्हारे बनाए bots",
+    "can_do": "- (planned) तुम्हारे बनाए bots",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.bots.email-inbox": {
+    "status": "planned",
+    "what_it_is": "Email / Inbox bot",
+    "can_do": "- (planned) Email / Inbox bot",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.bots.personal-assistant": {
+    "status": "planned",
+    "what_it_is": "Personal Assistant bot",
+    "can_do": "- (planned) Personal Assistant bot",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.bots.research": {
+    "status": "planned",
+    "what_it_is": "Research bot",
+    "can_do": "- (planned) Research bot",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.bots.search": {
+    "status": "planned",
+    "what_it_is": "Search bot",
+    "can_do": "- (planned) Search bot",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.bots.shopping": {
+    "status": "planned",
+    "what_it_is": "Shopping bot",
+    "can_do": "- (planned) Shopping bot",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.bots.social-media": {
+    "status": "planned",
+    "what_it_is": "Social Media bot",
+    "can_do": "- (planned) Social Media bot",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.recipes.message-compose": {
+    "status": "planned",
+    "what_it_is": "call/SMS/WhatsApp का draft (भेजने से पहले confirm)",
+    "can_do": "- (planned) call/SMS/WhatsApp का draft (भेजने से पहले confirm)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.recipes.open-app": {
+    "status": "planned",
+    "what_it_is": "app खोलो: installed? → app, नहीं → fallback",
+    "can_do": "- (planned) app खोलो: installed? → app, नहीं → fallback",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.recipes.play-media": {
+    "status": "planned",
+    "what_it_is": "गाना या video चलाना",
+    "can_do": "- (planned) गाना या video चलाना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.recipes.search-in-app": {
+    "status": "planned",
+    "what_it_is": "app के अंदर ढूँढना",
+    "can_do": "- (planned) app के अंदर ढूँढना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.recipes.youtube-control": {
+    "status": "planned",
+    "what_it_is": "play, pause, next, like, subscribe (confirm के साथ)",
+    "can_do": "- (planned) play, pause, next, like, subscribe (confirm के साथ)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.tools.browser": {
+    "status": "planned",
+    "what_it_is": "browser चलाना",
+    "can_do": "- (planned) browser चलाना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.tools.files": {
+    "status": "planned",
+    "what_it_is": "फ़ाइल पढ़ना/लिखना",
+    "can_do": "- (planned) फ़ाइल पढ़ना/लिखना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.tools.phone": {
+    "status": "planned",
+    "what_it_is": "phone control",
+    "can_do": "- (planned) phone control",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.tools.shell": {
+    "status": "planned",
+    "what_it_is": "terminal command चलाना",
+    "can_do": "- (planned) terminal command चलाना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "library.tools.web-search": {
+    "status": "planned",
+    "what_it_is": "search और news",
+    "can_do": "- (planned) search और news",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "memory.engine": {
+    "status": "planned",
+    "what_it_is": "Memory ka engine: likhna (ingest), dhoondhna (recall), badalna, bhoolna, redaction, embeddings. Code ghar: packages/memory. Ye folder sirf pehchaan aur KNOWLEDGE ke liye.",
+    "can_do": "- (planned) Ek hi MemoryStore interface ke peeche sab: create/get/update/list/search/forget/export/stats. Pehla ghar Supabase, baad mein Neon ya Turso.\n- (planned) Hybrid search: shabd (tokens) + vector (768-dim) + taaza-pan + bharosa. Vector na ho (kill/budget/key/off) to sirf shabd, jawab phir bhi aata hai.\n- (planned) Chat ke liye recall(): chhota \"card\" (hamesha) + sawaal ke hisaab se yaadein, character budget ke andar.\n- (planned) Size nigrani: 400 MB, ~30k yaadein, ya search dheema = REPORT/banner mein \"ab bada store jodo\".",
+    "limits": "- Abhi kuch bana nahi hai: sab neeche likha design hai (status planned).\n- Koi bahari memory service (Honcho/mem0 cloud) nahi. Data sirf Amit ke Supabase mein.\n- Model gateway mein abhi embed() nahi hai: CONTRACT REQUEST. Tab tak vector search band, shabd search chalta."
+  },
+  "memory.episodes": {
+    "status": "planned",
+    "what_it_is": "Kaam ke episodes: kya hua, kab, kaise nipta. Chhote saaransh, kachchi baatchit nahi.",
+    "can_do": "- (planned) `memories` table ki kind = episode. Kya hua, kab, kaise nipta (chhote saaransh, poori baatchit nahi).\n- (planned) Retention: 365 din, phir saaransh ya delete (size ke hisaab se).\n- (planned) Privacy: private=haan agar kisi doosre ki nazuk baat ho; poori baatchit store nahi.",
+    "limits": "- Abhi kuch bana nahi hai: sab neeche likha design hai (status planned).\n- Asli data sirf Supabase (table `memories`) mein, git mein kabhi nahi (decision 006).\n- NEVER list (memory/rules) yahan bhi lagu: secrets, OTP, card/bank, ID numbers, paise ke ank, sehat, abuse, minor, self-harm."
+  },
+  "memory.facts": {
+    "status": "planned",
+    "what_it_is": "Pakki baatein aur Amit ke liye hue faisle, har ek ke saath source aur bharosa.",
+    "can_do": "- (planned) `memories` table ki kind = fact. Pakki baatein aur faisle (Supabase use karenge); har ek ke saath source aur bharosa.\n- (planned) Retention: kabhi nahi; \"ek baar ki zaroorat\" = 14 din; andaza (inferred) 90 din jab tak dobara confirm na ho.\n- (planned) Privacy: private=haan sirf jab Amit kahe ya baat nijee ho.",
+    "limits": "- Abhi kuch bana nahi hai: sab neeche likha design hai (status planned).\n- Asli data sirf Supabase (table `memories`) mein, git mein kabhi nahi (decision 006).\n- NEVER list (memory/rules) yahan bhi lagu: secrets, OTP, card/bank, ID numbers, paise ke ank, sehat, abuse, minor, self-harm."
+  },
+  "memory.graph": {
+    "status": "planned",
+    "what_it_is": "Memory Graph: yaadon, notes, files, projects, tasks aur logon ko jodne wale rishte (links).",
+    "can_do": "- (planned) Table `memory_links` (src, rel, dst) se: person-works_on-project, note-about-project, derived_from (saaransh kis se bana).\n- (planned) Bhoolte waqt derived_from wale saaransh bhi mit jaate hain.\n- (planned) Graph screen ke liye 1-2 kadam ke padosi nikalna (limit ke saath).",
+    "limits": "- Abhi kuch bana nahi hai: sab neeche likha design hai (status planned).\n- Alag graph database nahi (decision 001: ek hi Postgres). Gehri graph-search (3+ kadam) v1 mein nahi."
+  },
+  "memory.knowledge": {
+    "status": "planned",
+    "what_it_is": "Notes, files aur personal knowledge base ka pointer wala hissa: har note/file ka ek chhota memory row (title, saaransh, tags, vector) taaki ek hi search mein mile. Poora note `notes` table mein, file Storage mein.",
+    "can_do": "- (planned) kind=knowledge rows jinke ref_type/ref_id notes/files/projects ko point karte hain.\n- (planned) Ek vector per note (title + saaransh), poora text sirf shabd-search se. Chunk-level vector tab jab bada store aaye.\n- (planned) Second Brain ke 4 kadam: Capture, Organize, Distill, Express (features/knowledge-base).",
+    "limits": "- Abhi kuch bana nahi hai: sab neeche likha design hai (status planned).\n- Asli data sirf Supabase (table `memories`) mein, git mein kabhi nahi (decision 006).\n- Web/email/screen/file ka text \"hukm\" nahi: sirf data. Amit khud save kare tabhi note banta hai."
+  },
+  "memory.people": {
+    "status": "planned",
+    "what_it_is": "Parivar, dost, contacts: naam, rishta, kaam, janmdin. Doosron ki nazuk baatein nahi.",
+    "can_do": "- (planned) `memories` table ki kind = person. Naam, rishta, kaam, janmdin. Doosron ki nazuk jaankari nahi.\n- (planned) Retention: kabhi nahi mitti; contact phone/address private=haan.\n- (planned) Privacy: phone number, address, email = private=haan, chat model ko tabhi jaate hain jab Amit us baat ke liye maange. Minor ki jaankari kabhi nahi.",
+    "limits": "- Abhi kuch bana nahi hai: sab neeche likha design hai (status planned).\n- Asli data sirf Supabase (table `memories`) mein, git mein kabhi nahi (decision 006).\n- NEVER list (memory/rules) yahan bhi lagu: secrets, OTP, card/bank, ID numbers, paise ke ank, sehat, abuse, minor, self-harm."
+  },
+  "memory.preferences": {
+    "status": "planned",
+    "what_it_is": "Pasand-napasand aur chhote niyam. Sudhaar sabse upar: save karo aur usi chat mein lagu karo.",
+    "can_do": "- (planned) `memories` table ki kind = preference. Pasand-napasand aur Amit ke sudhaar (\"aise mat bolo\").\n- (planned) Retention: kabhi nahi mitti; 12 mahine se na chhui ho to halke se poochho.\n- (planned) Privacy: private=nahi, jab tak kisi aur ki nazuk baat na ho.",
+    "limits": "- Abhi kuch bana nahi hai: sab neeche likha design hai (status planned).\n- Asli data sirf Supabase (table `memories`) mein, git mein kabhi nahi (decision 006).\n- NEVER list (memory/rules) yahan bhi lagu: secrets, OTP, card/bank, ID numbers, paise ke ank, sehat, abuse, minor, self-harm."
+  },
+  "memory.profile": {
+    "status": "planned",
+    "what_it_is": "Tum kaun ho: naam, bhasha, kaam, bolne ka dhang. Chhota \"card\" jo har chat mein jaata hai.",
+    "can_do": "- (planned) `memories` table ki kind = profile. Amit kaun hai: bulane ka naam (Boss), bhasha, kaam, bolne ka dhang.\n- (planned) Retention: kabhi khud nahi mitti; saal mein ek baar \"ab bhi sahi hai?\" jaanch.\n- (planned) Privacy: private=nahi (card chat model ko jaata hai); koi sensitive baat yahan nahi aati.",
+    "limits": "- Abhi kuch bana nahi hai: sab neeche likha design hai (status planned).\n- Asli data sirf Supabase (table `memories`) mein, git mein kabhi nahi (decision 006).\n- NEVER list (memory/rules) yahan bhi lagu: secrets, OTP, card/bank, ID numbers, paise ke ank, sehat, abuse, minor, self-harm."
+  },
+  "memory.projects": {
+    "status": "planned",
+    "what_it_is": "Tumhare projects aur kahan tak pahunche. Yahan chhota saaransh; poori detail `projects` table mein.",
+    "can_do": "- (planned) `memories` table ki kind = project. Amit ke projects aur kahan tak pahunche (pointer; poora kaam features/projects mein).\n- (planned) Retention: project khatam hone ke 180 din baad saaransh archive.\n- (planned) Privacy: private=nahi.",
+    "limits": "- Abhi kuch bana nahi hai: sab neeche likha design hai (status planned).\n- Asli data sirf Supabase (table `memories`) mein, git mein kabhi nahi (decision 006).\n- NEVER list (memory/rules) yahan bhi lagu: secrets, OTP, card/bank, ID numbers, paise ke ank, sehat, abuse, minor, self-harm."
+  },
+  "memory.routines": {
+    "status": "planned",
+    "what_it_is": "Roz ki dincharya aur baar-baar aane wali tarikhen. Paise ka ank nahi, sirf tarikh.",
+    "can_do": "- (planned) `memories` table ki kind = routine. Roz ki aadatein aur zaroori tarikhen (bill ki tarikh, janmdin).\n- (planned) Retention: 180 din se purani routine par \"ab bhi?\" poochho; tarikh wali yaad tarikh ke 30 din baad mitti.\n- (planned) Privacy: private=nahi.",
+    "limits": "- Abhi kuch bana nahi hai: sab neeche likha design hai (status planned).\n- Asli data sirf Supabase (table `memories`) mein, git mein kabhi nahi (decision 006).\n- NEVER list (memory/rules) yahan bhi lagu: secrets, OTP, card/bank, ID numbers, paise ke ank, sehat, abuse, minor, self-harm."
+  },
+  "memory.rules": {
+    "status": "planned",
+    "what_it_is": "Yaad rakhne ke niyam: kya yaad rakhna, kab poochna, kya KABHI store nahi karna, kitne din, aur privacy. Final text: self/identity/memory-behaviour.md. Code: packages/memory (rules.ts, redact.ts, classify.ts, policy.ts).",
+    "can_do": "- (planned) Har naya yaad candidate 4 raston mein se ek par bhejna: save+bata, pehle pooch, refuse (kabhi nahi), ya skip.\n- (planned) NEVER list lagu karna, \"haan\" kehne par bhi: secret/password/key/token, OTP/CVV/card/bank/UPI PIN, ID numbers (Aadhaar/PAN/passport), paise ke ank, sehat, abuse, minor ki jaankari, self-harm, injected hukm.\n- (planned) Har yaad ke saath source, why, private, expires_at, confidence tay karna.\n- (planned) Self-harm ya abuse dikhe to save nahi, par S07/S21 ko `care` signal dena taaki JARVIS naram jawab de.",
+    "limits": "- Abhi kuch bana nahi hai: sab neeche likha design hai (status planned).\n- Regex aur shabd-soochi sab nahi pakad sakti (Hindi/Hinglish ki spelling alag-alag hoti hai): isliye Amit delete/export/edit hamesha kar sakta hai aur hafte mein ek purani yaadon ka scan chalega.\n- Niyam badalna = naya version + nayi dated line; purani line mitai nahi jaati."
+  },
+  "packages.brain": {
+    "status": "built (bundles 1 and 2 done; 65 tests; not wired to DB/model yet)",
+    "what_it_is": "S22 policy for how JARVIS thinks and uses powers. It decides; it does not execute. Enforcement = harness/permissions. Kill switch + audit = safety/.",
+    "can_do": "- levels.ts: L0-L4 only. (L0 observe, L1 suggest, L2 act after confirm, L3 act then tell, L4 silent safe+reversible)\n- power-registry.ts: validates powers (same rules as DB: id pattern, current<=max, dangerous<=L2, L4 only reversible). newPlugPower() makes a safe new power starting at L0.\n- gate.ts: the one gate. Kill ON/unreadable => deny. Unknown power => deny. Otherwise returns mode (observe/suggest/ask_confirm/act_then_tell/act_silent).\n- depth-router.ts: FAST / NORMAL / DEEP by rules (no model call), with tunable budgets.\n- confirm-wording.ts: wording per level; voice yes only \"हाँ / कर दो / भेज दो\"; silence never yes; money/health/password confirm by phone voice; money/health/password/vault = voice yes, then owner fingerprint.\n- owner-credential.ts: owner fingerprint policy (enrol once in owner login, never deleted, extra ones need owner verify).\n- loop.ts: the standard loop with ports; web/screen/message text is data and never starts an action; kill re-checked just before acting.",
+    "limits": "- Does not run any power itself. Does not read the kill switch itself (safety/ does; brain only receives the state).\n- Planner, uncertainty, proactivity, explainability, contracts and 20+ QA scenarios are bundle 2 (not built).\n- Depth budgets are starting values, to tune with S07/S13.\n- A new squad MUST call gate() before acting; brain cannot force it. Harness/permissions enforces."
+  },
+  "packages.contracts": {
+    "status": "built",
+    "what_it_is": "API contracts: route paths, methods, auth requirements, request/response Zod schemas, error codes and generated Kotlin/JSON Schema.",
+    "can_do": "- Contracts include core system/auth/phone routes, three owner session routes (`auth.session.create|get|delete`) and the approved S21 `/api/voice/transcribe` and `/api/voice/speak` endpoints.\n- `system.events.emit` requires `idempotency_key`; event envelope schema stays shared with `packages/events`.\n- Voice routes carry an uploaded audio reference or text metadata; raw audio bytes are not part of JSON contract. Both are kill-sensitive.\n- Kotlin types and `contracts/generated/routes.json` are produced by `npm run generate`; tests check paths, schemas, error format, route coverage and critical generated fields. Generator execution remains part of the normal npm test once dependencies are installed.",
+    "limits": "- These are contracts only; voice route implementations and audio-provider adapter are not part of this bundle. S21 owns voice runtime on its branch; S13/S07 supply later model adapters.\n- Kotlin output is generated but needs the Android project to compile it.\n- Password login is not part of the auth contract; current session bridge accepts a Supabase-issued token only."
+  },
+  "packages.db": {
+    "status": "built",
+    "what_it_is": "Supabase (Postgres + Auth + Realtime) schema, migrations, RLS, queue functions and service-only operational RPCs. Production migration state reported by LEAD: 0001–0004 applied and verified. Migration 0005 in this bundle is prepared locally only.",
+    "can_do": "- 18 core tables from migrations 0001–0004; migration 0005 adds `event_rate_limits` for owner-scoped database rate limiting.\n- RLS on owner data; power cap enforced in DB; fail-closed kill switch row and trigger cancel waiting/running phone commands and bump epoch.\n- Phone command queue with claim/expiry/idempotency/kill_epoch; worker jobs queue with claim/heartbeat/finish/purge routines.\n- Migration 0004 functions `claim_job`, `heartbeat_job`, `finish_job`, `purge_old_jobs` explicitly revoke PUBLIC/anon/authenticated and grant EXECUTE only to service_role.\n- Migration 0005 adds service-role-only `consume_event_rate_limit` and `set_system_kill`; the latter writes kill state and audit activity in one transaction.\n- Realtime publication remains limited to `system_state`, `phone_commands`, `tasks`, `reminders`; the `events` table is not published.",
+    "limits": "- This code bundle does not connect to or execute migrations on real Supabase. LEAD snapshot: 0001–0004 are already applied there. Only Antigravity applies migration 0005.\n- Migration 0005 has been tested locally with PGlite only; production still needs apply/verify by Antigravity.\n- Free Supabase retention/backup limits remain as existing setup documentation describes."
+  },
+  "packages.discovery": {
+    "status": "planned",
+    "what_it_is": "नई चीज़ ढूँढना: machine पर या नेट पर मिले agents, tools, MCP का draft manifest बनाना (सीधे live नहीं करता)",
+    "can_do": "- (planned) नई चीज़ ढूँढना: machine पर या नेट पर मिले agents, tools, MCP का draft manifest बनाना (सीधे live नहीं करता)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "packages.events": {
+    "status": "built",
+    "what_it_is": "JARVIS का strict event envelope, registry, offline outbox और database persistence adapter. हर event एक validated envelope में जाता है।",
+    "can_do": "- Envelope में `id`, dot.case `type`, `source`, UTC `ts`, object `payload`, optional `correlation_id`, version और server intake के लिए required `idempotency_key` होता है। Payload 16 KB से छोटा होना चाहिए।\n- Registry unapproved type और malformed payload reject करती है। S21 के छह approved voice/persona events metadata-only और stored-only हैं।\n- `EventOutbox` idempotency key के साथ enqueue करता है, insertion order में flush करता है और failed/network/429/5xx send पर event को queue में रखता है। Browser IndexedDB adapter उपलब्ध है; Android समान `OutboxStore` contract लागू कर सकता है।\n- Supabase adapter `events` में owner-scoped idempotent insert/list करता है। Event intake 60/minute/owner database RPC limit जाँचता है; RPC unavailable हो तो write fail-closed है।\n- `events` table Realtime publication में नहीं है। Live classified events भी event history में लिखते हैं; phone/app live updates अपनी चार allowed tables से लेते हैं।",
+    "limits": "- Browser IndexedDB adapter है; native Android Room/SQLite adapter अभी Android squad का काम है।\n- Production event writes/rate limit के लिए migration `0005_event_rate_limits.sql` Antigravity को real Supabase पर apply करनी होगी; इस bundle ने remote DB नहीं छुआ।\n- Event को action नहीं माना जाता। Event intake किसी command/tool को execute नहीं करता।"
+  },
+  "packages.harness": {
+    "status": "built",
+    "what_it_is": "JARVIS runtime permissions enforcement (gate check before every power, safety kill state translation).",
+    "can_do": "- Checks permissions before power execution using brain's gate() policy\n- Reads kill switch state from safety and passes to gate fail-closed\n- Enforces L0-L4 autonomy and confirmation rules (e.g. memory.forget at L2)\n- Rejects unknown powers fail-closed",
+    "limits": "- Does not execute the power itself; enforcement only.\n- Full runtime loop, tool-runner, and sessions are planned for Phase 1 (S07)."
+  },
+  "packages.kinds": {
+    "status": "planned",
+    "what_it_is": "हर तरह की चीज़ का नियम (schema)",
+    "can_do": "- (planned) हर तरह की चीज़ का नियम (schema)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "packages.locale": {
+    "status": "built",
+    "what_it_is": "समय और भाषा के नियम। database में हमेशा UTC; दिखाते समय भारत का समय (Asia/Kolkata, UTC+5:30, कोई daylight saving नहीं); हिंदी, Hinglish और English में तारीख़, समय और अभिवादन।",
+    "can_do": "- UTC <-> भारत का समय: `toISTParts`, `istToUtc` (31 फ़रवरी जैसी नकली तारीख़ पर गलती), `startOfDayIST`, `startOfMonthIST`, `addDaysIST`, `parseISTDateTime(\"2026-11-07 17:10\")` (हिंदी अंक भी चलते हैं)। (built)\n- `formatDate` (short/long/full), `formatTime`, `formatDateTime`: en \"5:10 PM\", hi \"शाम 5:10 बजे\", hinglish \"shaam 5:10 baje\"। (built)\n- `greeting` (सुबह 4-12, दोपहर 12-16, शाम 16-20, रात 20-4), `relativeDay` (आज/कल/बीता कल)। (built)\n- `toDevanagariDigits`, `toAsciiDigits`, `formatINR` (₹12,34,567.50 वाली भारतीय grouping)। (built)\n- `detectLanguage(text)` -> `hi` / `hinglish` / `en` (देवनागरी का अनुपात और आम Hinglish शब्दों से)। (built)",
+    "limits": "- \"कल शाम 5 बजे\" जैसे वाक्य से समय निकालना (parsing) यहाँ नहीं; वह S12 scheduler का काम है। यहाँ सिर्फ़ सख़्त \"YYYY-MM-DD HH:MM\" है।\n- Hinglish की तारीख़ में महीने और वार अंग्रेज़ी में हैं (लोग ऐसा ही लिखते हैं)। Roman Hindi में महीने/वार के नाम नहीं हैं।\n- `detectLanguage` अंदाज़ा है, गारंटी नहीं: बहुत छोटे वाक्य (\"ok\", \"theek hai\") में गलत हो सकता है। शब्द-सूची छोटी है और बढ़ानी होगी।\n- सिर्फ़ भारत का समय। दूसरा time zone नहीं।"
+  },
+  "packages.logging": {
+    "status": "built",
+    "what_it_is": "एक जैसे structured logs (हर लाइन एक JSON), secrets का अपने-आप छिपना, request id, और health की रिपोर्ट।",
+    "can_do": "- `createLogger({service, level})` -> debug/info/warn/error और `child({request_id,...})`। हर field print होने से पहले `redact()` से गुज़रता है। (built)\n- `redact`: नाम से छिपाता है (password, token, authorization, api_key, service_role, cookie, pepper, `*_key` ...) और रूप से भी (JWT, `sb_secret_`, `sk-`, `AIza`, `ghp_`, `Bearer ...`, database URL का password)। Error को सपाट करता है, गोलाकार संदर्भ काटता है, बड़ी चीज़ें छोटी करता है। (built)\n- Sinks: `consoleSink` (warn/error stderr पर), `memorySink` (tests); `toActivityRow` warn/error को `activity_log` की पंक्ति में बदलता है। टूटा हुआ sink program नहीं तोड़ता। (built)\n- `newRequestId()` -> `req_` + 16 hex। (built)\n- Health: `runHealth(checks)` -> ok / degraded / down (critical check फेल = down, बाकी = degraded; हर check का समय-सीमा); `toHealthResponse` contracts के `system.health` के हिसाब से (ठीक = 200 {status, ts}, वरना 503 `unavailable`, कोई ब्योरा बाहर नहीं); `dbSizeCheck` (400 MB पर चेतावनी, decision 009)। (built)",
+    "limits": "- Logs कहीं जमा नहीं करता (शुरू में सिर्फ़ stdout/stderr)। `activity_log` में असली लिखना जोड़ने वाले (api/worker) का काम है।\n- Redaction पूरी गारंटी नहीं: नया तरह का secret जिसका नाम और रूप दोनों अलग हों बच सकता है। नया रूप दिखे तो `redact.ts` में जोड़िए और test भी।\n- Log में prompts, जवाब, निजी संदेश मत डालिए; यह पैकेज उन्हें पहचान नहीं सकता।\n- Health सिर्फ़ रिपोर्ट बनाता है; checks (जैसे database की असली query) बुलाने वाला देगा।"
+  },
+  "packages.mcp-server": {
+    "status": "planned",
+    "what_it_is": "JARVIS का अपना MCP दरवाज़ा (self.describe सहित)",
+    "can_do": "- (planned) JARVIS का अपना MCP दरवाज़ा (self.describe सहित)",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "packages.memory": {
+    "status": "built (local tests pass; Supabase par abhi nahi chalaya)",
+    "what_it_is": "Memory ka code ghar (S09): MemoryStore interface, Supabase adapter, rules/redaction/policy, hybrid search, chat recall, export, growth check. Zero dependency (sirf Node + fetch).",
+    "can_do": "- Policy: `decide()` candidate ko save / ask / refuse / skip mein baantta hai (src/policy.ts, redact.ts, classify.ts). Niyam: self/identity/memory-behaviour.md.\n- Store: `MemoryStore` interface + `InMemoryStore` (reference) + `SupabaseMemoryStore` (PostgREST, owner filter har request mein) + `runStoreContract` (Neon/Turso ko ye pass karna hoga).\n- `MemoryService`: card(), recall() (card -> shabd -> vector ladder), remember(), decline(), update(), findToForget(), forget(), forgetAll(), exportAll().\n- Embeddings: `Embedder`, `gatewayEmbedder`, `runEmbedBatch` (private/secret kabhi nahi, kill/budget par ruk jaata). Hybrid rank (search.ts). Growth alarm (growth.ts: 400 MB / 30k / slow search).\n- Migrations 0030-0032 (packages/db/migrations): naye columns, halfvec(768)+HNSW, notes/files/projects/links, functions.",
+    "limits": "- Abhi tak: asli Supabase par nahi chala; pglite test (db-rls.test.mjs) sandbox mein SKIP; gateway mein embed() nahi (CR-1), isliye vector search band, shabd-search chalta.\n- Shabd-soochi aur patterns sab nahi pakadte (Hinglish spelling); weekly rescan job baaki (CR-5).\n- Abhi kuch bana nahi hai: sab neeche likha design hai (status planned).\n- Asli Supabase par kuch nahi chalata. Model gateway ke bina koi model call nahi."
+  },
+  "packages.model-gateway": {
+    "status": "built",
+    "what_it_is": "हर AI model बुलाने का एक ही दरवाज़ा। हर call का क्रम पक्का: kill switch -> model सूची में है? -> खर्चे की सीमा -> key -> call -> usage दर्ज। (Router की समझ, यानी कौन सा model कब, S13/S07 की है; यहाँ सिर्फ़ plumbing है।)",
+    "can_do": "- `createGateway({...}).call(request)` -> `{ok:true,text,usage,warning?}` या `{ok:false,code,message}`। Codes: `kill_switch_on`, `unknown_model`, `unknown_provider`, `unpriced_model`, `budget_exceeded`, `no_key`, `provider_error`, `timeout`। (built)\n- खर्चे की सीमा (`Budget`): रोज़ की और महीने की (भारत की आधी रात से), हर model की रोज़ की सीमा, और free models की रोज़ के requests की सीमा। Call से पहले \"सबसे बुरा खर्चा\" (अनुमानित input + पूरा output) जोड़कर देखा जाता है, इसलिए सीमा पार करने वाली call होती ही नहीं। 80% पर चेतावनी। (built)\n- बिना कीमत वाला (non-free) model मना: कीमत हम अंदाज़े से नहीं भरते। (built)\n- Keys: `envKeys()` env से पढ़ता है (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, नाम `.env.example` वाले)। Key न हो तो बताता है कौन सा variable भरना है, कीमत कभी नहीं। (built)\n- Usage: `model_usage` table में हर call (असफल भी, ok=false) दर्ज; `supabaseUsageStore` (service_role, इस महीने की अधिकतम 5000 पंक्तियाँ पढ़ता है) और `memoryUsageStore` (tests)। (built)\n- Timeout (default 60 s), और logs में prompt, जवाब या key कभी नहीं। (built)",
+    "limits": "- असली providers (Anthropic/OpenAI/Gemini के adapters) अभी नहीं हैं; `Provider` interface है, adapters S13/S07 लिखेंगे। Tests नकली provider से हैं।\n- कीमतें और सीमाएँ (`ModelSpec`, `Budget`) कहीं से भरी नहीं गई हैं। इन्हें Amit/S13 settings में तय करें; कीमत देखने की ज़िम्मेदारी भरने वाले की है।\n- Usage पढ़ना/लिखना सीधा Supabase REST है; पढ़ना न हो सके तो खर्च बंद (fail-closed)।\n- कई कॉल एक साथ हों तो सीमा थोड़ी पार हो सकती है (दोनों ने एक ही usage देखी); एक user और धीमी रफ़्तार के लिए ठीक, भारी concurrency में lock चाहिए।\n- Provider ने fail हुई call का पैसा लिया हो तो वह दर्ज नहीं होता (tokens 0)।\nS21/S13/S07 interface only: `AudioModelAdapter` declares transcribe/speak input/output types using audio references and metadata. No audio provider, adapter implementation, routing, or gateway invocation is added in this bundle."
+  },
+  "packages.models": {
+    "status": "planned",
+    "what_it_is": "model router का code",
+    "can_do": "- (planned) model router का code",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "packages.presence": {
+    "status": "planned",
+    "what_it_is": "कौन सी जगह (web, phone, orb, TV) अभी चालू है: एक समय पर एक ही JARVIS",
+    "can_do": "- (planned) कौन सी जगह (web, phone, orb, TV) अभी चालू है: एक समय पर एक ही JARVIS",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "packages.realtime": {
+    "status": "planned",
+    "what_it_is": "events को UI और phone तक पहुँचाना",
+    "can_do": "- (planned) events को UI और phone तक पहुँचाना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "packages.registry-builder": {
+    "status": "planned",
+    "what_it_is": "manifests से self/registry बनाना और जाँचना",
+    "can_do": "- (planned) manifests से self/registry बनाना और जाँचना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "packages.safety": {
+    "status": "built",
+    "what_it_is": "JARVIS का fail-closed safety gate. यह kill-switch state पढ़ता है और तय करता है कि owner/device क्या कर सकते हैं।",
+    "can_do": "- `readKillSwitch(store, ownerId)` असली state न मिले, malformed हो या DB पढ़ न पाए तो `{kill:true, epoch:-1}` वाला unavailable परिणाम देता है।\n- `setKillSwitch(...)` paired device को केवल ON करने देता है; OFF केवल owner कर सकता है। OFF से पहले state सफलतापूर्वक पढ़ी जानी चाहिए।\n- Write failure या invalid response को कभी OFF success नहीं बताता। Server API audit सहित atomic DB RPC बुलाती है।\n- Tests owner ON/OFF, device ON, device OFF denial, missing row, read/write outage और fail-closed result जाँचते हैं।",
+    "limits": "- यह अकेले Supabase नहीं बुलाता; store adapter caller देता है।\n- कोई privileged action खुद execute नहीं करता; action routes/worker अलग safety checks करेंगे।\n- Database audit और atomic update के लिए migration `0005_event_rate_limits.sql` आवश्यक है; यह bundle इसे real Supabase पर apply नहीं करता।"
+  },
+  "packages.scheduler": {
+    "status": "planned",
+    "what_it_is": "timed jobs: reminders, automations",
+    "can_do": "- (planned) timed jobs: reminders, automations",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "packages.shared": {
+    "status": "built",
+    "what_it_is": "सबका साझा छोटा code, बिना किसी library के: नकली-हो-सकने वाली घड़ी, kill switch पढ़ने का fail-closed तरीका, retry की प्रतीक्षा का हिसाब।",
+    "can_do": "- `Clock`, `systemClock`, `fixedClock` (tests में समय पक्का करना), `sleep(ms, signal)` जो abort पर तुरंत जागे। (built)\n- Kill switch: `KillSwitchReader`, `readKillFailClosed`, `assertNotKilled`, `KilledError`। पढ़ न सके या जवाब अजीब हो तो माना जाता है कि kill switch चालू है। (built)\n- `NonRetryableError` (दोबारा कोशिश बेकार), `backoffMs` (आधा-पूरा jitter के साथ बढ़ती प्रतीक्षा, सीमा तक), `newId`। (built)",
+    "limits": "- सिर्फ़ छोटे औज़ार हैं। बड़ा कोई काम यहाँ नहीं रखना; उसका अपना package बने।\n- Kill switch को खुद database से नहीं पढ़ता; पढ़ने वाला (`KillSwitchReader`) बाहर से आता है।"
+  },
+  "packages.terminal-hub": {
+    "status": "planned",
+    "what_it_is": "terminals का इंजन: खोलना, output पढ़ना, input भेजना, निगरानी",
+    "can_do": "- (planned) terminals का इंजन: खोलना, output पढ़ना, input भेजना, निगरानी",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "packages.vault": {
+    "status": "planned",
+    "what_it_is": "secrets सुरक्षित पढ़ना",
+    "can_do": "- (planned) secrets सुरक्षित पढ़ना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "packages.voice": {
+    "status": "built (core logic + tests; routes, live Fish call और UI जुड़ाव बाकी)",
+    "what_it_is": "JARVIS की आवाज़ का इंजन: STT (बोली हुई बात -> text), TTS (JARVIS का text -> आवाज़), streaming, और बीच में टोकने (barge-in) का तरीका। यह सिर्फ़ आवाज़ का पाइप है। क्या बोलना है यह persona (self/identity) तय करता है, क्या करना है यह S22 brain, और चैट का loop S07 चलाता है। UI का बटन features/voice/voice-mode में है।",
+    "can_do": "- (planned) एक utterance की रिकॉर्डिंग लेकर text देना (`transcribe`), Hindi/Hinglish/English, confidence के साथ।\n- (planned) JARVIS के जवाब को वाक्यों के टुकड़ों में बाँटकर बोलना (`speak`) ताकि पहला वाक्य जल्दी सुनाई दे, पूरा जवाब बनने का इंतज़ार न हो।\n- (planned) Barge-in: Amit बोलना शुरू करे तो JARVIS तुरंत चुप, बची हुई आवाज़ रद्द।\n- (built) `toSpeech(text)`: जवाब को कान के लिए साफ़ करना: markdown, emoji, URL, file path हटाना; ₹, समय, तारीख़ `packages.locale` से बोलने वाले रूप में; लंबे वाक्य तोड़ना।\n- (built) Local stop commands (बिना model): \"ruko\", \"stop\", \"chup\", \"band karo\" -> बोलना रोको, अधूरा काम रद्द। सख़्त नियम: सिर्फ़ छोटी (<= 3 शब्द) बात, और \"mat ruko / ruko mat\" जैसी उलटी बात पर नहीं।\n- (built, fake adapters से tested) एक सीढ़ी (ladder) STT और TTS दोनों के लिए, ताकि कुछ टूटे तो बात न रुके (नीचे)।\n- (planned) हर आवाज़ वाली call का metadata log (provider, कितनी देर, confidence, fallback हुआ या नहीं)। कभी आवाज़, text या key नहीं।",
+    "limits": "- 2026-11-07 का build (0.2.0): `src/` में stop-words, toSpeech, sensitive-check, tags, session, ladder + Fish adapter, 18 tests पास। बाकी (routes, असली Fish call, UI जुड़ाव, STT) अभी planned है। Provider = Fish Audio, model `s2.1-pro-free` (Amit का चुनाव; cloning और paid models बंद)।\n- Wake word (\"Hey JARVIS\" कहकर जगाना) v1 में नहीं। v1 में Hold-to-talk और tap-to-toggle है। हमेशा सुनने वाला mic बैटरी और निजता का सवाल है; S16A/S17 के साथ बाद में।\n- Speaker की पहचान (कि बोलने वाला Amit ही है) v1 में नहीं। इसलिए TV या आसपास के लोगों की आवाज़ से बड़े काम नहीं होने चाहिए (नीचे \"Voice से confirm\")।\n- Browser का मुफ़्त speech-recognition कई जगह (खासकर iOS Safari) भरोसे का नहीं, और कुछ browsers में आवाज़ इंटरनेट पर Google जैसे server को जाती है। इसलिए यह सिर्फ़ मुफ़्त पहला विकल्प है, गारंटी नहीं।\n- Roman Hinglish का उच्चारण TTS पर कैसा आएगा, यह असली आवाज़ सुनकर ही पता चलेगा। (नीचे `speech_script`।)\n- कोई भी power नहीं चलाता, कोई memory नहीं लिखता। सिर्फ़ text लेता-देता है।\n- Provider की keys यहाँ नहीं रखी जातीं (decision 010: client में कोई key नहीं)।"
+  },
+  "packages.watchers": {
+    "status": "planned (folder created first, per Folder-First rule; no code yet)\nOWNER: S22 BRAIN (policy). Enforcement = harness/permissions. Kill switch + audit = safety/.",
+    "what_it_is": "Watchers: small checks that let JARVIS speak first (schedule clash, deadlines). Policy: command-center/policies/S22_POLICY.md.",
+    "can_do": "Nothing yet (planned). Will follow the L0-L4 rules in S22_POLICY.md.",
+    "limits": "Nothing here runs yet. Never changes the kill switch from here without S19/safety."
+  },
+  "self.health": {
+    "status": "planned",
+    "what_it_is": "smoke tests के नतीजे, status.json इन्हीं से बदलता है",
+    "can_do": "- (planned) smoke tests के नतीजे, status.json इन्हीं से बदलता है",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "self.identity": {
+    "status": "planned",
+    "what_it_is": "मैं कौन हूँ। JARVIS का स्वभाव (शांत, चतुर, वफ़ादार, dry sarcasm वाला दोस्त), बोलने का ढंग और भाषा (natural Hinglish)। Amit को \"Boss\" बुलाता है। मुख्य चीज़ `persona.md` है: वही JARVIS का system prompt है।",
+    "can_do": "- `persona.md` लिखी है (DRAFT v0.1.0): पहचान, tone, Hinglish नियम, mazaak के नियम, mood पढ़ना, proactivity, confirmation/error/bad-news style, modes, voice वाला हिस्सा। (written, अभी किसी code में इस्तेमाल नहीं)\n- `samples.md` लिखी है: Home greeting, task help, phone control, buri khabar, voice, error के नमूने। S07 और QA इन्हें कसौटी की तरह इस्तेमाल करें। (written)\n- `memory-behaviour.md` (FINAL v1.0.0, S09 ने final किया; पहले DRAFT): क्या याद रखना, कब पूछना, क्या कभी store नहीं। (written)\n- `interview.md`: Amit के जवाब और उनसे निकले फ़ैसले। (written)\n- (planned) S07 हर chat call में persona.md का CORE हिस्सा system prompt में डालेगा; {{placeholders}} runtime में भरेंगे।\n- (planned) mood/mode के हिसाब से tone बदलना (Normal, Focus, Night, Chill)।",
+    "limits": "- कोई code, table, route या event नहीं। यह सिर्फ़ लिखा हुआ व्यक्तित्व है।\n- सिर्फ़ आवाज़ और व्यक्तित्व। कौन सी power कब चलानी है और कौन सा autonomy level है, यह S22 तय करता है। persona.md उसकी नीति नहीं बदलती, सिर्फ़ उसे बोलने का ढंग देता है।\n- याददाश्त की असली schema और नियम S09 के हैं। यहाँ का हिस्सा सिर्फ़ draft है।\n- Mode (Focus/Night/Chill) का सिर्फ़ बोलने वाला असर यहाँ है। DND, notification रोकना जैसे सिस्टम के असर S01/S13/S19 के हैं।\n- JARVIS इंसान होने का दावा नहीं करता, और जो चीज़ registry में \"live\" नहीं उसे अपनी ability नहीं बताता।"
+  },
+  "self.journal": {
+    "status": "planned",
+    "what_it_is": "गलतियों और सीखों की डायरी",
+    "can_do": "- (planned) गलतियों और सीखों की डायरी",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "self.ledger": {
+    "status": "planned",
+    "what_it_is": "सिर्फ जुड़ने वाला रिकॉर्ड: क्या कब जुड़ा, बदला, टूटा, ठीक हुआ",
+    "can_do": "- (planned) सिर्फ जुड़ने वाला रिकॉर्ड: क्या कब जुड़ा, बदला, टूटा, ठीक हुआ",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "self.live-state": {
+    "status": "planned",
+    "what_it_is": "अभी की हालत: कौन सा device online, कौन से apps installed, कौन सा काम चल रहा",
+    "can_do": "- (planned) अभी की हालत: कौन सा device online, कौन से apps installed, कौन सा काम चल रहा",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "self.proposals": {
+    "status": "planned",
+    "what_it_is": "JARVIS कुछ बदलना चाहे तो सिर्फ सुझाव यहाँ, मंज़ूरी के बाद ही असर",
+    "can_do": "- (planned) JARVIS कुछ बदलना चाहे तो सिर्फ सुझाव यहाँ, मंज़ूरी के बाद ही असर",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "self.registry": {
+    "status": "planned",
+    "what_it_is": "सब कुछ की master list, build से अपने-आप बनती है",
+    "can_do": "- (planned) सब कुछ की master list, build से अपने-आप बनती है",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "self.truth-rules": {
+    "status": "planned",
+    "what_it_is": "जो registry में नहीं, वो \"पता नहीं / बना नहीं\" कहना। manifest खुद नहीं लिखना",
+    "can_do": "- (planned) जो registry में नहीं, वो \"पता नहीं / बना नहीं\" कहना। manifest खुद नहीं लिखना",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "worker.gateway": {
+    "status": "planned",
+    "what_it_is": "realtime और voice के connections",
+    "can_do": "- (planned) realtime और voice के connections",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  },
+  "worker.jobs": {
+    "status": "built",
+    "what_it_is": "Worker का \"लंबे काम\" वाला हिस्सा: जो काम पीछे से, धीरे या समय पर चलने हैं उन्हें एक कतार (`jobs` table) से उठाकर सुरक्षित तरीक़े से चलाता है। एक सादा Node program है जो सिर्फ़ Supabase से बात करता है, इसलिए laptop पर भी चलेगा और बाद में AWS या Docker में भी (decision 012)।",
+    "can_do": "- कतार: migration 0004 (`jobs` table और functions `claim_job`, `heartbeat_job`, `finish_job`, `purge_old_jobs`; सिर्फ़ service_role चला सकता है, app नहीं)। (built, local Postgres पर tested; असली Supabase पर चली नहीं)\n- `Worker`: एक बार में एक job; हर बार लेने से पहले kill switch (fail-closed); job के दौरान भी हर `killPollMs` पर देखता है और चालू होते ही job रोकता है (job कतार में लौटता है); lease और heartbeat (worker मर जाए तो job दोबारा उठता है); timeout; असफल होने पर बढ़ती प्रतीक्षा के साथ दोबारा, `max_attempts` के बाद failed; `NonRetryableError` पर तुरंत failed; अनजान kind पर तुरंत failed; `stop()` चल रहे काम को ख़त्म होने देता है। (built)\n- Built-in jobs: `system.keepalive` (असली database query, free Supabase को सोने से बचाने के लिए) और `system.purge` (30 दिन से पुराने पूरे हुए jobs हटाना)। अपने आप हर 12 और 24 घंटे में लगते हैं (idempotency key से, दोबारा चलाने या दो worker होने पर भी एक ही बार)। (built)\n- `SupabaseStore` (service_role, REST) और `discoverOwner`; `npm start` से चलता है (`src/main.ts`, SIGINT/SIGTERM पर शालीनता से रुकता है)। (built)",
+    "limits": "- `npm start` असली Supabase पर अभी चलाया नहीं गया; migration 0004 भी वहाँ नहीं चली। Amit/LEAD की हाँ के बाद ही।\n- सिर्फ़ 2 built-in jobs हैं। दूसरे squads अपने handlers (kind, dot.case) जोड़ेंगे।\n- एक worker, एक job एक बार में। कई worker एक साथ चल सकते हैं (SKIP LOCKED) पर वह परखा नहीं गया।\n- Laptop बंद/sleep हो तो worker रुकता है; lease ख़त्म होने के बाद जो job अधूरा था वह दोबारा चलेगा (इसलिए handlers को दोबारा चलने पर सुरक्षित होना चाहिए)।\n- \"ठीक 5:10 बजे\" वाले reminders यहाँ नहीं; वे फ़ोन के alarm और scheduler (S12) के हैं (decision 007/012)।"
+  },
+  "worker.machine-agent": {
+    "status": "planned",
+    "what_it_is": "हर machine पर चलने वाला छोटा सेवक: terminals सौंपता है और वहाँ नए agents/tools ढूँढकर बताता है",
+    "can_do": "- (planned) हर machine पर चलने वाला छोटा सेवक: terminals सौंपता है और वहाँ नए agents/tools ढूँढकर बताता है",
+    "limits": "- Nothing is built yet. Everything above is planned."
+  }
+}

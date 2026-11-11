@@ -1,0 +1,17 @@
+{
+  "id": "packages.events",
+  "name": "events",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S00",
+  "phase": 1,
+  "status": "built",
+  "does": "Strict event envelope/registry, metadata-only voice events, durable offline outbox, idempotent Supabase persistence and rate-limited event intake",
+  "uses": [
+    "packages.db",
+    "packages.shared"
+  ],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.2.0"
+}
