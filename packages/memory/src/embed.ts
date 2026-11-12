@@ -32,7 +32,7 @@ export function l2normalize(v: number[]): number[] { let n = 0; for (const x of 
 
 /** The text that is allowed to leave for an embedding model, or null = never embed this row. */
 export function prepareEmbedText(m: Pick<Memory, 'title' | 'body' | 'private' | 'status'>): string | null {
-  if (m.private || m.status !== 'active') return null;
+  if (m.private || m.tier === 'sensitive' || m.status !== 'active') return null;
   const t = `${m.title}. ${m.body}`; if (findSecrets(t).length) return null;
   return redactText(t).slice(0, 2000);
 }

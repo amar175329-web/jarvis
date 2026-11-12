@@ -1,9 +1,10 @@
 // Reference store in memory (tests, local dev, and the model for every real adapter). Same rules as the real ones.
-import type { ForgetResult, Kind, Link, LinkType, ListQuery, Memory, MemoryPatch, NewMemory, Page, SearchHit, SearchQuery, StoreStats } from './types.ts';
+import type { ForgetResult, Kind, Link, LinkType, ListQuery, Memory, MemoryPatch, MemoryTier, NewMemory, Page, SearchHit, SearchQuery, StoreStats } from './types.ts';
 import { MemoryError } from './types.ts';
 import { DAY, LIST_MAX_PAGE, RETENTION_DAYS } from './rules.ts';
 import { LINK_TYPES, validateNew, type MemoryStore } from './store.ts';
 import { overlap } from './text.ts';
+import { purposeAllowsSensitive } from './classify.ts';
 
 type Row = { owner: string; m: Memory; vec: number[] | null };
 export type InMemoryDb = { rows: Map<string, Row>; links: Map<string, { owner: string; l: Link }>; declines: Map<string, { owner: string; at: number }>; seq: number };
@@ -37,7 +38,7 @@ export class InMemoryStore implements MemoryStore {
     if (r.m.revision !== expectedRevision) throw new MemoryError('conflict', 'memory changed since you read it');
     const next: Memory = { ...r.m, ...patch, tags: patch.tags ? [...patch.tags] : r.m.tags, tokens: patch.tokens ? [...patch.tokens] : r.m.tokens, revision: r.m.revision + 1, updated_at: this.clock().toISOString() };
     const textChanged = (patch.title !== undefined && patch.title !== r.m.title) || (patch.body !== undefined && patch.body !== r.m.body) || (patch.tags !== undefined);
-    if (textChanged || next.private) { next.embedding_model = null; next.embedded_at = null; r.vec = null; } // changed text or now private: old vector is wrong or forbidden
+    if (textChanged || next.private || next.tier === 'sensitive') { next.embedding_model = null; next.embedded_at = null; r.vec = null; } // changed text or now private: old vector is wrong or forbidden
     validateNew({ ...next, ref_type: next.ref_type, ref_id: next.ref_id } as NewMemory);
     r.m = next; return { ...next };
   }
@@ -50,7 +51,7 @@ export class InMemoryStore implements MemoryStore {
   async search(q: SearchQuery): Promise<SearchHit[]> {
     const now = q.now.getTime(); const pool: SearchHit[] = [];
     for (const r of this.all()) {
-      const m = r.m; if (!live(m, now) || (m.private && !q.allowPrivate) || (q.kinds && !q.kinds.includes(m.kind))) continue;
+      const m = r.m; if (!live(m, now) || (m.tier === 'sensitive' && (!q.purpose || !purposeAllowsSensitive(m.tags, q.purpose))) || (q.kinds && !q.kinds.includes(m.kind))) continue;
       const kw = overlap(q.tokens, m.tokens); const sim = q.embedding && r.vec ? Math.max(0, cosine(q.embedding, r.vec)) : null;
       if (kw > 0 || sim !== null) pool.push({ memory: { ...m }, sim, kw });
     }
@@ -60,15 +61,15 @@ export class InMemoryStore implements MemoryStore {
   }
   async pinned(max: number): Promise<Memory[]> { const now = this.clock().getTime(); return this.all().map((r) => r.m).filter((m) => m.pinned && !m.private && live(m, now)).sort((a, b) => (a.created_at < b.created_at ? -1 : 1)).slice(0, max).map((m) => ({ ...m })); }
   async touch(ids: string[], now: Date): Promise<void> { for (const id of ids) { const r = this.mine(id); if (r) r.m = { ...r.m, last_used_at: now.toISOString(), use_count: r.m.use_count + 1 }; } }
-  async findBySubjectKey(kind: Kind, subjectKey: string): Promise<Memory | null> { const now = this.clock().getTime(); const r = this.all().find((x) => x.m.kind === kind && x.m.subject_key === subjectKey && live(x.m, now)); return r ? { ...r.m } : null; }
+  async findBySubjectKey(kind: Kind, subjectKey: string, tier: MemoryTier = 'normal'): Promise<Memory | null> { const now = this.clock().getTime(); const r = this.all().find((x) => x.m.kind === kind && x.m.subject_key === subjectKey && x.m.tier === tier && live(x.m, now)); return r ? { ...r.m } : null; }
   async setEmbedding(id: string, vector: number[] | null, model: string): Promise<void> {
     const r = this.mine(id); if (!r) throw new MemoryError('not_found', 'memory not found');
     if (vector === null) { r.vec = null; r.m = { ...r.m, embedding_model: 'skipped', embedded_at: this.clock().toISOString() }; return; }
-    if (r.m.private) throw new MemoryError('forbidden', 'private memory never gets a vector');
+    if (r.m.private || r.m.tier === 'sensitive') throw new MemoryError('forbidden', 'T2 sensitive memory never gets a vector');
     if (vector.length !== this.dim) throw new MemoryError('invalid', `vector must have ${this.dim} numbers`);
     r.vec = [...vector]; r.m = { ...r.m, embedding_model: model, embedded_at: this.clock().toISOString() };
   }
-  async pendingEmbeddings(limit: number): Promise<Memory[]> { const now = this.clock().getTime(); return this.all().map((r) => r.m).filter((m) => live(m, now) && !m.private && m.embedding_model === null).sort((a, b) => (a.created_at < b.created_at ? -1 : 1)).slice(0, limit).map((m) => ({ ...m })); }
+  async pendingEmbeddings(limit: number): Promise<Memory[]> { const now = this.clock().getTime(); return this.all().map((r) => r.m).filter((m) => live(m, now) && !m.private && m.tier === 'normal' && m.embedding_model === null).sort((a, b) => (a.created_at < b.created_at ? -1 : 1)).slice(0, limit).map((m) => ({ ...m })); }
   async forget(id: string): Promise<ForgetResult> {
     if (!this.mine(id)) return { deleted: 0, derived_deleted: 0, links_deleted: 0 };
     const doomed = new Set<string>([id]); let derived = 0;

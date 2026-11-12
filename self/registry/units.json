@@ -1855,7 +1855,7 @@
     "status": "built",
     "does": "Memory ka code: store interface (Supabase pehle), rules/redaction, hybrid search, chat recall, export, size alarm",
     "autonomy_default": "L0",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "path": "packages/memory"
   },
   {

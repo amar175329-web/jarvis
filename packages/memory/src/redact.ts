@@ -49,6 +49,8 @@ export function findSecrets(text: string): Finding[] {
   for (const m of text.matchAll(/(?:aadhaar|aadhar|adhar|आधार|\buid\b)\D{0,15}(\d{4}[\s-]?\d{4}[\s-]?\d{4})/gi)) add('gov_id', m);
   for (const m of text.matchAll(/\b[A-Za-z]{3}[PCHFATBLJGpchfatbljg][A-Za-z]\d{4}[A-Za-z]\b/g)) add('gov_id', m); // PAN: AAAPL1234C
   for (const m of text.matchAll(/(?:passport|पासपोर्ट)\D{0,15}[A-Za-z]\d{7}\b/gi)) add('gov_id', m);
+  // An ID label is enough to stop this message from entering memory, even when the value is omitted or dictated separately.
+  for (const m of text.matchAll(/\b(?:pan|aadhaar|aadhar|passport)\s*(?:card\s*)?(?:number|no\.?|num|details?)\b/gi)) add('gov_id', m);
   for (const m of text.matchAll(/(?:voter\s*id|driving\s*licen[cs]e|\bdl\s*no\b|epic\s*no)\D{0,15}[A-Za-z0-9]{8,16}/gi)) add('gov_id', m);
 
   for (const m of text.matchAll(/(?:otp|ओटीपी|one[\s-]?time\s*(?:password|code)|verification\s*code|security\s*code|login\s*code)\D{0,20}?\d{4,8}\b/gi)) add('otp', m);
@@ -60,7 +62,7 @@ export function findSecrets(text: string): Finding[] {
   for (const m of text.matchAll(/\b[A-Z]{4}0[A-Z0-9]{6}\b/g)) add('bank_account', m); // IFSC
 
   // password: "password <value>" where value looks like a real credential
-  for (const m of text.matchAll(/(?:password|passwd|pwd|passcode|पासवर्ड|पासकोड)\s*(is|hai|h|है|=|:|-)?\s*(\S{4,})/gi)) {
+  for (const m of text.matchAll(/(?:password|passwd|passwrd|paasword|pasword|paswrd|pasvord|pasward|psswd|pwd|passcode|पासवर्ड|पासवॉर्ड|पास्वर्ड|पासकोड)\s*(is|hai|h|है|=|:|-)?\s*(\S{4,})/gi)) {
     const val = (m[2] ?? '').replace(/[.,;!?]+$/, '').toLowerCase(); const explicit = !!m[1];
     if (IGNORE_PW_VALUE.has(val)) continue;
     if (/[\d\W_]/.test(val) || explicit) add('password', m);
@@ -69,6 +71,13 @@ export function findSecrets(text: string): Finding[] {
 
   for (const m of text.matchAll(/(?:seed\s*phrase|recovery\s*phrase|mnemonic|secret\s*phrase)[\s\S]{0,200}/gi)) { const words = m[0].split(/\s+/).filter((w) => /^[a-z]{3,8}$/.test(w)); if (words.length >= 11) add('recovery_phrase', m); }
   for (const m of text.matchAll(/(?:cookie|session[_\s-]?(?:id|token)?|auth[_\s-]?token|access[_\s-]?token|refresh[_\s-]?token)\s*[:=]\s*\S{16,}/gi)) add('session_token', m);
+
+  // LEAD 2026-11-12 hardening (found by trying to fool the first version; labels and spelling vary in Hinglish):
+  // (a) PAN written with spaces:
+  // spaces or hyphens inside an uppercase PAN ("ABCDE 1234 F"): uppercase only, so ordinary words never match.
+  for (const m of text.matchAll(/\b[A-Z]{5}[\s-]?\d{4}[\s-]?[A-Z]\b/g)) add('gov_id', m);
+  // (b) a credential-looking token with no label at all: letters + digits + a symbol, 8-40 chars, not an e-mail or a link.
+  for (const m of text.matchAll(/(?<![\w@])(?=[^\s]*[A-Za-z])(?=[^\s]*\d)(?=[^\s]*[@#$%^&*!])[^\s]{8,40}(?![\w@])/g)) { const v = m[0].replace(/[.,;!?]+$/, ''); if (/^https?:/i.test(v) || /@[\w-]+\.[A-Za-z]{2,}/.test(v) || /^\d+(?:[.,]\d+)?[%$₹]/.test(v)) continue; add('password', m); }
 
   return mergeFindings(out);
 }
