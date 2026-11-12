@@ -807,10 +807,26 @@
     "used_by": [
       "memory.engine",
       "memory.rules",
+      "packages.chat",
       "packages.harness",
       "packages.voice",
       "self.identity"
     ]
+  },
+  "packages.chat": {
+    "uses": [
+      "packages.brain",
+      "packages.memory",
+      "packages.model-gateway",
+      "packages.shared",
+      "packages.db"
+    ],
+    "knows": [
+      "packages.events",
+      "packages.harness",
+      "packages.voice"
+    ],
+    "used_by": []
   },
   "packages.contracts": {
     "uses": [
@@ -829,6 +845,7 @@
       "api.system",
       "memory.engine",
       "packages.brain",
+      "packages.chat",
       "packages.events",
       "packages.memory",
       "worker.jobs"
@@ -849,6 +866,7 @@
       "api.system",
       "memory.engine",
       "packages.brain",
+      "packages.chat",
       "packages.contracts",
       "packages.memory",
       "packages.voice"
@@ -860,7 +878,9 @@
       "packages.safety"
     ],
     "knows": [],
-    "used_by": []
+    "used_by": [
+      "packages.chat"
+    ]
   },
   "packages.kinds": {
     "uses": [],
@@ -917,7 +937,8 @@
       "memory.profile",
       "memory.projects",
       "memory.routines",
-      "memory.rules"
+      "memory.rules",
+      "packages.chat"
     ]
   },
   "packages.model-gateway": {
@@ -929,6 +950,7 @@
     "knows": [],
     "used_by": [
       "memory.engine",
+      "packages.chat",
       "packages.memory",
       "packages.voice"
     ]
@@ -973,6 +995,7 @@
     "uses": [],
     "knows": [],
     "used_by": [
+      "packages.chat",
       "packages.contracts",
       "packages.events",
       "packages.logging",
@@ -1005,6 +1028,7 @@
       "packages.vault"
     ],
     "used_by": [
+      "packages.chat",
       "self.identity"
     ]
   },

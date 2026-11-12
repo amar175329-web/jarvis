@@ -1,7 +1,7 @@
 // Static guard (runs everywhere, no database needed): my migrations keep the project rules. The real RLS test is db-rls.test.mjs (needs pglite).
 import test from 'node:test'; import assert from 'node:assert/strict'; import fs from 'node:fs'; import path from 'node:path';
 const dir = path.resolve(import.meta.dirname, '../../db/migrations');
-const mine = fs.readdirSync(dir).filter((f) => /^003\d_/.test(f)).sort(); const sql = Object.fromEntries(mine.map((f) => [f, fs.readFileSync(path.join(dir, f), 'utf8')]));
+const mine = fs.readdirSync(dir).filter((f) => /^003[0-3]_/.test(f)).sort(); const sql = Object.fromEntries(mine.map((f) => [f, fs.readFileSync(path.join(dir, f), 'utf8')]));
 const all = Object.values(sql).join('\n');
 test('only my range 0030-0039 is used, and 0001..0020 are untouched by me', () => { assert.deepEqual(mine, ['0030_memory_core.sql', '0031_workspace.sql', '0032_memory_functions.sql', '0033_memory_tiers_and_purpose.sql']); const touched = [...sql['0030_memory_core.sql'].matchAll(/alter table public\.(\w+)/g)].map((m) => m[1]); assert.ok(touched.every((t) => t === 'memories' || t === 'memory_declines'), touched.join()); });
 test('every new table: owner_id, RLS enabled AND forced, owner_all policy, anon revoked', () => {

@@ -1729,6 +1729,19 @@
     "path": "packages/brain"
   },
   {
+    "id": "packages.chat",
+    "name": "chat",
+    "kind": "package",
+    "group": "packages",
+    "owner_squad": "S07",
+    "phase": 1,
+    "status": "built",
+    "does": "S07 chat message pipeline, privacy-aware model routing, provider adapters, threads and safe power hand-off",
+    "autonomy_default": "L0",
+    "version": "0.1.0",
+    "path": "packages/chat"
+  },
+  {
     "id": "packages.contracts",
     "name": "contracts",
     "kind": "package",
