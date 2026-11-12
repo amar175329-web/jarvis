@@ -15,7 +15,7 @@ export function voiceIdFor(role: VoiceRole = 'jarvis', env: Record<string, strin
   return role === 'helper' ? (env.HELPER_VOICE_ID || HELPER_VOICE_ID) : (env.JARVIS_VOICE_ID || DEFAULT_VOICE_ID);
 }
 export const FISH_FREE_MODEL = 's2.1-pro-free';
-// One doc says the free model runs until 30 Nov 2026, Fish itself only says "initial period". After this date the cloud tier switches off.
+// free tier ki date badalti rehti hai, pakka 30 Nov 2026 tak; usse pehle paid plan/doosra model decide karna
 export const FISH_FREE_UNTIL = new Date('2026-11-30T18:30:00Z'); // end of 30 Nov in India
 
 // Fish sampling settings. Lower temperature = more consistent voice (Fish docs). `normalize` makes Fish rewrite numbers/dates/symbols and

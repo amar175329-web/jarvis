@@ -1790,7 +1790,7 @@
     "status": "built",
     "does": "JARVIS runtime permissions enforcement (gate check before every power, safety kill state translation)",
     "autonomy_default": "L1",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "path": "packages/harness"
   },
   {
@@ -1998,7 +1998,7 @@
     "status": "built",
     "does": "STT, TTS, streaming: आवाज़ से text और text से आवाज़, बीच में टोकना (barge-in), Hinglish को बोलने लायक बनाना",
     "autonomy_default": "L0",
-    "version": "0.7.0",
+    "version": "0.7.1",
     "path": "packages/voice"
   },
   {

@@ -13,6 +13,7 @@ export interface DecisionLogEntry {
   executed: boolean;
   confirmed?: boolean;
   error?: string;
+  logError?: string;
   durationMs?: number;
 }
 
@@ -31,7 +32,23 @@ export interface ExecutePowerResult<T> {
   gate: GateResult;
   result?: T;
   error?: Error;
+  logError?: string;
   decisionLog: DecisionLogEntry;
+}
+
+async function emitLog(
+  onDecisionLog: ((entry: DecisionLogEntry) => void | Promise<void>) | undefined,
+  entry: DecisionLogEntry
+): Promise<string | undefined> {
+  if (!onDecisionLog) return undefined;
+  try {
+    await onDecisionLog(entry);
+    return undefined;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    entry.logError = msg;
+    return msg;
+  }
 }
 
 export async function executePower<T>(
@@ -63,35 +80,39 @@ export async function executePower<T>(
 
   // 3. Permission checks
   if (!gateResult.allow) {
-    if (onDecisionLog) await onDecisionLog(decisionLog);
-    return { executed: false, gate: gateResult, decisionLog };
+    const logError = await emitLog(onDecisionLog, decisionLog);
+    return { executed: false, gate: gateResult, logError, decisionLog };
   }
 
   // L2 requires explicit confirmation
   if (gateResult.mode === 'ask_confirm' && !confirmed) {
     decisionLog.error = 'L2 power requires explicit confirmation';
-    if (onDecisionLog) await onDecisionLog(decisionLog);
+    const logError = await emitLog(onDecisionLog, decisionLog);
     return {
       executed: false,
       gate: gateResult,
       error: new Error('L2 power requires explicit confirmation'),
+      logError,
       decisionLog,
     };
   }
 
-  // 4. Safe execution of the power
+  // 4. Safe execution of the power: isolate run() from logging
+  let runResult: T;
   try {
-    const result = await run();
-    decisionLog.executed = true;
-    decisionLog.durationMs = Date.now() - start;
-    if (onDecisionLog) await onDecisionLog(decisionLog);
-    return { executed: true, gate: gateResult, result, decisionLog };
+    runResult = await run();
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err));
     decisionLog.executed = false;
     decisionLog.error = error.message;
     decisionLog.durationMs = Date.now() - start;
-    if (onDecisionLog) await onDecisionLog(decisionLog);
-    return { executed: false, gate: gateResult, error, decisionLog };
+    const logError = await emitLog(onDecisionLog, decisionLog);
+    return { executed: false, gate: gateResult, error, logError, decisionLog };
   }
+
+  // run() succeeded: mark executed true, logging failure must never mask success
+  decisionLog.executed = true;
+  decisionLog.durationMs = Date.now() - start;
+  const logError = await emitLog(onDecisionLog, decisionLog);
+  return { executed: true, gate: gateResult, result: runResult, logError, decisionLog };
 }

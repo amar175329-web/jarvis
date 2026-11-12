@@ -30,3 +30,4 @@ CHANGE LOG:
 - (append-only) folder-first: created as planned, version 0.0.1. Owner: S07.
 - 2026-11-11 - wired brain gate() and safety kill switch into harness/permissions (checkPowerPermission), 7 tests pass - 0.1.0
 - 2026-11-12 - added executePower single execution path with gate evaluation, fail-closed kill/unreadable checks, L2 confirmation gate, decision logging (14 tests pass) - 0.2.0
+- 2026-11-12 - fixed executor logging bug: isolated onDecisionLog in try/catch so logging failure never masks run() success or throws unhandled exception; added logError capture (16 tests pass) - 0.2.1

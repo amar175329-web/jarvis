@@ -213,3 +213,59 @@ test('executePower: records error in decision log when run() throws', async () =
   assert.equal(log!.executed, false);
   assert.equal(log!.error, 'display hardware disconnected');
 });
+
+// BUGFIX TESTS (LEAD P7B):
+// (a) run chala + log throw -> executed true, run sirf 1 baar
+test('executePower bugfix (a): run executed once even if onDecisionLog throws, executed stays true', async () => {
+  const store = mockStore({ kill: false, epoch: 1 });
+  let runCount = 0;
+
+  const res = await executePower({
+    reg,
+    powerId: 'terminal-strip.display',
+    store,
+    ownerId: OWNER,
+    run: async () => {
+      runCount++;
+      return { status: 'sent' };
+    },
+    onDecisionLog: async () => {
+      throw new Error('remote audit DB connection timeout');
+    },
+  });
+
+  assert.equal(runCount, 1, 'run() must execute exactly once');
+  assert.equal(res.executed, true, 'res.executed must remain true even when logging fails');
+  assert.deepEqual(res.result, { status: 'sent' });
+  assert.equal(res.logError, 'remote audit DB connection timeout');
+  assert.equal(res.decisionLog.logError, 'remote audit DB connection timeout');
+  assert.equal(res.decisionLog.executed, true);
+});
+
+// (b) kill ON + log throw -> executed false, exception nahi phooti
+test('executePower bugfix (b): kill ON + onDecisionLog throws -> executed false, no unhandled exception', async () => {
+  const store = mockStore({ kill: true, epoch: 2 });
+  let runCount = 0;
+
+  const res = await executePower({
+    reg,
+    powerId: 'terminal-strip.display',
+    store,
+    ownerId: OWNER,
+    run: async () => {
+      runCount++;
+      return 'must-not-run';
+    },
+    onDecisionLog: async () => {
+      throw new Error('logger disk full');
+    },
+  });
+
+  assert.equal(runCount, 0, 'run() must not execute when kill is ON');
+  assert.equal(res.executed, false);
+  assert.equal(res.gate.allow, false);
+  assert.equal(res.gate.mode, 'deny');
+  assert.equal(res.logError, 'logger disk full');
+  assert.equal(res.decisionLog.logError, 'logger disk full');
+  assert.equal(res.decisionLog.executed, false);
+});
