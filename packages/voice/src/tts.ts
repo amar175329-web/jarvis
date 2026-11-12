@@ -18,6 +18,16 @@ export const FISH_FREE_MODEL = 's2.1-pro-free';
 // free tier ki date badalti rehti hai, pakka 30 Nov 2026 tak; usse pehle paid plan/doosra model decide karna
 export const FISH_FREE_UNTIL = new Date('2026-11-30T18:30:00Z'); // end of 30 Nov in India
 
+/**
+ * Days remaining until the Fish free model tier expires.
+ * Returns > 0 while active, <= 0 once expired.
+ */
+export function daysUntilFishFreeExpiry(now: Date = new Date()): number {
+  const diffMs = FISH_FREE_UNTIL.getTime() - now.getTime();
+  if (diffMs <= 0) return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+}
+
 // Fish sampling settings. Lower temperature = more consistent voice (Fish docs). `normalize` makes Fish rewrite numbers/dates/symbols and
 // guess the language of each chunk; we already spell numbers in Hindi ourselves, so it is switched off to speak exactly what is written.
 export interface Tuning { temperature?: number; top_p?: number; normalize?: boolean }
