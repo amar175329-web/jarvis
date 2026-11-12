@@ -1790,7 +1790,7 @@
     "status": "built",
     "does": "JARVIS runtime permissions enforcement (gate check before every power, safety kill state translation)",
     "autonomy_default": "L1",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "path": "packages/harness"
   },
   {

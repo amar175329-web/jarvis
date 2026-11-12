@@ -823,9 +823,9 @@
   },
   "packages.harness": {
     "status": "built",
-    "what_it_is": "JARVIS runtime permissions enforcement (gate check before every power, safety kill state translation).",
-    "can_do": "- Checks permissions before power execution using brain's gate() policy\n- Reads kill switch state from safety and passes to gate fail-closed\n- Enforces L0-L4 autonomy and confirmation rules (e.g. memory.forget at L2)\n- Rejects unknown powers fail-closed",
-    "limits": "- Does not execute the power itself; enforcement only.\n- Full runtime loop, tool-runner, and sessions are planned for Phase 1 (S07)."
+    "what_it_is": "JARVIS runtime permissions enforcement and single-path executor (gate check before every power, safety kill state translation, decision logging).",
+    "can_do": "- Checks permissions before power execution using brain's gate() policy\n- Reads kill switch state from safety and passes to gate fail-closed\n- Single entrypoint executePower(powerId, run) guarantees no power runs without gate evaluation\n- Enforces L0-L4 autonomy and confirmation rules (kill ON stops run; unreadable stops run; L2 requires confirmation)\n- Emits decision log entry after power evaluation or run\n- Rejects unknown powers fail-closed",
+    "limits": "- Does not persist decision logs to database yet; emits in-memory callback (S07/S19 will wire audit table).\n- Full runtime agent loop, tool-runner, and sessions are planned for Phase 1 (S07)."
   },
   "packages.kinds": {
     "status": "planned",
