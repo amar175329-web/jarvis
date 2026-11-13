@@ -1,0 +1,7 @@
+**/*.test.ts
+**/*.test.mjs
+api/**/tests/**
+packages/**/tests/**
+packages/**/tests-real/**
+api/chat/threads.*.ts
+api/chat/messages.*.ts

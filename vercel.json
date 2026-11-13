@@ -1,4 +1,7 @@
 {
   "cleanUrls": true,
-  "headers": [{ "source": "/(.*)", "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }] }]
+  "headers": [{ "source": "/(.*)", "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }] }],
+  "rewrites": [
+    { "source": "/api/chat/:action", "destination": "/api/chat" }
+  ]
 }

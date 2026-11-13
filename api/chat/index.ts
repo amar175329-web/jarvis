@@ -417,3 +417,16 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
 
   return new Response(stream, { status: 200, headers });
 }
+
+// Default export routing all chat endpoints when consolidated on Vercel
+export default async function handler(request: Request, options: ChatOptions = {}): Promise<Response> {
+  const url = new URL(request.url);
+  const pathname = request.headers.get('x-matched-path') || url.pathname;
+  if (pathname.endsWith('/threads.list')) return threadsListHandler(request, options);
+  if (pathname.endsWith('/threads.create')) return threadsCreateHandler(request, options);
+  if (pathname.endsWith('/messages.list')) return messagesListHandler(request, options);
+  if (pathname.endsWith('/messages.send')) return messagesSendHandler(request, options);
+  if (pathname.endsWith('/messages.stream')) return messagesStreamHandler(request, options);
+  return Response.json({ ok: false, error: { code: 'not_found', message: `chat route not found for ${pathname}` } }, { status: 404 });
+}
+
