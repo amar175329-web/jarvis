@@ -59,7 +59,7 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
     // User A uploads own file
     const upA = await fetch(`${env.TEST_SUPABASE_URL}/storage/v1/object/files/${userA.uid}/isolation.txt`, {
       method: 'POST',
-      headers: { 'apikey': env.TEST_SUPABASE_ANON_KEY, 'Authorization': `Bearer ${userA.token}`, 'Content-Type': 'text/plain' },
+      headers: { 'apikey': env.TEST_SUPABASE_ANON_KEY, 'Authorization': `Bearer ${userA.token}`, 'Content-Type': 'text/plain', 'x-upsert': 'true' },
       body: testPayload
     });
     assert.ok(upA.status === 200 || upA.status === 409, `Upload A status ${upA.status}`);
@@ -87,7 +87,7 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
     // User B uploads into own folder
     const upB = await fetch(`${env.TEST_SUPABASE_URL}/storage/v1/object/files/${userB.uid}/own.txt`, {
       method: 'POST',
-      headers: { 'apikey': env.TEST_SUPABASE_ANON_KEY, 'Authorization': `Bearer ${userB.token}`, 'Content-Type': 'text/plain' },
+      headers: { 'apikey': env.TEST_SUPABASE_ANON_KEY, 'Authorization': `Bearer ${userB.token}`, 'Content-Type': 'text/plain', 'x-upsert': 'true' },
       body: 'User B content'
     });
     assert.ok(upB.status === 200 || upB.status === 409, `Upload B status ${upB.status}`);
@@ -200,6 +200,88 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
         /violates foreign key constraint/i
       );
     });
+  });
+
+  await t.test('chat HTTP PostgREST flow: User A creates thread, User B cannot see or query it', async () => {
+    // User A creates thread via PostgREST
+    const createRes = await fetch(`${env.TEST_SUPABASE_URL}/rest/v1/chat_threads`, {
+      method: 'POST',
+      headers: {
+        'apikey': env.TEST_SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${userA.token}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+      },
+      body: JSON.stringify({
+        owner_id: userA.uid,
+        title: 'User A HTTP Thread',
+      }),
+    });
+    assert.equal(createRes.status, 201, `Thread creation status ${createRes.status}`);
+    const createdThreads = await createRes.json();
+    const threadAId = createdThreads[0].id;
+    assert.ok(threadAId, 'Thread ID must exist');
+
+    // User A adds message
+    const msgRes = await fetch(`${env.TEST_SUPABASE_URL}/rest/v1/chat_messages`, {
+      method: 'POST',
+      headers: {
+        'apikey': env.TEST_SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${userA.token}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        owner_id: userA.uid,
+        thread_id: threadAId,
+        role: 'user',
+        content: 'Confidential message via HTTP',
+        sequence: 1,
+      }),
+    });
+    assert.equal(msgRes.status, 201, `Message creation status ${msgRes.status}`);
+
+    // User B attempts to read threads (must be empty or not contain threadAId)
+    const listResB = await fetch(`${env.TEST_SUPABASE_URL}/rest/v1/chat_threads?id=eq.${threadAId}`, {
+      method: 'GET',
+      headers: {
+        'apikey': env.TEST_SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${userB.token}`,
+      },
+    });
+    assert.equal(listResB.status, 200);
+    const threadsB = await listResB.json();
+    assert.equal(threadsB.length, 0, 'User B must not see User A thread');
+
+    // User B attempts to read messages in thread A (must return 0 messages)
+    const msgListB = await fetch(`${env.TEST_SUPABASE_URL}/rest/v1/chat_messages?thread_id=eq.${threadAId}`, {
+      method: 'GET',
+      headers: {
+        'apikey': env.TEST_SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${userB.token}`,
+      },
+    });
+    assert.equal(msgListB.status, 200);
+    const msgsB = await msgListB.json();
+    assert.equal(msgsB.length, 0, 'User B must not see messages from User A thread');
+
+    // User B attempts to inject a message into User A's thread (must fail)
+    const injectResB = await fetch(`${env.TEST_SUPABASE_URL}/rest/v1/chat_messages`, {
+      method: 'POST',
+      headers: {
+        'apikey': env.TEST_SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${userB.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        owner_id: userB.uid,
+        thread_id: threadAId,
+        role: 'user',
+        content: 'Hacked by B',
+        sequence: 2,
+      }),
+    });
+    assert.ok(injectResB.status >= 400, 'User B must be rejected when inserting into User A thread');
   });
 
   await client.end();

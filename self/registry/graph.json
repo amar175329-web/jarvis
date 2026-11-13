@@ -3,8 +3,21 @@
     "uses": [],
     "knows": [],
     "used_by": [
+      "api.chat",
       "api.system"
     ]
+  },
+  "api.chat": {
+    "uses": [
+      "api.auth",
+      "packages.chat",
+      "packages.model-gateway",
+      "packages.events",
+      "packages.safety",
+      "packages.contracts"
+    ],
+    "knows": [],
+    "used_by": []
   },
   "api.system": {
     "uses": [
@@ -826,7 +839,9 @@
       "packages.harness",
       "packages.voice"
     ],
-    "used_by": []
+    "used_by": [
+      "api.chat"
+    ]
   },
   "packages.contracts": {
     "uses": [
@@ -835,6 +850,7 @@
     ],
     "knows": [],
     "used_by": [
+      "api.chat",
       "packages.logging"
     ]
   },
@@ -863,6 +879,7 @@
     ],
     "knows": [],
     "used_by": [
+      "api.chat",
       "api.system",
       "memory.engine",
       "packages.brain",
@@ -949,6 +966,7 @@
     ],
     "knows": [],
     "used_by": [
+      "api.chat",
       "memory.engine",
       "packages.chat",
       "packages.memory",
@@ -979,6 +997,7 @@
     "uses": [],
     "knows": [],
     "used_by": [
+      "api.chat",
       "api.system",
       "memory.engine",
       "packages.brain",

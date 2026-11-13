@@ -8,8 +8,8 @@ const MAX_BODY_BYTES = 10 * 1024;
 type AuthUser = { id: string; email: string };
 type CookieSession = { access_token: string; refresh_token?: string; issued_at: number };
 type AuthOptions = { env?: Record<string, string | undefined>; fetch?: typeof fetch };
-type SessionResult =
-  | { ok: true; user: AuthUser; expiresIn: number; setCookie?: string }
+export type SessionResult =
+  | { ok: true; user: AuthUser; expiresIn: number; setCookie?: string; accessToken: string }
   | { ok: false; status: 401 | 403 | 503; message: string; clearCookie?: boolean };
 
 function config(o: AuthOptions) {
@@ -113,6 +113,11 @@ export async function readOwnerSession(request: Request, options: AuthOptions = 
   const o = config(options);
   if (!o) return { ok: false, status: 503, message: 'authentication is not configured' };
   let session = decodeCookie(request.headers.get('cookie'));
+  if (!session) {
+    const auth = request.headers.get('authorization') ?? '';
+    const match = /^Bearer\s+([A-Za-z0-9._~-]{20,4096})$/i.exec(auth);
+    if (match) session = { access_token: match[1], issued_at: Date.now() };
+  }
   if (!session) return { ok: false, status: 401, message: 'owner session is missing', clearCookie: true };
   let verified = await verifyAccessToken(session.access_token, o);
   let rotated = false;
@@ -125,7 +130,7 @@ export async function readOwnerSession(request: Request, options: AuthOptions = 
   if (!verified.ok) return { ok: false, status: verified.status, message: verified.status === 401 ? 'owner session is invalid' : 'authentication provider is unavailable', clearCookie: verified.status === 401 };
   if (verified.user.email !== o.ownerEmail) return { ok: false, status: 403, message: 'this account is not the configured JARVIS owner', clearCookie: true };
   const expiresIn = session.refresh_token ? SESSION_MAX_AGE : Math.max(0, ACCESS_ONLY_MAX_AGE - Math.floor((Date.now() - session.issued_at) / 1000));
-  return { ok: true, user: verified.user, expiresIn, ...(rotated ? { setCookie: setCookie(session, true) } : {}) };
+  return { ok: true, user: verified.user, expiresIn, accessToken: session.access_token, ...(rotated ? { setCookie: setCookie(session, true) } : {}) };
 }
 
 export async function getOwnerSessionResponse(request: Request, options: AuthOptions = {}): Promise<Response> {

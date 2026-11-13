@@ -3,6 +3,10 @@
     "status": "built",
     "evidence": null
   },
+  "api.chat": {
+    "status": "built",
+    "evidence": null
+  },
   "api.system": {
     "status": "built",
     "evidence": null

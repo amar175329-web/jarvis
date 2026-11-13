@@ -1,0 +1,21 @@
+{
+  "id": "api.chat",
+  "name": "chat API",
+  "kind": "ops-part",
+  "group": "api",
+  "owner_squad": "S07",
+  "phase": 1,
+  "status": "built",
+  "does": "Owner-authenticated chat endpoints (threads and messages) with RLS thread store, model streaming, and metadata-only events",
+  "uses": [
+    "api.auth",
+    "packages.chat",
+    "packages.model-gateway",
+    "packages.events",
+    "packages.safety",
+    "packages.contracts"
+  ],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

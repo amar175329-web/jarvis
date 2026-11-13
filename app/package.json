@@ -8,7 +8,7 @@
     "preview": "vite preview",
     "test:visual": "node tests/visual.test.mjs",
     "test:behavior": "node tests/behavior.test.mjs",
-    "test": "node --test tests/kill-switch-policy.test.mjs",
+    "test": "node --test tests/kill-switch-policy.test.mjs tests/chat.test.mjs",
     "test:ui": "node tests/behavior.test.mjs && node tests/visual.test.mjs"
   },
   "dependencies": {
