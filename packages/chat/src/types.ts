@@ -72,3 +72,9 @@ export interface ChatMemoryPort {
   recall(options: { text: string; purpose?: MemoryPurpose }): Promise<Recall>;
   remember(candidate: Candidate): Promise<RememberResult>;
 }
+
+/** Server-side adapter backed only by migration 0034 tables and authenticated RLS. */
+export interface ChatThreadStore {
+  listMessages(input: { ownerId: string; threadId: string; limit: number }): Promise<ChatMessage[]>;
+  appendMessage(input: { ownerId: string; threadId: string; role: ChatMessage['role']; content: string }): Promise<void | ChatMessage>;
+}

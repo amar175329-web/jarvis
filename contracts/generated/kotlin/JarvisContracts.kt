@@ -23,6 +23,11 @@ object JarvisRoutes {
     const val PHONE_COMMANDS_ACK = "/api/phone/commands.ack"
     const val PHONE_COMMANDS_CANCEL = "/api/phone/commands.cancel"
     const val PHONE_COMMANDS_LIST = "/api/phone/commands.list"
+    const val CHAT_THREADS_LIST = "/api/chat/threads.list"
+    const val CHAT_THREADS_CREATE = "/api/chat/threads.create"
+    const val CHAT_MESSAGES_LIST = "/api/chat/messages.list"
+    const val CHAT_MESSAGES_SEND = "/api/chat/messages.send"
+    const val CHAT_MESSAGES_STREAM = "/api/chat/messages.stream"
     const val VOICE_TRANSCRIBE = "/api/voice/transcribe"
     const val VOICE_SPEAK = "/api/voice/speak"
 }
@@ -90,6 +95,68 @@ class AuthSessionGetRequest
 data class AuthSessionGetResponse(
     @SerialName("user") val user: AuthSessionGetResponseUser,
     @SerialName("expires_in") val expiresIn: Int
+)
+
+@Serializable
+data class ChatMessagesListRequest(
+    @SerialName("thread_id") val threadId: String,
+    @SerialName("before_sequence") val beforeSequence: Int? = null,
+    @SerialName("limit") val limit: Int? = null
+)
+
+@Serializable
+data class ChatMessagesListResponse(
+    @SerialName("messages") val messages: List<ChatMessagesListResponseMessagesItem>,
+    @SerialName("next_before_sequence") val nextBeforeSequence: Int? = null
+)
+
+@Serializable
+data class ChatMessagesSendRequest(
+    @SerialName("thread_id") val threadId: String,
+    @SerialName("message_id") val messageId: String? = null,
+    @SerialName("text") val text: String,
+    @SerialName("data") val data: List<ChatMessagesSendRequestDataItem>? = null,
+    @SerialName("attachments") val attachments: List<ChatMessagesSendRequestAttachmentsItem>? = null,
+    @SerialName("voice") val voice: ChatMessagesSendRequestVoice? = null
+)
+
+@Serializable
+data class ChatMessagesSendResponse(
+    @SerialName("accepted") val accepted: Boolean,
+    @SerialName("thread_id") val threadId: String,
+    @SerialName("message_id") val messageId: String,
+    @SerialName("stream_path") val streamPath: String
+)
+
+@Serializable
+data class ChatMessagesStreamRequest(
+    @SerialName("thread_id") val threadId: String,
+    @SerialName("message_id") val messageId: String,
+    @SerialName("after_index") val afterIndex: Int? = null
+)
+
+typealias ChatMessagesStreamResponse = JsonElement
+
+@Serializable
+data class ChatThreadsCreateRequest(
+    @SerialName("title") val title: String? = null
+)
+
+@Serializable
+data class ChatThreadsCreateResponse(
+    @SerialName("thread") val thread: ChatThreadsCreateResponseThread
+)
+
+@Serializable
+data class ChatThreadsListRequest(
+    @SerialName("before") val before: String? = null,
+    @SerialName("limit") val limit: Int? = null
+)
+
+@Serializable
+data class ChatThreadsListResponse(
+    @SerialName("threads") val threads: List<ChatThreadsListResponseThreadsItem>,
+    @SerialName("next_before") val nextBefore: String? = null
 )
 
 @Serializable
@@ -337,6 +404,78 @@ data class AuthSessionCreateResponseUser(
 data class AuthSessionGetResponseUser(
     @SerialName("id") val id: String,
     @SerialName("email") val email: String
+)
+
+@Serializable
+enum class ChatMessagesListResponseMessagesItemRole {
+    @SerialName("user") USER,
+    @SerialName("assistant") ASSISTANT
+}
+
+@Serializable
+data class ChatMessagesListResponseMessagesItem(
+    @SerialName("id") val id: String,
+    @SerialName("thread_id") val threadId: String,
+    @SerialName("role") val role: ChatMessagesListResponseMessagesItemRole,
+    @SerialName("content") val content: String,
+    @SerialName("sequence") val sequence: Int,
+    @SerialName("created_at") val createdAt: String
+)
+
+@Serializable
+enum class ChatMessagesSendRequestDataItemSource {
+    @SerialName("web") WEB,
+    @SerialName("file") FILE,
+    @SerialName("tool") TOOL,
+    @SerialName("screen") SCREEN,
+    @SerialName("message") MESSAGE
+}
+
+@Serializable
+data class ChatMessagesSendRequestDataItem(
+    @SerialName("source") val source: ChatMessagesSendRequestDataItemSource,
+    @SerialName("text") val text: String
+)
+
+@Serializable
+data class ChatMessagesSendRequestAttachmentsItem(
+    @SerialName("id") val id: String,
+    @SerialName("storage_ref") val storageRef: String,
+    @SerialName("file_name") val fileName: String? = null,
+    @SerialName("mime_type") val mimeType: String,
+    @SerialName("size_bytes") val sizeBytes: Int? = null
+)
+
+@Serializable
+enum class ChatMessagesSendRequestVoiceMimeType {
+    @SerialName("audio/webm") AUDIO_WEBM,
+    @SerialName("audio/wav") AUDIO_WAV,
+    @SerialName("audio/mp4") AUDIO_MP4,
+    @SerialName("audio/mpeg") AUDIO_MPEG,
+    @SerialName("audio/ogg") AUDIO_OGG
+}
+
+@Serializable
+data class ChatMessagesSendRequestVoice(
+    @SerialName("audio_ref") val audioRef: String,
+    @SerialName("mime_type") val mimeType: ChatMessagesSendRequestVoiceMimeType,
+    @SerialName("language") val language: String? = null
+)
+
+@Serializable
+data class ChatThreadsCreateResponseThread(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String?,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String
+)
+
+@Serializable
+data class ChatThreadsListResponseThreadsItem(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String?,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String
 )
 
 @Serializable

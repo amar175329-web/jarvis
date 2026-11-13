@@ -34,6 +34,32 @@ const VoiceSpeakInput = z.object({
   voice_id: z.string().min(1).max(100).optional(),
 }).strict();
 
+// S07 authenticated chat contracts. Message content is stored only in migration 0034 tables (RLS).
+const ChatThread = z.object({
+  id: Uuid, title: z.string().max(200).nullable(), created_at: UtcTime, updated_at: UtcTime,
+}).strict();
+const ChatMessage = z.object({
+  id: Uuid, thread_id: Uuid, role: z.enum(['user', 'assistant']), content: z.string().max(12000),
+  sequence: z.number().int().min(0), created_at: UtcTime,
+}).strict();
+const ChatDataInput = z.object({
+  source: z.enum(['web', 'file', 'tool', 'screen', 'message']), text: z.string().max(12000),
+}).strict();
+const ChatAttachmentInput = z.object({
+  id: Uuid, storage_ref: z.string().min(1).max(500), file_name: z.string().max(255).optional(),
+  mime_type: z.string().min(1).max(100), size_bytes: z.number().int().nonnegative().max(10485760).optional(),
+}).strict();
+const ChatVoiceInput = z.object({
+  audio_ref: z.string().min(1).max(500), mime_type: z.enum(['audio/webm', 'audio/wav', 'audio/mp4', 'audio/mpeg', 'audio/ogg']),
+  language: z.string().min(2).max(35).optional(),
+}).strict();
+const ChatStreamFrame = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('chat.message.started'), thread_id: Uuid, message_id: Uuid }).strict(),
+  z.object({ type: z.literal('chat.message.delta'), thread_id: Uuid, message_id: Uuid, index: z.number().int().min(0), text: z.string().max(12000) }).strict(),
+  z.object({ type: z.literal('chat.message.completed'), thread_id: Uuid, message_id: Uuid, chunk_count: z.number().int().min(0) }).strict(),
+  z.object({ type: z.literal('chat.message.error'), thread_id: Uuid, message_id: Uuid, code: z.string().min(1).max(80) }).strict(),
+]);
+
 export const ROUTES = {
   'auth.session.create': route({
     path: '/api/auth/session.create', method: 'POST', auth: 'none', killSensitive: false, errors: ['bad_request', 'unauthorized', 'forbidden', 'unavailable'],
@@ -118,6 +144,40 @@ export const ROUTES = {
     summary: 'Recent commands, newest first.',
     input: z.object({ device_id: Uuid.optional(), state: z.string().max(20).optional(), limit: z.number().int().min(1).max(200).default(50) }).strict(),
     output: z.object({ commands: z.array(PhoneCommand) }).strict(),
+  }),
+  // S07 CHAT (LEAD accepted CR-4, 2026-11-13). All routes require the owner session.
+  'chat.threads.list': route({
+    path: '/api/chat/threads.list', method: 'POST', auth: 'owner', killSensitive: false, errors: ['bad_request', 'unavailable'],
+    summary: 'List only the authenticated owner threads, newest first.',
+    input: z.object({ before: UtcTime.optional(), limit: z.number().int().min(1).max(100).default(30) }).strict(),
+    output: z.object({ threads: z.array(ChatThread), next_before: UtcTime.optional() }).strict(),
+  }),
+  'chat.threads.create': route({
+    path: '/api/chat/threads.create', method: 'POST', auth: 'owner', killSensitive: false, errors: ['bad_request', 'unavailable'],
+    summary: 'Create an owner-scoped chat thread. Database RLS remains the authorization boundary.',
+    input: z.object({ title: z.string().max(200).optional() }).strict(),
+    output: z.object({ thread: ChatThread }).strict(),
+  }),
+  'chat.messages.list': route({
+    path: '/api/chat/messages.list', method: 'POST', auth: 'owner', killSensitive: false, errors: ['bad_request', 'not_found', 'unavailable'],
+    summary: 'List messages from one owner-scoped thread, in sequence order.',
+    input: z.object({ thread_id: Uuid, before_sequence: z.number().int().min(0).optional(), limit: z.number().int().min(1).max(100).default(50) }).strict(),
+    output: z.object({ messages: z.array(ChatMessage), next_before_sequence: z.number().int().min(0).optional() }).strict(),
+  }),
+  'chat.messages.send': route({
+    path: '/api/chat/messages.send', method: 'POST', auth: 'owner', killSensitive: true, errors: ['bad_request', 'not_found', 'kill_switch_on', 'rate_limited', 'unavailable'],
+    summary: 'Accept an owner chat message and start model streaming; content is not written to the events table.',
+    input: z.object({
+      thread_id: Uuid, message_id: Uuid.optional(), text: z.string().min(1).max(12000),
+      data: z.array(ChatDataInput).max(10).optional(), attachments: z.array(ChatAttachmentInput).max(10).optional(), voice: ChatVoiceInput.optional(),
+    }).strict(),
+    output: z.object({ accepted: z.literal(true), thread_id: Uuid, message_id: Uuid, stream_path: z.literal('/api/chat/messages.stream') }).strict(),
+  }),
+  'chat.messages.stream': route({
+    path: '/api/chat/messages.stream', method: 'POST', auth: 'owner', killSensitive: true, errors: ['bad_request', 'not_found', 'kill_switch_on', 'unavailable'],
+    summary: 'Open the authenticated SSE stream for one owner message; text deltas travel only on this response, never in event rows.',
+    input: z.object({ thread_id: Uuid, message_id: Uuid, after_index: z.number().int().min(0).optional() }).strict(),
+    output: ChatStreamFrame, // one SSE frame; delta text exists only on this authenticated stream, never in the events table
   }),
   // S21 contract request (approved). Payloads carry references/metadata, never raw audio bytes.
   'voice.transcribe': route({

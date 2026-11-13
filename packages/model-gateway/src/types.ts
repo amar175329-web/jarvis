@@ -20,9 +20,11 @@ export interface UsageStore {
 }
 export interface KeyProvider { get(provider: string): string | undefined; envName(provider: string): string }
 export type ProviderResult = { text: string; tokensIn: number; tokensOut: number };
+export type ProviderChunkHandler = (delta: string) => void | Promise<void>;
 export interface Provider {
   name: string;
-  invoke(args: { model: string; input: unknown; maxOutputTokens: number; apiKey: string; signal: AbortSignal }): Promise<ProviderResult>;
+  /** Optional streaming callback. Existing providers remain compatible. */
+  invoke(args: { model: string; input: unknown; maxOutputTokens: number; apiKey: string; signal: AbortSignal; onChunk?: ProviderChunkHandler }): Promise<ProviderResult>;
 }
 export type GatewayRequest = { provider: string; model: string; task?: string; input: unknown; maxOutputTokens: number; estimatedInputTokens: number };
 export type GatewayErrorCode = 'kill_switch_on' | 'unknown_model' | 'unknown_provider' | 'unpriced_model' | 'budget_exceeded' | 'no_key' | 'provider_error' | 'timeout';

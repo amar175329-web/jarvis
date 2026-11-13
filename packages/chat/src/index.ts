@@ -5,3 +5,5 @@ export * from './stream.ts';
 export * from './pipeline.ts';
 export * from './power-runner.ts';
 export * from './providers.ts';
+export * from './care.ts';
+export * from './thread-store.ts';

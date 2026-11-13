@@ -1,4 +1,5 @@
-import type { Provider, ProviderResult } from '../../model-gateway/src/types.ts';
+import type { Gateway } from '../../model-gateway/src/gateway.ts';
+import type { Provider, ProviderChunkHandler, ProviderResult } from '../../model-gateway/src/types.ts';
 
 type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 type PromptEnvelope = { system?: string; user?: string };
@@ -14,7 +15,7 @@ function promptParts(input: unknown): PromptEnvelope {
 function estimateTokens(value: string): number { return Math.max(1, Math.ceil(value.length / 4)); }
 function parseJson(data: string): unknown | null { try { return JSON.parse(data) as unknown; } catch { return null; } }
 
-async function consumeSse(response: Response, signal: AbortSignal, parse: DeltaParser, fallbackInputTokens: number): Promise<ProviderResult> {
+async function consumeSse(response: Response, signal: AbortSignal, parse: DeltaParser, fallbackInputTokens: number, onChunk?: ProviderChunkHandler): Promise<ProviderResult> {
   if (!response.ok) throw new Error('provider request failed'); // Never expose/log provider body; it can echo secrets.
   if (!response.body) throw new Error('provider stream missing');
   const reader = response.body.getReader();
@@ -22,11 +23,12 @@ async function consumeSse(response: Response, signal: AbortSignal, parse: DeltaP
   const usage: UsageState = { input: 0, output: 0 };
   const output: string[] = [];
   let buffer = '';
-  const frame = (raw: string) => {
+  const frame = async (raw: string) => {
     const data = raw.split(/\r?\n/).filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trimStart()).join('\n');
     if (!data || data === '[DONE]') return;
     const event = parseJson(data); if (!event) return;
-    const delta = parse(event, usage); if (delta) output.push(delta);
+    const delta = parse(event, usage);
+    if (delta) { output.push(delta); await onChunk?.(delta); }
   };
   try {
     for (;;) {
@@ -37,13 +39,13 @@ async function consumeSse(response: Response, signal: AbortSignal, parse: DeltaP
       let split = buffer.search(/\r?\n\r?\n/);
       while (split >= 0) {
         const separator = buffer.slice(split).match(/^\r?\n\r?\n/)?.[0] ?? '\n\n';
-        frame(buffer.slice(0, split));
+        await frame(buffer.slice(0, split));
         buffer = buffer.slice(split + separator.length);
         split = buffer.search(/\r?\n\r?\n/);
       }
     }
     buffer += decoder.decode();
-    if (buffer.trim()) frame(buffer);
+    if (buffer.trim()) await frame(buffer);
   } finally {
     try { reader.releaseLock(); } catch { /* already released */ }
   }
@@ -68,7 +70,7 @@ export function createAnthropicProvider(fetcher: FetchLike = fetch, endpoint = '
         if (e.type === 'message_start') usage.input = e.message?.usage?.input_tokens ?? usage.input;
         if (e.type === 'message_delta') usage.output = e.usage?.output_tokens ?? usage.output;
         return e.type === 'content_block_delta' && e.delta?.type === 'text_delta' ? (e.delta.text ?? '') : '';
-      }, estimateTokens(JSON.stringify(args.input)));
+      }, estimateTokens(JSON.stringify(args.input)), args.onChunk);
     },
   };
 }
@@ -89,7 +91,7 @@ export function createOpenAIProvider(fetcher: FetchLike = fetch, endpoint = 'htt
         usage.output = e.usage?.completion_tokens ?? usage.output;
         const content = e.choices?.[0]?.delta?.content;
         return typeof content === 'string' ? content : Array.isArray(content) ? content.map((x) => x.text ?? '').join('') : '';
-      }, estimateTokens(JSON.stringify(args.input)));
+      }, estimateTokens(JSON.stringify(args.input)), args.onChunk);
     },
   };
 }
@@ -114,11 +116,18 @@ export function createGeminiProvider(fetcher: FetchLike = fetch, endpointBase = 
         usage.input = e.usageMetadata?.promptTokenCount ?? usage.input;
         usage.output = e.usageMetadata?.candidatesTokenCount ?? usage.output;
         return e.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? '';
-      }, estimateTokens(JSON.stringify(args.input)));
+      }, estimateTokens(JSON.stringify(args.input)), args.onChunk);
     },
   };
 }
 
 export function createProviderAdapters(fetcher: FetchLike = fetch): Provider[] {
   return [createAnthropicProvider(fetcher), createOpenAIProvider(fetcher), createGeminiProvider(fetcher)];
+}
+
+/** Register S07's fetch-only adapters in the shared gateway provider map. No key/model/price is supplied here. */
+export function registerChatProviderAdapters(gateway: Pick<Gateway, 'registerProvider'>, fetcher: FetchLike = fetch): string[] {
+  const adapters = createProviderAdapters(fetcher);
+  for (const adapter of adapters) gateway.registerProvider(adapter);
+  return adapters.map((adapter) => adapter.name);
 }

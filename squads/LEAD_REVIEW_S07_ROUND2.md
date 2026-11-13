@@ -1,0 +1,5 @@
+# LEAD REVIEW - S07 chat round 2 (GPT)
+ACCEPTED with LEAD fix. Verified by running on P9 base: patch applies clean (git am); scope = packages/chat, model-gateway, events registry, contracts routes (as LEAD allowed); register 167, check 40; chat 37, gateway 22, events 24; full suite 413 tests / 17 packages.
+LEAD fix: GPT could not run `npm run generate` (no zod-to-json-schema), so contracts test 11 failed (generated routes missing /api/chat/*). Regenerated contracts/generated/{routes.json,kotlin/JarvisContracts.kt}; contracts 15/15.
+Probe (free-only config): Roman + Devanagari self-harm/abuse -> fixed care reply, 0 model calls; salary/password -> needs_model, 0 calls; "project khatam", "kaam khatam kar dunga", weather -> normal call.
+Open: (1) With kill switch ON a person in crisis gets only "Kill switch ON hai" (care reply is local text, not an action: recommend showing it even then; Amit to decide). (2) thread sequence is per-process; multi-instance needs DB-side allocator. (3) private model slot still blank: Amit must pick provider/model/price. (4) routes are schemas only: next = API handlers + SSE + app wiring (Antigravity P10).

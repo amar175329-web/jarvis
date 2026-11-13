@@ -1,14 +1,15 @@
 # CONTRACT REQUESTS (S07 -> S00/LEAD, S13, S22)
-Shared gateway interfaces, event registry, routes and harness implementation remain owned by their squads. S07 has not modified those folders.
 
-| # | Kise | Kya | Kyun |
+ROUND 2 STATUS (2026-11-13): CR-1, CR-2, CR-3 and CR-4 were integrated against the LEAD-approved interfaces. Ownership stays with S00/S22 for their shared components; S07 made only the explicitly approved Round 2 file changes.
+
+| # | Status | Kise | Contract delivered |
 |---|---|---|---|
-| CR-1 | S00/S13 (`packages/model-gateway`) | Register the S07 Anthropic/OpenAI/Gemini adapter factories in the gateway provider map, then add a stream-aware call (`callStream` or `Provider.invoke` `onChunk`) that preserves kill -> allow-list -> budget -> key -> timeout -> usage; retain `call()` compatibility. Provider chunks must never be logged. | `Provider.invoke()` currently returns only `{text,tokensIn,tokensOut}` and the gateway has no S07 adapters registered. S07 adapters consume provider SSE but the gateway buffers until completion, so neither model calls nor true token-by-token UI delivery are connected until this contract lands. |
-| CR-2 | S00 (`packages/events`) | Register metadata-only event names: `chat.thread.created {thread_id}`, `chat.message.created {thread_id,message_id,role}`, `chat.message.started {thread_id,message_id}`, `chat.message.delta {thread_id,message_id,index}`, `chat.message.completed {thread_id,message_id,chunk_count}`, `chat.message.error {thread_id,message_id,code}`, `chat.attachment.referenced {thread_id,message_id,attachment_id,mime_type}`. | Event registry rejects unregistered names. Never put chat text, delta text, file content, storage refs, voice transcripts or secrets into the events table. Live delta text stays on the authenticated chat stream transport. |
-| CR-3 | S22/S00 (`packages/harness`) | Export the agreed `executePower({reg,powerId,store,ownerId,confirmed?,run,onDecisionLog?})` returning `{executed,gate,result?,error?,decisionLog}`. Keep the permission gate, kill re-check and audit inside the harness. | Existing harness currently exposes `checkPowerPermission` only. S07 contains only a typed `PowerRunner` port and fake-runner tests; it does not edit or bypass the harness. |
-| CR-4 | S00 (`packages/contracts`, API routes) | Approve `/api/chat/threads.*`, `/api/chat/messages.*`, and authenticated streaming route contracts using migration 0034. Attachments and voice stay opaque references owned by storage/S21. | S07 supplies thread/message/attachment types and the local schema. Shared route contracts are not silently added by this squad. |
+| CR-1 | COMPLETE (S07 adapter + gateway seam) | S00/S13 (`packages/model-gateway`) | `registerProvider`, `Provider.invoke.onChunk`, and `callStream()` preserve kill -> allow-list -> worst-case budget -> key -> timeout -> usage. Existing `call()` remains; gateway logs never contain prompts, deltas, output or keys. |
+| CR-2 | COMPLETE (metadata-only registry) | S00 (`packages/events`) | Seven `chat.*` names are registered with strict metadata schemas only. Delta content and attachment storage refs are not event fields; live delta text exists only on authenticated stream transport. |
+| CR-3 | COMPLETE (production adapter) | S22/S00 (`packages/harness`) | `createHarnessPowerRunner()` imports the existing `executePower` and maps the approved input/result. Harness stays untouched; chat never invokes `run` directly. |
+| CR-4 | COMPLETE (schemas only) | S00 (`packages/contracts`, API routes) | Owner-authenticated Zod contracts now define thread list/create, message list, send and SSE stream frames. HTTP handlers/auth middleware remain API/server ownership. |
 
-## Implementation boundary
-- `packages/chat` owns the chat orchestration and provider adapters.
-- `packages/db/migrations/0034_chat_threads.sql` is the only database change in this bundle; never apply it to real Supabase from this worktree.
-- `app/src/components/Chat.tsx` is read-only and remains unchanged.
+## Round 2 boundary
+- `packages/chat` owns chat orchestration, provider adapter factories, care reply, RLS thread adapter and PowerRunner adapter.
+- Only the LEAD-approved Round 2 paths were edited: `packages/chat/*`, `packages/model-gateway/*`, `packages/events/src/registry.ts`, and `packages/contracts/src/routes.ts`.
+- No migration, harness, brain, memory, safety, voice, app or real Supabase changes were made. `app/src/components/Chat.tsx` remains read-only.

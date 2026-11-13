@@ -4,8 +4,11 @@ import { handleMessage } from '../src/pipeline.ts';
 import { EMPTY_MODEL_ROUTER_CONFIG, routeModel, type ModelRouterConfig } from '../src/model-router.ts';
 import { SYSTEM_PROMPT_BLOCKS, buildSystemPrompt } from '../src/system-prompt.ts';
 import { emitReply, splitReply } from '../src/stream.ts';
-import { assessPowerConfirmation, executeRegisteredPower, parseChatConfirmation, type PowerRunner } from '../src/power-runner.ts';
-import { createAnthropicProvider, createGeminiProvider, createOpenAIProvider } from '../src/providers.ts';
+import { assessPowerConfirmation, createHarnessPowerRunner, executeRegisteredPower, parseChatConfirmation, type PowerRunner } from '../src/power-runner.ts';
+import { createAnthropicProvider, createGeminiProvider, createOpenAIProvider, registerChatProviderAdapters } from '../src/providers.ts';
+import { CARE_REPLY } from '../src/care.ts';
+import type { ChatMessage } from '../src/types.ts';
+import { createRlsChatThreadStore } from '../src/thread-store.ts';
 import { makeRegistry, type Power } from '../../brain/src/power-registry.ts';
 import type { Recall } from '../../memory/src/service.ts';
 import type { ChatStreamEvent } from '../src/types.ts';
@@ -212,4 +215,178 @@ test('blank model slots stay blank; router has no guessed model names or prices'
   const route = routeModel({ depth: 'FAST', privateData: false, config: EMPTY_MODEL_ROUTER_CONFIG });
   assert.equal(route.status, 'unconfigured');
   assert.equal(JSON.stringify(EMPTY_MODEL_ROUTER_CONFIG).includes('price'), false);
+});
+
+
+test('care reply handles Roman self-harm and abuse phrases without memory, private slot or model', async () => {
+  for (const text of ['Mera jeene ka mann nahi hai', 'Mujhe mar jaana hai', 'Main jaan dena chahta hoon', 'Mere saath abuse ho raha hai']) {
+    const gw = gateway(); const mem = fakeMemory();
+    const r = await handleMessage({ text }, deps({ gateway: gw, memory: mem, config: EMPTY_MODEL_ROUTER_CONFIG }));
+    assert.equal(r.status, 'care', text);
+    assert.equal(r.text, CARE_REPLY);
+    assert.doesNotMatch(r.text, /method|tareeka|plan|yojna/i);
+    assert.equal(gw.calls.length, 0, 'care path must not call a model');
+    assert.equal(mem.recalled.length, 0, 'care path must not recall private memory');
+  }
+});
+
+test('care reply handles Devanagari self-harm and abuse phrases without asking needs_model', async () => {
+  const phrases = ['मेरा जीने का मन नहीं है', 'मुझे मर जाना है', 'मेरे साथ घरेलू हिंसा हो रही है'];
+  for (const text of phrases) {
+    const gw = gateway();
+    const r = await handleMessage({ text }, deps({ gateway: gw, config: EMPTY_MODEL_ROUTER_CONFIG }));
+    assert.equal(r.status, 'care', text);
+    assert.equal(r.text, CARE_REPLY);
+    assert.equal(gw.calls.length, 0);
+    assert.doesNotMatch(r.text, /needs_model|private model configured/i);
+  }
+});
+
+test('care stream sends started/deltas/completed for fixed local reply', async () => {
+  const events: ChatStreamEvent[] = [];
+  const r = await handleMessage({ text: 'I want to end my life' }, deps({ emit: (e) => { events.push(e); }, config: EMPTY_MODEL_ROUTER_CONFIG }));
+  assert.equal(r.status, 'care');
+  assert.equal(events[0]?.type, 'chat.message.started');
+  assert.equal(events.at(-1)?.type, 'chat.message.completed');
+  assert.equal(events.filter((e) => e.type === 'chat.message.delta').map((e) => e.text).join(''), CARE_REPLY);
+});
+
+test('chat callStream forwards provider deltas before completion in exact order', async () => {
+  const events: ChatStreamEvent[] = [];
+  const streamed: string[] = [];
+  const gw = {
+    async callStream(_request: unknown, onChunk: (chunk: string) => void | Promise<void>) {
+      await onChunk('Nam'); streamed.push('first');
+      await onChunk('aste'); streamed.push('second');
+      return { ok: true as const, text: 'Namaste', usage: { tokensIn: 8, tokensOut: 2, costUsd: 0 } };
+    },
+  };
+  const r = await handleMessage({ text: 'Hi' }, deps({ gateway: gw, emit: (event) => { events.push(event); } }));
+  assert.equal(r.text, 'Namaste');
+  assert.deepEqual(events.map((e) => e.type), ['chat.message.started', 'chat.message.delta', 'chat.message.delta', 'chat.message.completed']);
+  assert.deepEqual(events.filter((e) => e.type === 'chat.message.delta').map((e) => e.text), ['Nam', 'aste']);
+  assert.deepEqual(streamed, ['first', 'second']);
+});
+
+test('chat thread history includes T1, gates T2 by purpose, redacts T3 and saves only through thread port', async () => {
+  const secret = 'My$trongPass123';
+  const rows: ChatMessage[] = [
+    { id: 'm1', threadId: 't1', ownerId: 'owner-1', role: 'user', content: 'Mujhe chai pasand hai', sequence: 1, createdAt: new Date().toISOString() },
+    { id: 'm2', threadId: 't1', ownerId: 'owner-1', role: 'user', content: 'Meri salary 50000 hai', sequence: 2, createdAt: new Date().toISOString() },
+    { id: 'm3', threadId: 't1', ownerId: 'owner-1', role: 'user', content: `password is ${secret}`, sequence: 3, createdAt: new Date().toISOString() },
+  ];
+  const appended: Array<{ ownerId: string; threadId: string; role: string; content: string }> = [];
+  const threads = {
+    async listMessages(input: { ownerId: string; threadId: string; limit: number }) { assert.equal(input.ownerId, 'owner-1'); assert.equal(input.threadId, 't1'); return rows; },
+    async appendMessage(input: { ownerId: string; threadId: string; role: 'user' | 'assistant'; content: string }) { appended.push(input); },
+  };
+  const gw = gateway();
+  const r = await handleMessage({ text: 'Hi', threadId: 't1' }, { ...deps({ gateway: gw }), ownerId: 'owner-1', threads });
+  assert.equal(r.status, 'ok');
+  const user = (gw.calls[0] as { input: { user: string } }).input.user;
+  assert.match(user, /Mujhe chai pasand hai/);
+  assert.doesNotMatch(user, /Meri salary 50000/);
+  assert.doesNotMatch(user, new RegExp(secret));
+  assert.equal(appended.length, 2);
+  assert.deepEqual(appended.map((m) => m.role), ['user', 'assistant']);
+  assert.ok(appended.every((m) => m.ownerId === 'owner-1' && m.threadId === 't1'));
+
+  const gw2 = gateway();
+  await handleMessage({ text: 'Is history se mujhe jawab do', threadId: 't1', memoryPurpose: { purpose: 'ask', reason: 'explicit_question' } }, { ...deps({ gateway: gw2 }), ownerId: 'owner-1', threads });
+  const secondUser = (gw2.calls[0] as { input: { user: string } }).input.user;
+  assert.match(secondUser, /Meri salary 50000/);
+  assert.doesNotMatch(secondUser, new RegExp(secret));
+  assert.match(secondUser, /\[hata diya\]/);
+  assert.equal((gw2.calls[0] as { provider: string }).provider, 'anthropic');
+});
+
+test('thread history obeys explicit history token budget', async () => {
+  const rows: ChatMessage[] = [{ id: 'm', threadId: 't', ownerId: 'o', role: 'user', content: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.repeat(8), sequence: 1, createdAt: new Date().toISOString() }];
+  const threads = { async listMessages() { return rows; }, async appendMessage() {} };
+  const gw = gateway();
+  await handleMessage({ text: 'Hi', threadId: 't' }, { ...deps({ gateway: gw }), ownerId: 'o', threads, historyTokenBudget: 30 });
+  const user = (gw.calls[0] as { input: { user: string } }).input.user;
+  assert.match(user, /ABCDE/);
+  assert.doesNotMatch(user, /ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNO/);
+  const historyFrame = user.slice(user.indexOf('<<DATA source=message'));
+  assert.ok(Math.ceil(historyFrame.length / 4) <= 30, 'serialized DATA wrapper plus history must fit the token budget');
+});
+
+test('Anthropic adapter forwards SSE deltas immediately to the gateway callback', async () => {
+  const chunks: string[] = [];
+  const provider = createAnthropicProvider(async () => sse(
+    { type: 'content_block_delta', delta: { type: 'text_delta', text: 'live-' } },
+    { type: 'content_block_delta', delta: { type: 'text_delta', text: 'token' } },
+  ));
+  const result = await provider.invoke({ model: 'slot', input: { user: 'hi' }, maxOutputTokens: 50, apiKey: 'fake-test-key', signal: new AbortController().signal, onChunk: (chunk) => { chunks.push(chunk); } });
+  assert.equal(result.text, 'live-token');
+  assert.deepEqual(chunks, ['live-', 'token']);
+});
+
+test('chat registers all three provider adapters without assigning models or prices', () => {
+  const registered: string[] = [];
+  const names = registerChatProviderAdapters({ registerProvider(provider) { registered.push(provider.name); } }, async () => sse());
+  assert.deepEqual(names, ['anthropic', 'openai', 'gemini']);
+  assert.deepEqual(registered, names);
+  assert.deepEqual(EMPTY_MODEL_ROUTER_CONFIG, { fast: null, normal: null, deep: null, private: null, tasks: {} });
+});
+
+
+test('RLS thread store uses only chat_messages with owner token and owner-scoped queries', async () => {
+  const calls: Array<{ url: URL; init: RequestInit }> = [];
+  const store = createRlsChatThreadStore({
+    supabaseUrl: 'https://example.supabase.co', anonKey: 'public-anon-test-key', accessToken: 'owner-access-token-test',
+    fetcher: async (input, init = {}) => {
+      const url = input instanceof URL ? input : new URL(String(input));
+      calls.push({ url, init });
+      if (init.method === 'POST') return new Response(null, { status: 201 });
+      return new Response(JSON.stringify([]), { status: 200, headers: { 'content-type': 'application/json' } });
+    },
+  });
+  await store.listMessages({ ownerId: 'owner-a', threadId: 'thread-a', limit: 10 });
+  await store.appendMessage({ ownerId: 'owner-a', threadId: 'thread-a', role: 'user', content: 'private chat body' });
+  assert.equal(calls.length, 3);
+  for (const call of calls) {
+    assert.equal(call.url.pathname, '/rest/v1/chat_messages');
+    assert.equal(call.init.headers && (call.init.headers as Record<string, string>).authorization, 'Bearer owner-access-token-test');
+    assert.equal((call.init.headers as Record<string, string>).apikey, 'public-anon-test-key');
+  }
+  assert.equal(calls[0]!.url.searchParams.get('owner_id'), 'eq.owner-a');
+  assert.equal(calls[0]!.url.searchParams.get('thread_id'), 'eq.thread-a');
+  const inserted = JSON.parse(String(calls[2]!.init.body)) as Record<string, unknown>;
+  assert.deepEqual(inserted, { owner_id: 'owner-a', thread_id: 'thread-a', role: 'user', content: 'private chat body', sequence: 0 });
+  assert.equal(calls[2]!.init.headers && (calls[2]!.init.headers as Record<string, string>).prefer, 'return=minimal');
+});
+
+test('production PowerRunner calls the real harness: kill ON and L2 missing confirmation never run', async () => {
+  const power: Power = { id: 'memory.forget', name: 'Forget', owner_squad: 'S09', autonomy_default: 2, autonomy_current: 2, max_level: 2, needs_confirm: true, reversible: false, tags: ['personal'] };
+  const reg = makeRegistry([power]);
+  const runner = createHarnessPowerRunner();
+  let runs = 0;
+  const killedStore = { async read() { return { kill: true, epoch: 1, changed_at: new Date().toISOString() }; }, async write() { return null; } };
+  const killed = await executeRegisteredPower({ runner, reg, powerId: power.id, store: killedStore, ownerId: 'owner', power, confirmation: { answer: 'yes', channel: 'phone_voice' }, run: () => { runs++; } });
+  assert.equal(killed.executed, false);
+  assert.equal(killed.gate.reason, 'kill switch is ON');
+  assert.equal(runs, 0);
+
+  const offStore = { async read() { return { kill: false, epoch: 1, changed_at: new Date().toISOString() }; }, async write() { return null; } };
+  const noConfirm = await executeRegisteredPower({ runner, reg, powerId: power.id, store: offStore, ownerId: 'owner', power, run: () => { runs++; } });
+  assert.equal(noConfirm.executed, false);
+  assert.equal(runs, 0);
+});
+
+test('production PowerRunner preserves executed=true when harness decision log fails', async () => {
+  const power: Power = { id: 'memory.forget', name: 'Forget', owner_squad: 'S09', autonomy_default: 2, autonomy_current: 2, max_level: 2, needs_confirm: true, reversible: false, tags: ['personal'] };
+  const reg = makeRegistry([power]);
+  const store = { async read() { return { kill: false, epoch: 1, changed_at: new Date().toISOString() }; }, async write() { return null; } };
+  let runs = 0;
+  const result = await executeRegisteredPower({
+    runner: createHarnessPowerRunner(), reg, powerId: power.id, store, ownerId: 'owner', power,
+    confirmation: { answer: 'yes', channel: 'phone_voice' },
+    run: () => { runs++; return 'done'; },
+    onDecisionLog: async () => { throw new Error('test audit log failure'); },
+  });
+  assert.equal(runs, 1);
+  assert.equal(result.executed, true);
+  assert.match(result.logError ?? '', /test audit log failure/);
 });

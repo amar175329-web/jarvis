@@ -1,6 +1,8 @@
 import { confirmed, FINGERPRINT_PROMPT, parseVoiceAnswer, wording, type Answer, type Channel, type ConfirmCtx, type Confirmation } from '../../brain/src/confirm-wording.ts';
 import type { GateResult } from '../../brain/src/gate.ts';
 import type { Power, Registry } from '../../brain/src/power-registry.ts';
+import { executePower as harnessExecutePower } from '../../harness/src/executor.ts';
+import type { KillSwitchStore } from '../../safety/src/index.ts';
 
 export type PowerRunnerArgs = {
   reg: Registry;
@@ -18,6 +20,7 @@ export type PowerRunnerResult = {
   result?: unknown;
   error?: unknown;
   decisionLog: string;
+  logError?: string;
 };
 /** Small seam for the harness's executePower({...}) function. Chat never invokes a power itself. */
 export interface PowerRunner {
@@ -97,4 +100,32 @@ export async function executeRegisteredPower(input: {
     run: input.run,
     onDecisionLog: input.onDecisionLog,
   });
+}
+
+
+/** Production adapter: every execution delegates to the single harness executor. */
+export function createHarnessPowerRunner(): PowerRunner {
+  return {
+    async executePower(input) {
+      const result = await harnessExecutePower({
+        reg: input.reg,
+        powerId: input.powerId,
+        store: input.store as KillSwitchStore,
+        ownerId: input.ownerId,
+        confirmed: input.confirmed?.answer === 'yes',
+        run: input.run,
+        onDecisionLog: (entry) => input.onDecisionLog?.(
+          `Harness decision: ${entry.powerId}; gate=${entry.gateResult.mode}; level=${entry.gateResult.level ?? 'unknown'}; executed=${entry.executed}${entry.logError ? '; audit-log-error occurred' : ''}.`,
+        ),
+      });
+      return {
+        executed: result.executed,
+        gate: result.gate,
+        ...(result.result !== undefined ? { result: result.result } : {}),
+        ...(result.error ? { error: result.error } : {}),
+        decisionLog: `Harness gate=${result.gate.mode}; executed=${result.executed}.`,
+        ...(result.logError ? { logError: result.logError } : {}),
+      };
+    },
+  };
 }
