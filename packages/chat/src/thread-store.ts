@@ -120,6 +120,26 @@ export function createRlsChatThreadStore(input: {
         createdAt: row.created_at,
       }));
     },
+    async getMessage(query) {
+      const url = new URL(base);
+      url.searchParams.set('select', 'id,thread_id,owner_id,role,content,sequence,created_at');
+      url.searchParams.set('owner_id', `eq.${query.ownerId}`);
+      url.searchParams.set('thread_id', `eq.${query.threadId}`);
+      url.searchParams.set('id', `eq.${query.messageId}`);
+      url.searchParams.set('limit', '1');
+      const rows = await readRows(url);
+      if (!rows.length) return null;
+      const row = rows[0]!;
+      return {
+        id: row.id,
+        threadId: row.thread_id,
+        ownerId: row.owner_id,
+        role: row.role,
+        content: row.content,
+        sequence: Number(row.sequence),
+        createdAt: row.created_at,
+      };
+    },
     async appendMessage(message) {
       await serial(`${message.ownerId}:${message.threadId}`, async () => {
         const latest = new URL(base);
@@ -134,6 +154,7 @@ export function createRlsChatThreadStore(input: {
           method: 'POST',
           headers: headers({ 'content-type': 'application/json', prefer: 'return=minimal' }),
           body: JSON.stringify({
+            ...(message.id ? { id: message.id } : {}),
             owner_id: message.ownerId,
             thread_id: message.threadId,
             role: message.role,

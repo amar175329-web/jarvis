@@ -10,10 +10,14 @@ import {
   type ChatGateway,
   type ModelRouterConfig,
   type ChatStreamEvent,
+  type ChatMessage,
 } from '../../packages/chat/src/index.ts';
 import { createGateway } from '../../packages/model-gateway/src/gateway.ts';
+import { supabaseUsageStore, memoryUsageStore } from '../../packages/model-gateway/src/stores.ts';
+import type { UsageStore, ModelSpec } from '../../packages/model-gateway/src/types.ts';
 import { emitEvent, supabaseEventStore } from '../../packages/events/src/index.ts';
 import { createLogger } from '../../packages/logging/src/index.ts';
+import { detectCareSignal } from '../../packages/chat/src/care.ts';
 import type { KillSwitchReader, KillState } from '../../shared/src/index.ts';
 
 export type ChatOptions = {
@@ -23,6 +27,8 @@ export type ChatOptions = {
   threadStore?: ChatThreadStore;
   killReader?: KillSwitchReader;
   modelConfig?: ModelRouterConfig;
+  usageStore?: UsageStore;
+  models?: ModelSpec[];
 };
 
 type ChatConfig = {
@@ -33,25 +39,14 @@ type ChatConfig = {
   fetcher: typeof fetch;
 };
 
-type PendingMessage = {
-  thread_id: string;
-  message_id: string;
-  ownerId: string;
-  text: string;
-  data?: Array<{ source: 'web' | 'file' | 'tool' | 'screen' | 'message'; text: string }>;
-  attachments?: Array<{ id: string; storage_ref: string; file_name?: string; mime_type: string; size_bytes?: number }>;
-  voice?: { audio_ref: string; mime_type: 'audio/webm' | 'audio/wav' | 'audio/mp4' | 'audio/mpeg' | 'audio/ogg'; language?: string };
-  createdAt: number;
-};
-
-const pendingMessages = new Map<string, PendingMessage>();
-
-function prunePending() {
-  const cutoff = Date.now() - 5 * 60 * 1000;
-  for (const [k, v] of pendingMessages.entries()) {
-    if (v.createdAt < cutoff) pendingMessages.delete(k);
-  }
-}
+const DEFAULT_MODEL_SPECS: ModelSpec[] = [
+  { provider: 'anthropic', model: 'claude-3-5-sonnet-20241022', price: { in_per_mtok: 3, out_per_mtok: 15 } },
+  { provider: 'anthropic', model: 'claude', price: { in_per_mtok: 3, out_per_mtok: 15 } },
+  { provider: 'gemini', model: 'gemini-1.5-flash', free: true, maxRequestsPerDay: 1500 },
+  { provider: 'gemini', model: 'gemini-2.0-flash-exp', free: true, maxRequestsPerDay: 1500 },
+  { provider: 'openai', model: 'gpt-4o-mini', price: { in_per_mtok: 0.15, out_per_mtok: 0.6 } },
+  { provider: 'openai', model: 'gpt-4o', price: { in_per_mtok: 2.5, out_per_mtok: 10 } },
+];
 
 function config(options: ChatOptions): ChatConfig | null {
   const env = options.env ?? process.env;
@@ -219,35 +214,46 @@ export async function messagesSendHandler(request: Request, options: ChatOptions
   const owner = await readOwnerSession(request, { env: c?.env ?? options.env, fetch: c?.fetcher ?? options.fetch });
   if (!owner.ok) return fail(owner.status, owner.status === 401 ? 'unauthorized' : owner.status === 403 ? 'forbidden' : 'unavailable', owner.message, owner.clearCookie ? { 'set-cookie': clearSessionCookie() } : {});
 
-  // Check kill switch
+  // Check kill switch (fail-closed)
   const killReader = options.killReader ?? (c ? defaultKillReader(c) : null);
-  if (killReader) {
-    try {
-      const killState = await killReader.read(owner.user.id);
-      if (killState.kill) return preserveRotatedCookie(fail(403, 'kill_switch_on', 'Kill switch ON hai, main kuch nahi kar raha.'), owner.setCookie);
-    } catch {
-      return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch unreadable'), owner.setCookie);
-    }
+  if (!killReader) {
+    return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch reader is unavailable (fail-closed)'), owner.setCookie);
+  }
+  let killState: KillState;
+  try {
+    killState = await killReader.read(owner.user.id);
+  } catch {
+    return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch unreadable'), owner.setCookie);
   }
 
   const body = await bodyJson(request);
   const parsed = ROUTES['chat.messages.send'].input.safeParse(body);
   if (!parsed.success) return preserveRotatedCookie(fail(400, 'bad_request', 'invalid message send payload'), owner.setCookie);
 
+  const isCare = detectCareSignal(parsed.data.text);
+  if (killState.kill && !isCare) {
+    return preserveRotatedCookie(fail(403, 'kill_switch_on', 'Kill switch ON hai, main kuch nahi kar raha.'), owner.setCookie);
+  }
+
+  const store = options.threadStore ?? (c ? createRlsChatThreadStore({ supabaseUrl: c.url, anonKey: c.anonKey, accessToken: owner.accessToken, fetcher: c.fetcher }) : null);
+  if (!store) {
+    return preserveRotatedCookie(fail(503, 'unavailable', 'chat thread store is not configured'), owner.setCookie);
+  }
+
   const message_id = parsed.data.message_id ?? crypto.randomUUID();
   const thread_id = parsed.data.thread_id;
 
-  prunePending();
-  pendingMessages.set(`${owner.user.id}:${thread_id}:${message_id}`, {
-    thread_id,
-    message_id,
-    ownerId: owner.user.id,
-    text: parsed.data.text,
-    data: parsed.data.data,
-    attachments: parsed.data.attachments,
-    voice: parsed.data.voice,
-    createdAt: Date.now(),
-  });
+  try {
+    await store.appendMessage({
+      id: message_id,
+      ownerId: owner.user.id,
+      threadId: thread_id,
+      role: 'user',
+      content: parsed.data.text,
+    });
+  } catch {
+    return preserveRotatedCookie(fail(503, 'unavailable', 'failed to append message to thread store'), owner.setCookie);
+  }
 
   // Emit metadata-only event
   await emitMetadataEvent(c, owner.user.id, 'chat.message.created', { thread_id, message_id, role: 'user' });
@@ -280,40 +286,103 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
   const owner = await readOwnerSession(request, { env: c?.env ?? options.env, fetch: c?.fetcher ?? options.fetch });
   if (!owner.ok) return fail(owner.status, owner.status === 401 ? 'unauthorized' : owner.status === 403 ? 'forbidden' : 'unavailable', owner.message, owner.clearCookie ? { 'set-cookie': clearSessionCookie() } : {});
 
+  // Check kill switch (fail-closed)
   const killReader = options.killReader ?? (c ? defaultKillReader(c) : null);
-  if (killReader) {
-    try {
-      const killState = await killReader.read(owner.user.id);
-      if (killState.kill) return preserveRotatedCookie(fail(403, 'kill_switch_on', 'Kill switch ON hai, main kuch nahi kar raha.'), owner.setCookie);
-    } catch {
-      return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch unreadable'), owner.setCookie);
-    }
+  if (!killReader) {
+    return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch reader is unavailable (fail-closed)'), owner.setCookie);
+  }
+  let killState: KillState;
+  try {
+    killState = await killReader.read(owner.user.id);
+  } catch {
+    return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch unreadable'), owner.setCookie);
   }
 
   const body = await bodyJson(request);
   const parsed = ROUTES['chat.messages.stream'].input.safeParse(body);
   if (!parsed.success) return preserveRotatedCookie(fail(400, 'bad_request', 'invalid stream request payload'), owner.setCookie);
 
-  const pendingKey = `${owner.user.id}:${parsed.data.thread_id}:${parsed.data.message_id}`;
-  const pending = pendingMessages.get(pendingKey);
-  if (!pending) return preserveRotatedCookie(fail(404, 'not_found', 'message stream not found or expired'), owner.setCookie);
+  const threadStore = options.threadStore ?? (c ? createRlsChatThreadStore({ supabaseUrl: c.url, anonKey: c.anonKey, accessToken: owner.accessToken, fetcher: c.fetcher }) : null);
+  if (!threadStore) {
+    return preserveRotatedCookie(fail(503, 'unavailable', 'chat thread store is not configured'), owner.setCookie);
+  }
 
-  const threadStore = options.threadStore ?? (c ? createRlsChatThreadStore({ supabaseUrl: c.url, anonKey: c.anonKey, accessToken: owner.accessToken, fetcher: c.fetcher }) : undefined);
+  let userMessage: ChatMessage | null = null;
+  if (threadStore.getMessage) {
+    userMessage = await threadStore.getMessage({ ownerId: owner.user.id, threadId: parsed.data.thread_id, messageId: parsed.data.message_id });
+  } else {
+    const rows = await threadStore.listMessages({ ownerId: owner.user.id, threadId: parsed.data.thread_id, limit: 100 });
+    userMessage = rows.find((m) => m.id === parsed.data.message_id) ?? null;
+  }
+  if (!userMessage) {
+    return preserveRotatedCookie(fail(404, 'not_found', 'message stream not found or expired'), owner.setCookie);
+  }
 
-  // Model gateway setup: register provider adapters
+  const isCare = detectCareSignal(userMessage.content);
+  if (killState.kill && !isCare) {
+    return preserveRotatedCookie(fail(403, 'kill_switch_on', 'Kill switch ON hai, main kuch nahi kar raha.'), owner.setCookie);
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  };
+  if (owner.setCookie) headers['set-cookie'] = owner.setCookie;
+
+  // Idempotency: check if an assistant reply already exists following this user message in this thread
+  const history = await threadStore.listMessages({ ownerId: owner.user.id, threadId: parsed.data.thread_id, limit: 50 });
+  const existingReply = history.find((m) => m.role === 'assistant' && m.sequence > userMessage!.sequence);
+
+  if (existingReply) {
+    const stream = new ReadableStream({
+      start(controller) {
+        const encoder = new TextEncoder();
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.started', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id })}\n\n`));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.delta', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, index: 0, text: existingReply.content })}\n\n`));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.completed', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, chunk_count: 1 })}\n\n`));
+        controller.close();
+      },
+    });
+    return new Response(stream, { status: 200, headers });
+  }
+
+  // Model gateway & budget limits: read strictly from env/settings (MODEL_DAY_LIMIT_INR, MODEL_MONTH_LIMIT_INR)
+  const env = c?.env ?? options.env ?? process.env;
+  const dayLimitInrStr = env.MODEL_DAY_LIMIT_INR;
+  const monthLimitInrStr = env.MODEL_MONTH_LIMIT_INR;
+  const hasDayLimit = dayLimitInrStr !== undefined && dayLimitInrStr.trim() !== '' && !Number.isNaN(Number(dayLimitInrStr));
+  const hasMonthLimit = monthLimitInrStr !== undefined && monthLimitInrStr.trim() !== '' && !Number.isNaN(Number(monthLimitInrStr));
+  const budgetConfigured = hasDayLimit && hasMonthLimit;
+
   let gateway: ChatGateway;
   if (options.gateway) {
     gateway = options.gateway;
-  } else {
-    const rawGateway = createGateway({
-      kill: killReader ?? { read: async () => ({ kill: false, epoch: 0 }) },
-      usage: {
-        async summary() { return { dayTokens: 0, monthTokens: 0, dayCostINR: 0, monthCostINR: 0 }; },
-        async record() { /* no-op */ },
+  } else if (!budgetConfigured) {
+    // Budget is not set in env/settings: refuse model call ("budget set nahi hai"), strictly no guessing
+    gateway = {
+      async callStream() {
+        return { ok: false, code: 'budget_exceeded', message: 'budget set nahi hai: MODEL_DAY_LIMIT_INR aur MODEL_MONTH_LIMIT_INR set karein' };
       },
+      async call() {
+        return { ok: false, code: 'budget_exceeded', message: 'budget set nahi hai: MODEL_DAY_LIMIT_INR aur MODEL_MONTH_LIMIT_INR set karein' };
+      },
+    };
+  } else {
+    const inrPerUsd = Number(env.INR_PER_USD ?? '84');
+    const perDayUsd = Number(dayLimitInrStr) / inrPerUsd;
+    const perMonthUsd = Number(monthLimitInrStr) / inrPerUsd;
+
+    const usageStore = options.usageStore ?? (c?.serviceKey
+      ? supabaseUsageStore({ url: c.url, serviceKey: c.serviceKey, ownerId: owner.user.id, fetch: c.fetcher })
+      : memoryUsageStore());
+
+    const rawGateway = createGateway({
+      kill: killReader,
+      usage: usageStore,
       keys: {
         get(provider) {
-          const env = c?.env ?? process.env;
           if (provider === 'anthropic') return env.ANTHROPIC_API_KEY;
           if (provider === 'openai') return env.OPENAI_API_KEY;
           if (provider === 'gemini') return env.GEMINI_API_KEY;
@@ -322,8 +391,8 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
         envName(provider) { return `${provider.toUpperCase()}_API_KEY`; },
       },
       providers: [],
-      models: [],
-      budget: { dayLimitINR: 500, monthLimitINR: 5000, maxOutputTokens: 4096 },
+      models: options.models ?? DEFAULT_MODEL_SPECS,
+      budget: { perDayUsd, perMonthUsd },
       logger: createLogger({ service: 'chat', sinks: [] }),
     });
     registerChatProviderAdapters(rawGateway, c?.fetcher);
@@ -333,12 +402,9 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
   const modelConfig = options.modelConfig ?? EMPTY_MODEL_ROUTER_CONFIG;
 
   const chatInput: ChatInput = {
-    threadId: pending.thread_id,
-    messageId: pending.message_id,
-    text: pending.text,
-    data: pending.data?.map((d) => ({ source: d.source, text: d.text })),
-    attachments: pending.attachments?.map((a) => ({ id: a.id, storageRef: a.storage_ref, fileName: a.file_name, mimeType: a.mime_type, sizeBytes: a.size_bytes })),
-    voice: pending.voice ? { audioRef: pending.voice.audio_ref, mimeType: pending.voice.mime_type, language: pending.voice.language } : undefined,
+    threadId: parsed.data.thread_id,
+    messageId: userMessage.id,
+    text: userMessage.content,
   };
 
   const stream = new ReadableStream({
@@ -354,29 +420,29 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
       const emit = async (event: ChatStreamEvent) => {
         if (event.type === 'chat.message.started') {
           streamStarted = true;
-          sendFrame({ type: 'chat.message.started', thread_id: pending.thread_id, message_id: pending.message_id });
-          await emitMetadataEvent(c, owner.user.id, 'chat.message.started', { thread_id: pending.thread_id, message_id: pending.message_id });
+          sendFrame({ type: 'chat.message.started', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id });
+          await emitMetadataEvent(c, owner.user.id, 'chat.message.started', { thread_id: parsed.data.thread_id, message_id: parsed.data.message_id });
         } else if (event.type === 'chat.message.delta') {
           if (!streamStarted) {
             streamStarted = true;
-            sendFrame({ type: 'chat.message.started', thread_id: pending.thread_id, message_id: pending.message_id });
-            await emitMetadataEvent(c, owner.user.id, 'chat.message.started', { thread_id: pending.thread_id, message_id: pending.message_id });
+            sendFrame({ type: 'chat.message.started', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id });
+            await emitMetadataEvent(c, owner.user.id, 'chat.message.started', { thread_id: parsed.data.thread_id, message_id: parsed.data.message_id });
           }
           chunkCount++;
-          sendFrame({ type: 'chat.message.delta', thread_id: pending.thread_id, message_id: pending.message_id, index: event.index, text: event.text });
-          await emitMetadataEvent(c, owner.user.id, 'chat.message.delta', { thread_id: pending.thread_id, message_id: pending.message_id, index: event.index });
+          sendFrame({ type: 'chat.message.delta', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, index: event.index, text: event.text });
+          await emitMetadataEvent(c, owner.user.id, 'chat.message.delta', { thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, index: event.index });
         } else if (event.type === 'chat.message.completed') {
-          sendFrame({ type: 'chat.message.completed', thread_id: pending.thread_id, message_id: pending.message_id, chunk_count: chunkCount });
-          await emitMetadataEvent(c, owner.user.id, 'chat.message.completed', { thread_id: pending.thread_id, message_id: pending.message_id, chunk_count: chunkCount });
+          sendFrame({ type: 'chat.message.completed', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, chunk_count: chunkCount });
+          await emitMetadataEvent(c, owner.user.id, 'chat.message.completed', { thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, chunk_count: chunkCount });
         } else if (event.type === 'chat.message.error') {
-          sendFrame({ type: 'chat.message.error', thread_id: pending.thread_id, message_id: pending.message_id, code: event.code });
-          await emitMetadataEvent(c, owner.user.id, 'chat.message.error', { thread_id: pending.thread_id, message_id: pending.message_id, code: event.code });
+          sendFrame({ type: 'chat.message.error', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, code: event.code });
+          await emitMetadataEvent(c, owner.user.id, 'chat.message.error', { thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, code: event.code });
         }
       };
 
       try {
         const result = await handleMessage(chatInput, {
-          killSwitch: killReader ?? { read: async () => ({ kill: false, epoch: 0 }) },
+          killSwitch: killReader,
           threads: threadStore,
           ownerId: owner.user.id,
           gateway,
@@ -384,36 +450,27 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
           emit,
         });
 
-        if (result.status === 'needs_model') {
-          // Model slot is empty or unconfigured: return clean Hindi message without crash
-          const fallbackText = result.text || 'Model slot set nahi hai. Settings mein model configure karein.';
+        if (result.status === 'needs_model' || result.status === 'failed') {
+          // Model slot is unconfigured, or budget limit exceeded / budget not set
+          const fallbackText = result.text || (result.status === 'needs_model'
+            ? 'Model slot set nahi hai. Settings mein model configure karein.'
+            : 'Model call execute nahi ho saki.');
           if (!streamStarted) {
             await emit({ type: 'chat.message.started' });
           }
           await emit({ type: 'chat.message.delta', index: 0, text: fallbackText });
           await emit({ type: 'chat.message.completed' });
-          if (threadStore) {
-            try {
-              await threadStore.appendMessage({ ownerId: owner.user.id, threadId: pending.thread_id, role: 'assistant', content: fallbackText });
-            } catch { /* persistence failure handled cleanly */ }
-          }
+          try {
+            await threadStore.appendMessage({ ownerId: owner.user.id, threadId: parsed.data.thread_id, role: 'assistant', content: fallbackText });
+          } catch { /* persistence failure handled cleanly */ }
         }
       } catch (err: any) {
-        sendFrame({ type: 'chat.message.error', thread_id: pending.thread_id, message_id: pending.message_id, code: err?.code ?? 'internal_error' });
+        sendFrame({ type: 'chat.message.error', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, code: err?.code ?? 'internal_error' });
       } finally {
-        pendingMessages.delete(pendingKey);
         controller.close();
       }
     },
   });
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'text/event-stream; charset=utf-8',
-    'Cache-Control': 'no-cache, no-transform',
-    'Connection': 'keep-alive',
-    'X-Accel-Buffering': 'no',
-  };
-  if (owner.setCookie) headers['set-cookie'] = owner.setCookie;
 
   return new Response(stream, { status: 200, headers });
 }
@@ -429,4 +486,3 @@ export default async function handler(request: Request, options: ChatOptions = {
   if (pathname.endsWith('/messages.stream')) return messagesStreamHandler(request, options);
   return Response.json({ ok: false, error: { code: 'not_found', message: `chat route not found for ${pathname}` } }, { status: 404 });
 }
-

@@ -51,7 +51,7 @@ function purposeFor(input: ChatInput): MemoryPurpose | undefined {
 
 function gatewayMessage(result: Extract<GatewayResult, { ok: false }>): string {
   switch (result.code) {
-    case 'budget_exceeded': return 'Aaj ki model budget limit poori ho gayi hai. Main abhi model call nahi kar raha.';
+    case 'budget_exceeded': return (result.message && result.message.includes('budget set nahi hai')) ? 'Model budget set nahi hai. Settings mein MODEL_DAY_LIMIT_INR aur MODEL_MONTH_LIMIT_INR set karein.' : 'Aaj ki model budget limit poori ho gayi hai. Main abhi model call nahi kar raha.';
     case 'unpriced_model': return 'Is model ki keemat settings mein set nahi hai. Main keemat ka andaza nahi lagaunga; Amit/S13 ko ise configure karna hoga.';
     case 'no_key': return 'Model ki server key configured nahi hai. Key sirf server environment mein set honi chahiye.';
     case 'kill_switch_on': return 'Kill switch ON hai, main kuch nahi kar raha.';
@@ -112,30 +112,41 @@ async function persistThreadMessage(deps: ChatDependencies, input: ChatInput, ro
   }
 }
 
-/** S07's single message entry point. Kill switch is the first I/O and care reply bypasses all models/memory. */
+/** S07's single message entry point. Care reply bypasses all models/memory and remains active even when kill switch is ON. */
 export async function handleMessage(input: ChatInput, deps: ChatDependencies): Promise<HandleMessageResult> {
+  const originalText = input.text ?? '';
+  const care = detectCareSignal(originalText);
   const kill = await readKillFailClosed(deps.killSwitch);
+
+  if (care) {
+    if (deps.threads && deps.ownerId && input.threadId) {
+      try {
+        const existing = await deps.threads.listMessages({ ownerId: deps.ownerId, threadId: input.threadId, limit: 10 });
+        const alreadySaved = existing.some((m) => m.id === input.messageId || (m.role === 'user' && m.content === originalText));
+        if (!alreadySaved) {
+          await persistThreadMessage(deps, input, 'user', originalText);
+        }
+      } catch {
+        await persistThreadMessage(deps, input, 'user', originalText);
+      }
+    }
+    await emitReply(CARE_REPLY, deps.emit ?? (() => undefined), { threadId: input.threadId, messageId: input.messageId }, deps.chunkSize ?? 48);
+    await persistThreadMessage(deps, input, 'assistant', CARE_REPLY);
+    const decisionLog = `Care reply (${care}) returned locally; no private slot, memory recall or model call was used.${kill.kill ? ' (Kill switch was ON, but care reply is exempt).' : ''}`;
+    await deps.onDecisionLog?.(decisionLog);
+    return { status: 'care', text: CARE_REPLY, decisionLog };
+  }
+
   if (kill.kill) {
     const decisionLog = 'Kill switch ON/unreadable; stopped before memory, model, stream or power. No content was read or acted on.';
     await deps.onDecisionLog?.(decisionLog);
     return { status: 'killed', text: 'Kill switch ON hai, main kuch nahi kar raha.', decisionLog };
   }
 
-  const originalText = input.text ?? '';
   if (!originalText.trim()) {
     const decisionLog = 'No text was supplied; voice transcription remains S21-owned and no model was called.';
     await deps.onDecisionLog?.(decisionLog);
     return { status: 'input_needed', text: 'Abhi text nahi mila. Voice ko S21 se text banwa kar bhejo.', decisionLog };
-  }
-
-  const care = detectCareSignal(originalText);
-  if (care) {
-    await persistThreadMessage(deps, input, 'user', originalText);
-    await emitReply(CARE_REPLY, deps.emit ?? (() => undefined), { threadId: input.threadId, messageId: input.messageId }, deps.chunkSize ?? 48);
-    await persistThreadMessage(deps, input, 'assistant', CARE_REPLY);
-    const decisionLog = `Care reply (${care}) returned locally; no private slot, memory recall or model call was used.`;
-    await deps.onDecisionLog?.(decisionLog);
-    return { status: 'care', text: CARE_REPLY, decisionLog };
   }
 
   const safeText = redactText(originalText);
@@ -221,7 +232,7 @@ export async function handleMessage(input: ChatInput, deps: ChatDependencies): P
     };
     modelResult = await deps.gateway.callStream(request, onChunk);
     if (!modelResult.ok) {
-      if (started) await emit({ type: 'chat.message.error', threadId: input.threadId, messageId: input.messageId, code: modelResult.code });
+      await emit({ type: 'chat.message.error', threadId: input.threadId, messageId: input.messageId, code: modelResult.code });
       const decisionLog = `Model gateway refused/failed (${modelResult.code}); no memory save or power ran.`;
       await deps.onDecisionLog?.(decisionLog);
       return { status: 'failed', text: gatewayMessage(modelResult), decisionLog, depth, modelError: modelResult.code };
