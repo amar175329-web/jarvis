@@ -88,14 +88,18 @@ function preserveRotatedCookie(response: Response, setCookie?: string): Response
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
-function defaultKillReader(c: ChatConfig): KillSwitchReader {
+function defaultKillReader(c: ChatConfig, defaultOwnerId?: string): KillSwitchReader {
   return {
-    async read(ownerId: string): Promise<KillState> {
+    async read(ownerId?: string): Promise<KillState> {
+      const oid = ownerId ?? defaultOwnerId;
       try {
         const url = new URL(`${c.url}/rest/v1/system_state`);
-        url.search = new URLSearchParams({ select: 'kill,epoch', owner_id: `eq.${ownerId}`, id: 'eq.1', limit: '1' }).toString();
-        const headers: Record<string, string> = { apikey: c.anonKey, Authorization: `Bearer ${c.anonKey}` };
-        if (c.serviceKey) headers.Authorization = `Bearer ${c.serviceKey}`;
+        const search: Record<string, string> = { select: 'kill,epoch', id: 'eq.1', limit: '1' };
+        if (oid) search.owner_id = `eq.${oid}`;
+        url.search = new URLSearchParams(search).toString();
+        const key = c.serviceKey || c.anonKey;
+        const headers: Record<string, string> = { apikey: key };
+        if (key.includes('.')) headers.Authorization = `Bearer ${key}`;
         const r = await c.fetcher(url, { headers });
         if (!r.ok) return { kill: true, epoch: -1 };
         const rows = await r.json() as any[];
@@ -215,7 +219,7 @@ export async function messagesSendHandler(request: Request, options: ChatOptions
   if (!owner.ok) return fail(owner.status, owner.status === 401 ? 'unauthorized' : owner.status === 403 ? 'forbidden' : 'unavailable', owner.message, owner.clearCookie ? { 'set-cookie': clearSessionCookie() } : {});
 
   // Check kill switch (fail-closed)
-  const killReader = options.killReader ?? (c ? defaultKillReader(c) : null);
+  const killReader = options.killReader ?? (c ? defaultKillReader(c, owner.user.id) : null);
   if (!killReader) {
     return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch reader is unavailable (fail-closed)'), owner.setCookie);
   }
@@ -287,7 +291,7 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
   if (!owner.ok) return fail(owner.status, owner.status === 401 ? 'unauthorized' : owner.status === 403 ? 'forbidden' : 'unavailable', owner.message, owner.clearCookie ? { 'set-cookie': clearSessionCookie() } : {});
 
   // Check kill switch (fail-closed)
-  const killReader = options.killReader ?? (c ? defaultKillReader(c) : null);
+  const killReader = options.killReader ?? (c ? defaultKillReader(c, owner.user.id) : null);
   if (!killReader) {
     return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch reader is unavailable (fail-closed)'), owner.setCookie);
   }
