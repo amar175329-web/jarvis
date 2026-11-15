@@ -103,12 +103,31 @@ function selectHistory(messages: Awaited<ReturnType<ChatThreadStore['listMessage
 async function persistThreadMessage(deps: ChatDependencies, input: ChatInput, role: 'user' | 'assistant', content: string, replyToMessageId?: string | null): Promise<boolean> {
   if (!deps.threads || !deps.ownerId || !input.threadId) return false;
   try {
+    const targetReplyTo = replyToMessageId ?? input.messageId;
+    if (role === 'assistant' && targetReplyTo && deps.threads.updateMessage && deps.threads.getReplyMessage) {
+      const existing = await deps.threads.getReplyMessage({
+        ownerId: deps.ownerId,
+        threadId: input.threadId,
+        replyToMessageId: targetReplyTo,
+      });
+      if (existing) {
+        await deps.threads.updateMessage({
+          ownerId: deps.ownerId,
+          threadId: input.threadId,
+          messageId: existing.id,
+          content,
+          status: 'done',
+        });
+        return true;
+      }
+    }
     await deps.threads.appendMessage({
       ownerId: deps.ownerId,
       threadId: input.threadId,
       role,
       content,
-      ...(role === 'assistant' && (replyToMessageId ?? input.messageId) ? { replyToMessageId: replyToMessageId ?? input.messageId } : {}),
+      status: 'done',
+      ...(role === 'assistant' && targetReplyTo ? { replyToMessageId: targetReplyTo } : {}),
     });
     return true;
   } catch {

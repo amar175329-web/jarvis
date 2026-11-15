@@ -39,7 +39,67 @@ type ChatConfig = {
   fetcher: typeof fetch;
 };
 
-const inFlightStreams = new Map<string, Promise<{ ok: boolean; text?: string; code?: string }>>();
+async function pollForCompletedReply(
+  store: ChatThreadStore,
+  ownerId: string,
+  threadId: string,
+  replyToMessageId: string,
+  maxWaitMs = 20_000,
+  intervalMs = 500,
+): Promise<ChatMessage | null> {
+  const start = Date.now();
+  while (Date.now() - start < maxWaitMs) {
+    let reply: ChatMessage | null = null;
+    if (store.getReplyMessage) {
+      reply = await store.getReplyMessage({ ownerId, threadId, replyToMessageId });
+    } else {
+      const msgs = await store.listMessages({ ownerId, threadId, limit: 20, status: 'all' });
+      reply = msgs.find((m) => m.role === 'assistant' && m.replyToMessageId === replyToMessageId) ?? null;
+    }
+    if (reply && reply.status === 'done') {
+      return reply;
+    }
+    if (!reply) {
+      return null;
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+  return null;
+}
+
+function streamCompletedReply(
+  completedReply: ChatMessage,
+  threadId: string,
+  messageId: string,
+  headers: Record<string, string>,
+): Response {
+  const stream = new ReadableStream({
+    start(controller) {
+      const encoder = new TextEncoder();
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.started', thread_id: threadId, message_id: messageId })}\n\n`));
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.delta', thread_id: threadId, message_id: messageId, index: 0, text: completedReply.content })}\n\n`));
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.completed', thread_id: threadId, message_id: messageId, chunk_count: 1 })}\n\n`));
+      controller.close();
+    },
+  });
+  return new Response(stream, { status: 200, headers });
+}
+
+function streamErrorFrame(
+  threadId: string,
+  messageId: string,
+  code: string,
+  headers: Record<string, string>,
+): Response {
+  const stream = new ReadableStream({
+    start(controller) {
+      const encoder = new TextEncoder();
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.error', thread_id: threadId, message_id: messageId, code })}\n\n`));
+      controller.close();
+    },
+  });
+  return new Response(stream, { status: 200, headers });
+}
 
 function config(options: ChatOptions): ChatConfig | null {
   const env = options.env ?? process.env;
@@ -185,9 +245,12 @@ export async function messagesListHandler(request: Request, options: ChatOptions
       threadId: parsed.data.thread_id,
       limit: parsed.data.limit,
       beforeSequence: parsed.data.before_sequence,
+      status: 'done',
     });
+    // Requirement 6: Chat history/list mein pending rows mat dikhao (messages.list aur model context mein sirf status 'done').
+    const doneRows = rows.filter((r) => r.status !== 'pending');
     // Return in sequence order ascending for clean chat display
-    const messages = rows.slice().sort((a, b) => a.sequence - b.sequence).map((row) => ({
+    const messages = doneRows.slice().sort((a, b) => a.sequence - b.sequence).map((row) => ({
       id: row.id,
       thread_id: row.threadId,
       role: row.role,
@@ -195,8 +258,8 @@ export async function messagesListHandler(request: Request, options: ChatOptions
       sequence: row.sequence,
       created_at: row.createdAt,
     }));
-    const next_before_sequence = rows.length === parsed.data.limit && rows.length > 0
-      ? Math.min(...rows.map((r) => r.sequence))
+    const next_before_sequence = doneRows.length === parsed.data.limit && doneRows.length > 0
+      ? Math.min(...doneRows.map((r) => r.sequence))
       : undefined;
     return preserveRotatedCookie(json(200, { ok: true, data: { messages, next_before_sequence } }, { 'cache-control': 'no-store' }), owner.setCookie);
   } catch {
@@ -328,49 +391,87 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
   };
   if (owner.setCookie) headers['set-cookie'] = owner.setCookie;
 
-  // Idempotency: check if an assistant reply already exists following this user message in this thread
-  const history = await threadStore.listMessages({ ownerId: owner.user.id, threadId: parsed.data.thread_id, limit: 50 });
-  const existingReply = history.find((m) => m.role === 'assistant' && m.replyToMessageId === userMessage!.id);
-
-  if (existingReply) {
-    const stream = new ReadableStream({
-      start(controller) {
-        const encoder = new TextEncoder();
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.started', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id })}\n\n`));
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.delta', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, index: 0, text: existingReply.content })}\n\n`));
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.completed', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, chunk_count: 1 })}\n\n`));
-        controller.close();
-      },
+  // 1. Check if an assistant reply already exists in DB for this message
+  let existingReply: ChatMessage | null = null;
+  if (threadStore.getReplyMessage) {
+    existingReply = await threadStore.getReplyMessage({
+      ownerId: owner.user.id,
+      threadId: parsed.data.thread_id,
+      replyToMessageId: userMessage.id,
     });
-    return new Response(stream, { status: 200, headers });
+  } else {
+    const history = await threadStore.listMessages({ ownerId: owner.user.id, threadId: parsed.data.thread_id, limit: 50, status: 'all' });
+    existingReply = history.find((m) => m.role === 'assistant' && m.replyToMessageId === userMessage!.id) ?? null;
   }
 
-  // Concurrent stream claim: if another stream is already in-flight for this message, wait for it or return progress
-  const claimKey = `${owner.user.id}:${parsed.data.thread_id}:${userMessage.id}`;
-  const inFlight = inFlightStreams.get(claimKey);
-  if (inFlight) {
-    const stream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
+  if (existingReply) {
+    if (existingReply.status === 'done') {
+      return streamCompletedReply(existingReply, parsed.data.thread_id, parsed.data.message_id, headers);
+    }
+    // Existing reply is 'pending'
+    const ageMs = Date.now() - new Date(existingReply.createdAt).getTime();
+    if (ageMs > 60_000) {
+      // Stale pending row (>60s) from crash: delete it and proceed to acquire new claim
+      if (threadStore.deleteMessage) {
         try {
-          const res = await inFlight;
-          if (res.ok && res.text) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.started', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id })}\n\n`));
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.delta', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, index: 0, text: res.text })}\n\n`));
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.completed', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, chunk_count: 1 })}\n\n`));
-          } else {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.started', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id })}\n\n`));
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.delta', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, index: 0, text: 'Jawab taiyar ho raha hai, thoda intezar karein.' })}\n\n`));
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.completed', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, chunk_count: 1 })}\n\n`));
-          }
-        } catch {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.error', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, code: 'stream_in_progress' })}\n\n`));
-        } finally {
-          controller.close();
-        }
-      },
+          await threadStore.deleteMessage({
+            ownerId: owner.user.id,
+            threadId: parsed.data.thread_id,
+            messageId: existingReply.id,
+          });
+        } catch { /* clean ignore */ }
+      }
+      existingReply = null;
+    } else {
+      // Active in-flight stream from another instance: wait for it without calling model
+      const completed = await pollForCompletedReply(threadStore, owner.user.id, parsed.data.thread_id, userMessage.id);
+      if (completed && completed.status === 'done') {
+        return streamCompletedReply(completed, parsed.data.thread_id, parsed.data.message_id, headers);
+      }
+      return streamErrorFrame(parsed.data.thread_id, parsed.data.message_id, 'stream_in_progress', headers);
+    }
+  }
+
+  // 2. DB-level claim BEFORE model call: insert assistant row with status 'pending'
+  let claimRow: ChatMessage | null = null;
+  const claimMessageId = crypto.randomUUID();
+  try {
+    const inserted = await threadStore.appendMessage({
+      id: claimMessageId,
+      ownerId: owner.user.id,
+      threadId: parsed.data.thread_id,
+      role: 'assistant',
+      content: '',
+      replyToMessageId: userMessage.id,
+      status: 'pending',
     });
-    return new Response(stream, { status: 200, headers });
+    claimRow = (inserted as ChatMessage) ?? {
+      id: claimMessageId,
+      threadId: parsed.data.thread_id,
+      ownerId: owner.user.id,
+      role: 'assistant',
+      content: '',
+      sequence: 0,
+      replyToMessageId: userMessage.id,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+  } catch (err: any) {
+    const isUniqueViolation = err?.code === '23505' || /unique|duplicate/i.test(err?.message ?? '');
+    if (!isUniqueViolation) {
+      // Requirement 7: Unique violation ko chup-chaap nigalna band: saaf code do.
+      throw err;
+    }
+    // Unique violation: lost the concurrent insert race!
+  }
+
+  if (!claimRow) {
+    // Another instance won the claim race: wait for it without calling model
+    const completed = await pollForCompletedReply(threadStore, owner.user.id, parsed.data.thread_id, userMessage.id);
+    if (completed && completed.status === 'done') {
+      return streamCompletedReply(completed, parsed.data.thread_id, parsed.data.message_id, headers);
+    }
+    return streamErrorFrame(parsed.data.thread_id, parsed.data.message_id, 'stream_in_progress', headers);
   }
 
   // Model gateway & budget limits: read strictly from env/settings (MODEL_DAY_LIMIT_INR, MODEL_MONTH_LIMIT_INR)
@@ -452,10 +553,6 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
     text: userMessage.content,
   };
 
-  let resolveFlight!: (val: { ok: boolean; text?: string; code?: string }) => void;
-  const flightPromise = new Promise<{ ok: boolean; text?: string; code?: string }>((res) => { resolveFlight = res; });
-  inFlightStreams.set(claimKey, flightPromise);
-
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();
@@ -500,10 +597,28 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
         });
 
         if (result.status === 'ok' || result.status === 'care') {
-          resolveFlight({ ok: true, text: result.text });
+          if (claimRow.id && threadStore.updateMessage) {
+            try {
+              await threadStore.updateMessage({
+                ownerId: owner.user.id,
+                threadId: parsed.data.thread_id,
+                messageId: claimRow.id,
+                content: result.text,
+                status: 'done',
+              });
+            } catch { /* clean ignore */ }
+          }
         } else if (result.status === 'needs_model' || result.status === 'failed') {
-          resolveFlight({ ok: false, code: result.status });
-          // Model slot is unconfigured, or budget limit exceeded / budget not set
+          // Requirement 4: Agar jeetne wale ka model fail/error ho: pending row DELETE karo (error text save nahi hoga, P12 gap 4 ka niyam), taaki retry chal sake.
+          if (claimRow.id && threadStore.deleteMessage) {
+            try {
+              await threadStore.deleteMessage({
+                ownerId: owner.user.id,
+                threadId: parsed.data.thread_id,
+                messageId: claimRow.id,
+              });
+            } catch { /* clean ignore */ }
+          }
           const fallbackText = result.text || (result.status === 'needs_model'
             ? 'Model slot set nahi hai. Settings mein model configure karein.'
             : 'Model call execute nahi ho saki.');
@@ -514,13 +629,28 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
           await emit({ type: 'chat.message.completed' });
           // ERROR SAVE NAHI: Do not persist fallbackText to chat_messages in DB!
         } else {
-          resolveFlight({ ok: false, code: result.status });
+          if (claimRow.id && threadStore.deleteMessage) {
+            try {
+              await threadStore.deleteMessage({
+                ownerId: owner.user.id,
+                threadId: parsed.data.thread_id,
+                messageId: claimRow.id,
+              });
+            } catch { /* clean ignore */ }
+          }
         }
       } catch (err: any) {
-        resolveFlight({ ok: false, code: err?.code ?? 'internal_error' });
+        if (claimRow.id && threadStore.deleteMessage) {
+          try {
+            await threadStore.deleteMessage({
+              ownerId: owner.user.id,
+              threadId: parsed.data.thread_id,
+              messageId: claimRow.id,
+            });
+          } catch { /* clean ignore */ }
+        }
         sendFrame({ type: 'chat.message.error', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, code: err?.code ?? 'internal_error' });
       } finally {
-        inFlightStreams.delete(claimKey);
         controller.close();
       }
     },

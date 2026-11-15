@@ -3,7 +3,8 @@ import type { ChatMessage, ChatThread, ChatThreadStore } from './types.ts';
 type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 type Row = {
   id: string; thread_id: string; owner_id: string; role: 'user' | 'assistant';
-  content: string; sequence: number | string; reply_to_message_id?: string | null; created_at: string;
+  content: string; sequence: number | string; reply_to_message_id?: string | null;
+  status?: 'pending' | 'done'; created_at: string;
 };
 
 /**
@@ -101,11 +102,17 @@ export function createRlsChatThreadStore(input: {
     },
     async listMessages(query) {
       const url = new URL(base);
-      url.searchParams.set('select', 'id,thread_id,owner_id,role,content,sequence,reply_to_message_id,created_at');
+      url.searchParams.set('select', 'id,thread_id,owner_id,role,content,sequence,reply_to_message_id,status,created_at');
       url.searchParams.set('owner_id', `eq.${query.ownerId}`);
       url.searchParams.set('thread_id', `eq.${query.threadId}`);
       if (query.beforeSequence !== undefined) {
         url.searchParams.set('sequence', `lt.${query.beforeSequence}`);
+      }
+      if (query.status === 'pending') {
+        url.searchParams.set('status', 'eq.pending');
+      } else if (query.status !== 'all') {
+        // By default, listMessages only returns 'done' rows
+        url.searchParams.set('status', 'eq.done');
       }
       url.searchParams.set('order', 'sequence.desc');
       url.searchParams.set('limit', String(Math.max(1, Math.min(100, query.limit))));
@@ -118,12 +125,13 @@ export function createRlsChatThreadStore(input: {
         content: row.content,
         sequence: Number(row.sequence),
         replyToMessageId: row.reply_to_message_id ? String(row.reply_to_message_id) : null,
+        status: row.status ?? 'done',
         createdAt: row.created_at,
       }));
     },
     async getMessage(query) {
       const url = new URL(base);
-      url.searchParams.set('select', 'id,thread_id,owner_id,role,content,sequence,reply_to_message_id,created_at');
+      url.searchParams.set('select', 'id,thread_id,owner_id,role,content,sequence,reply_to_message_id,status,created_at');
       url.searchParams.set('owner_id', `eq.${query.ownerId}`);
       url.searchParams.set('thread_id', `eq.${query.threadId}`);
       url.searchParams.set('id', `eq.${query.messageId}`);
@@ -139,11 +147,35 @@ export function createRlsChatThreadStore(input: {
         content: row.content,
         sequence: Number(row.sequence),
         replyToMessageId: row.reply_to_message_id ? String(row.reply_to_message_id) : null,
+        status: row.status ?? 'done',
+        createdAt: row.created_at,
+      };
+    },
+    async getReplyMessage(query) {
+      const url = new URL(base);
+      url.searchParams.set('select', 'id,thread_id,owner_id,role,content,sequence,reply_to_message_id,status,created_at');
+      url.searchParams.set('owner_id', `eq.${query.ownerId}`);
+      url.searchParams.set('thread_id', `eq.${query.threadId}`);
+      url.searchParams.set('reply_to_message_id', `eq.${query.replyToMessageId}`);
+      url.searchParams.set('role', 'eq.assistant');
+      url.searchParams.set('limit', '1');
+      const rows = await readRows(url);
+      if (!rows.length) return null;
+      const row = rows[0]!;
+      return {
+        id: row.id,
+        threadId: row.thread_id,
+        ownerId: row.owner_id,
+        role: row.role,
+        content: row.content,
+        sequence: Number(row.sequence),
+        replyToMessageId: row.reply_to_message_id ? String(row.reply_to_message_id) : null,
+        status: row.status ?? 'done',
         createdAt: row.created_at,
       };
     },
     async appendMessage(message) {
-      await serial(`${message.ownerId}:${message.threadId}`, async () => {
+      return await serial(`${message.ownerId}:${message.threadId}`, async () => {
         const latest = new URL(base);
         latest.searchParams.set('select', 'sequence');
         latest.searchParams.set('owner_id', `eq.${message.ownerId}`);
@@ -152,6 +184,8 @@ export function createRlsChatThreadStore(input: {
         latest.searchParams.set('limit', '1');
         const rows = await readRows(latest);
         const sequence = rows.length ? Number(rows[0]!.sequence) + 1 : 0;
+        const msgId = message.id ?? crypto.randomUUID();
+        const msgStatus = message.status ?? 'done';
         const response = await fetcher(base, {
           method: 'POST',
           headers: headers({ 'content-type': 'application/json', prefer: 'return=minimal' }),
@@ -162,11 +196,88 @@ export function createRlsChatThreadStore(input: {
             role: message.role,
             content: message.content,
             sequence,
+            ...(message.status ? { status: message.status } : {}),
             ...(message.replyToMessageId ? { reply_to_message_id: message.replyToMessageId } : {}),
           }),
         });
-        if (!response.ok) throw new Error('chat RLS write failed');
+        if (!response.ok) {
+          let errBody: any;
+          try { errBody = await response.json(); } catch { /* ignore */ }
+          const err = new Error(errBody?.message ?? `chat RLS write failed (HTTP ${response.status})`);
+          if (response.status === 409 || errBody?.code === '23505' || /unique|duplicate/i.test(errBody?.message ?? '')) {
+            (err as any).code = '23505';
+          }
+          throw err;
+        }
+        const createdRows = await response.json().catch(() => null) as Row[] | null;
+        if (Array.isArray(createdRows) && createdRows[0]) {
+          const r = createdRows[0]!;
+          return {
+            id: r.id,
+            threadId: r.thread_id,
+            ownerId: r.owner_id,
+            role: r.role,
+            content: r.content,
+            sequence: Number(r.sequence),
+            replyToMessageId: r.reply_to_message_id ? String(r.reply_to_message_id) : null,
+            status: r.status ?? msgStatus,
+            createdAt: r.created_at,
+          };
+        }
+        return {
+          id: msgId,
+          threadId: message.threadId,
+          ownerId: message.ownerId,
+          role: message.role,
+          content: message.content,
+          sequence,
+          replyToMessageId: message.replyToMessageId ?? null,
+          status: msgStatus,
+          createdAt: new Date().toISOString(),
+        };
       });
+    },
+    async updateMessage(query) {
+      const url = new URL(base);
+      url.searchParams.set('owner_id', `eq.${query.ownerId}`);
+      url.searchParams.set('thread_id', `eq.${query.threadId}`);
+      url.searchParams.set('id', `eq.${query.messageId}`);
+      const body: Record<string, unknown> = {};
+      if (query.content !== undefined) body.content = query.content;
+      if (query.status !== undefined) body.status = query.status;
+      const response = await fetcher(url, {
+        method: 'PATCH',
+        headers: headers({ 'content-type': 'application/json', prefer: 'return=representation' }),
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) throw new Error(`chat RLS update failed (HTTP ${response.status})`);
+      const rows = await response.json().catch(() => null) as Row[] | null;
+      if (Array.isArray(rows) && rows[0]) {
+        const r = rows[0]!;
+        return {
+          id: r.id,
+          threadId: r.thread_id,
+          ownerId: r.owner_id,
+          role: r.role,
+          content: r.content,
+          sequence: Number(r.sequence),
+          replyToMessageId: r.reply_to_message_id ? String(r.reply_to_message_id) : null,
+          status: r.status ?? 'done',
+          createdAt: r.created_at,
+        };
+      }
+      return null;
+    },
+    async deleteMessage(query) {
+      const url = new URL(base);
+      url.searchParams.set('owner_id', `eq.${query.ownerId}`);
+      url.searchParams.set('thread_id', `eq.${query.threadId}`);
+      url.searchParams.set('id', `eq.${query.messageId}`);
+      const response = await fetcher(url, {
+        method: 'DELETE',
+        headers: headers(),
+      });
+      if (!response.ok) throw new Error(`chat RLS delete failed (HTTP ${response.status})`);
     },
   };
 }

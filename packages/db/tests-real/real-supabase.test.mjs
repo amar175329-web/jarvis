@@ -396,5 +396,97 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
     });
   });
 
+  await t.test('migration 0037: concurrent insert same (thread, reply_to) -> 1 wins, other gets unique violation', async () => {
+    // 1. Verify status column on chat_messages
+    const colRes = await client.query(`
+      select column_name, data_type, column_default
+      from information_schema.columns
+      where table_schema = 'public' and table_name = 'chat_messages' and column_name = 'status';
+    `);
+    assert.equal(colRes.rows.length, 1, 'chat_messages status column must exist');
+    assert.equal(colRes.rows[0].column_name, 'status');
+
+    // 2. Setup thread & user message
+    let threadId;
+    let userMsgId;
+    await as(userA.uid, async () => {
+      const threadRes = await client.query(`
+        insert into public.chat_threads (owner_id, title)
+        values ('${userA.uid}', 'P13 Concurrent Claim Thread')
+        returning id;
+      `);
+      threadId = threadRes.rows[0].id;
+
+      const userMsgRes = await client.query(`
+        insert into public.chat_messages (owner_id, thread_id, role, content, sequence)
+        values ('${userA.uid}', '${threadId}', 'user', 'concurrent insert test', 1)
+        returning id;
+      `);
+      userMsgId = userMsgRes.rows[0].id;
+    });
+
+    // 3. Fire 2 concurrent HTTP POST inserts with same (thread_id, reply_to_message_id)
+    const insertPayload = (seq) => ({
+      owner_id: userA.uid,
+      thread_id: threadId,
+      role: 'assistant',
+      status: 'pending',
+      content: '',
+      sequence: seq,
+      reply_to_message_id: userMsgId,
+    });
+
+    const [res1, res2] = await Promise.all([
+      fetchWithRetry(`${env.TEST_SUPABASE_URL}/rest/v1/chat_messages`, {
+        method: 'POST',
+        headers: {
+          apikey: env.TEST_SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${userA.token}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify(insertPayload(2)),
+      }),
+      fetchWithRetry(`${env.TEST_SUPABASE_URL}/rest/v1/chat_messages`, {
+        method: 'POST',
+        headers: {
+          apikey: env.TEST_SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${userA.token}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify(insertPayload(3)),
+      }),
+    ]);
+
+    const statuses = [res1.status, res2.status].sort();
+    assert.equal(statuses[0], 201, 'one concurrent stream must win the claim (201)');
+    assert.equal(statuses[1], 409, 'the other concurrent stream must fail with unique violation (409)');
+
+    // Verify exactly one assistant row exists for this reply_to_message_id
+    const claimRows = await client.query(`
+      select id, status, content from public.chat_messages
+      where thread_id = '${threadId}' and reply_to_message_id = '${userMsgId}';
+    `);
+    assert.equal(claimRows.rows.length, 1, 'exactly 1 claim row in DB');
+    assert.equal(claimRows.rows[0].status, 'pending');
+
+    // Winner updates status to 'done' with content
+    await client.query(`
+      update public.chat_messages
+      set status = 'done', content = 'model reply completed'
+      where id = '${claimRows.rows[0].id}';
+    `);
+
+    const updated = await client.query(`
+      select status, content from public.chat_messages where id = '${claimRows.rows[0].id}';
+    `);
+    assert.equal(updated.rows[0].status, 'done');
+    assert.equal(updated.rows[0].content, 'model reply completed');
+
+    // Cleanup
+    await client.query(`delete from public.chat_threads where id = '${threadId}'`);
+  });
+
   await client.end();
 });

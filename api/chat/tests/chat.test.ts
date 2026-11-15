@@ -72,10 +72,13 @@ function createMockThreadStore(): ChatThreadStore & {
       return created;
     },
     async listMessages(q) {
-      return messages.filter((m) => m.ownerId === q.ownerId && m.threadId === q.threadId);
+      return messages.filter((m) => m.ownerId === q.ownerId && m.threadId === q.threadId && (q.status === 'all' || (q.status === 'pending' ? m.status === 'pending' : m.status !== 'pending')));
     },
     async getMessage(q) {
       return messages.find((m) => m.ownerId === q.ownerId && m.threadId === q.threadId && m.id === q.messageId) ?? null;
+    },
+    async getReplyMessage(q) {
+      return messages.find((m) => m.ownerId === q.ownerId && m.threadId === q.threadId && m.replyToMessageId === q.replyToMessageId && m.role === 'assistant') ?? null;
     },
     async appendMessage(m) {
       if (m.role === 'assistant' && m.replyToMessageId) {
@@ -88,7 +91,7 @@ function createMockThreadStore(): ChatThreadStore & {
           throw err;
         }
       }
-      const created = {
+      const created: ChatMessage = {
         id: m.id ?? crypto.randomUUID(),
         threadId: m.threadId,
         ownerId: m.ownerId,
@@ -96,10 +99,26 @@ function createMockThreadStore(): ChatThreadStore & {
         content: m.content,
         sequence: messages.length,
         replyToMessageId: m.replyToMessageId ?? null,
+        status: m.status ?? 'done',
         createdAt: new Date().toISOString(),
       };
       messages.push(created);
       return created;
+    },
+    async updateMessage(q) {
+      const msg = messages.find((m) => m.ownerId === q.ownerId && m.threadId === q.threadId && m.id === q.messageId);
+      if (msg) {
+        if (q.content !== undefined) msg.content = q.content;
+        if (q.status !== undefined) msg.status = q.status;
+        return { ...msg };
+      }
+      return null;
+    },
+    async deleteMessage(q) {
+      const idx = messages.findIndex((m) => m.ownerId === q.ownerId && m.threadId === q.threadId && m.id === q.messageId);
+      if (idx !== -1) {
+        messages.splice(idx, 1);
+      }
     },
   };
 }
@@ -803,5 +822,267 @@ test('6. empty modelConfig without S13 registry responds with needs_model, calls
   const assistantMsgs = store.messages.filter((m) => m.role === 'assistant');
   assert.equal(assistantMsgs.length, 0, 'fallback needs_model text must not be saved in DB');
 });
+
+test('P13 8(a): 2 separate module instances with shared store -> Promise.all -> model calls = 1, assistant rows = 1, same text to both', async () => {
+  const modA = await import('../index.ts?a=1');
+  const modB = await import('../index.ts?b=2');
+  assert.notEqual(modA, modB, 'must be two separate module instances');
+
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const sharedStore = createMockThreadStore();
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'multi-instance parallel stream' }),
+  });
+  const sendRes = await modA.messagesSendHandler(sendReq, { env, fetch: mockFetch, threadStore: sharedStore, killReader });
+  const messageId = (await sendRes.json()).data.message_id;
+
+  let modelCallCount = 0;
+  const mockGateway: ChatGateway = {
+    async callStream(req, onChunk) {
+      modelCallCount++;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await onChunk('Cross-instance synchronized chunk');
+      return { ok: true, text: 'Cross-instance synchronized chunk', usage: { tokensIn: 5, tokensOut: 5, costUsd: 0.0001 } };
+    },
+  };
+  const testSlot = { provider: 'anthropic' as const, model: 'claude', tier: 'paid' as const };
+  const optsA = {
+    env,
+    fetch: mockFetch,
+    threadStore: sharedStore,
+    killReader,
+    gateway: mockGateway,
+    modelConfig: { fast: testSlot, normal: testSlot, deep: testSlot, private: null },
+  };
+  const optsB = {
+    env,
+    fetch: mockFetch,
+    threadStore: sharedStore,
+    killReader,
+    gateway: mockGateway,
+    modelConfig: { fast: testSlot, normal: testSlot, deep: testSlot, private: null },
+  };
+
+  const req1 = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+  const req2 = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+
+  const [res1, res2] = await Promise.all([
+    modA.messagesStreamHandler(req1, optsA),
+    modB.messagesStreamHandler(req2, optsB),
+  ]);
+
+  assert.equal(res1.status, 200);
+  assert.equal(res2.status, 200);
+
+  const [text1, text2] = await Promise.all([res1.text(), res2.text()]);
+  assert.ok(text1.includes('Cross-instance synchronized chunk'));
+  assert.ok(text2.includes('Cross-instance synchronized chunk'));
+
+  assert.equal(modelCallCount, 1, 'model must only be called once even across module instances');
+  const assistantMsgs = sharedStore.messages.filter((m) => m.role === 'assistant' && m.replyToMessageId === messageId);
+  assert.equal(assistantMsgs.length, 1, 'exactly one assistant message must be stored in DB');
+  assert.equal(assistantMsgs[0].status, 'done');
+});
+
+test('P13 8(b): winner model fail -> pending row not in DB, retry creates new reply', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'model fail test' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env, fetch: mockFetch, threadStore: store, killReader });
+  const messageId = (await sendRes.json()).data.message_id;
+
+  let attempt = 0;
+  const failingGateway: ChatGateway = {
+    async callStream() {
+      attempt++;
+      if (attempt === 1) {
+        throw new Error('transient model failure');
+      }
+      return { ok: true, text: 'recovered reply on retry', usage: { tokensIn: 5, tokensOut: 5, costUsd: 0.0001 } };
+    },
+  };
+  const testSlot = { provider: 'anthropic' as const, model: 'claude', tier: 'paid' as const };
+  const opts = {
+    env,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    gateway: failingGateway,
+    modelConfig: { fast: testSlot, normal: testSlot, deep: testSlot, private: null },
+  };
+
+  const streamReq1 = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+  const res1 = await messagesStreamHandler(streamReq1, opts);
+  assert.equal(res1.status, 200);
+  const text1 = await res1.text();
+
+  // Pending row must have been cleaned up/deleted from DB
+  const pendingRows = store.messages.filter((m) => m.replyToMessageId === messageId && m.status === 'pending');
+  assert.equal(pendingRows.length, 0, 'pending row must be deleted on model error');
+  const allRows = store.messages.filter((m) => m.replyToMessageId === messageId);
+  assert.equal(allRows.length, 0, 'no assistant rows in DB after failed model call');
+
+  // Retry can now acquire a new claim and succeed
+  const streamReq2 = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+  const res2 = await messagesStreamHandler(streamReq2, opts);
+  assert.equal(res2.status, 200);
+  const text2 = await res2.text();
+  assert.ok(text2.includes('recovered reply on retry'));
+
+  const savedReplies = store.messages.filter((m) => m.replyToMessageId === messageId);
+  assert.equal(savedReplies.length, 1);
+  assert.equal(savedReplies[0].status, 'done');
+  assert.equal(savedReplies[0].content, 'recovered reply on retry');
+});
+
+test('P13 8(c): stale pending row (>60s) -> deleted and new claim acquired', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'stale test' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env, fetch: mockFetch, threadStore: store, killReader });
+  const messageId = (await sendRes.json()).data.message_id;
+
+  // Insert a stale pending row from a crashed instance (created 70 seconds ago)
+  const stalePendingMsg: ChatMessage = {
+    id: crypto.randomUUID(),
+    threadId: THREAD_ID,
+    ownerId: OWNER_ID,
+    role: 'assistant',
+    content: '',
+    sequence: store.messages.length,
+    replyToMessageId: messageId,
+    status: 'pending',
+    createdAt: new Date(Date.now() - 70_000).toISOString(),
+  };
+  store.messages.push(stalePendingMsg);
+
+  let modelCalls = 0;
+  const mockGateway: ChatGateway = {
+    async callStream(req, onChunk) {
+      modelCalls++;
+      await onChunk('Stale replaced with fresh reply');
+      return { ok: true, text: 'Stale replaced with fresh reply', usage: { tokensIn: 5, tokensOut: 5, costUsd: 0.0001 } };
+    },
+  };
+  const testSlot = { provider: 'anthropic' as const, model: 'claude', tier: 'paid' as const };
+  const opts = {
+    env,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    gateway: mockGateway,
+    modelConfig: { fast: testSlot, normal: testSlot, deep: testSlot, private: null },
+  };
+
+  const streamReq = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+  const res = await messagesStreamHandler(streamReq, opts);
+  assert.equal(res.status, 200);
+  const text = await res.text();
+  assert.ok(text.includes('Stale replaced with fresh reply'));
+  assert.equal(modelCalls, 1);
+
+  const replies = store.messages.filter((m) => m.replyToMessageId === messageId);
+  assert.equal(replies.length, 1);
+  assert.equal(replies[0].status, 'done');
+  assert.notEqual(replies[0].id, stalePendingMsg.id, 'stale pending row must have been replaced with new claim');
+});
+
+test('P13 8(d): messages.list does not return pending rows', async () => {
+  const cookie = await getOwnerCookie();
+  const store = createMockThreadStore();
+
+  // Add a user message
+  const userMsgId = crypto.randomUUID();
+  store.messages.push({
+    id: userMsgId,
+    threadId: THREAD_ID,
+    ownerId: OWNER_ID,
+    role: 'user',
+    content: 'User query',
+    sequence: 1,
+    status: 'done',
+    createdAt: new Date().toISOString(),
+  });
+
+  // Add an in-flight pending assistant message
+  store.messages.push({
+    id: crypto.randomUUID(),
+    threadId: THREAD_ID,
+    ownerId: OWNER_ID,
+    role: 'assistant',
+    content: '',
+    sequence: 2,
+    replyToMessageId: userMsgId,
+    status: 'pending',
+    createdAt: new Date().toISOString(),
+  });
+
+  // Add a completed assistant message
+  store.messages.push({
+    id: crypto.randomUUID(),
+    threadId: THREAD_ID,
+    ownerId: OWNER_ID,
+    role: 'assistant',
+    content: 'Completed answer',
+    sequence: 3,
+    replyToMessageId: crypto.randomUUID(),
+    status: 'done',
+    createdAt: new Date().toISOString(),
+  });
+
+  const req = new Request('https://jarvis.example/api/chat/messages.list', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID }),
+  });
+  const res = await messagesListHandler(req, { env, fetch: mockFetch, threadStore: store });
+  assert.equal(res.status, 200);
+  const data = await res.json();
+  assert.equal(data.ok, true);
+
+  const returnedMsgs = data.data.messages;
+  assert.ok(returnedMsgs.length >= 2);
+  const pendingFound = returnedMsgs.find((m: any) => m.status === 'pending' || m.content === '');
+  assert.equal(pendingFound, undefined, 'pending messages must NOT be returned in messages.list');
+  const completedFound = returnedMsgs.find((m: any) => m.content === 'Completed answer');
+  assert.ok(completedFound, 'completed message must be in messages.list');
+});
+
 
 
