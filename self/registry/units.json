@@ -1904,10 +1904,10 @@
     "group": "packages",
     "owner_squad": "S13",
     "phase": 2,
-    "status": "planned",
-    "does": "model router का code",
+    "status": "built",
+    "does": "Local Gemma-3 model runner, 60s health ping to settings, models registry, and privacy router",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "packages/models"
   },
   {

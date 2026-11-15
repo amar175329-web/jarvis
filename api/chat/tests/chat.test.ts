@@ -78,6 +78,16 @@ function createMockThreadStore(): ChatThreadStore & {
       return messages.find((m) => m.ownerId === q.ownerId && m.threadId === q.threadId && m.id === q.messageId) ?? null;
     },
     async appendMessage(m) {
+      if (m.role === 'assistant' && m.replyToMessageId) {
+        const existing = messages.find(
+          (x) => x.threadId === m.threadId && x.replyToMessageId === m.replyToMessageId
+        );
+        if (existing) {
+          const err = new Error('duplicate key value violates unique constraint "idx_chat_messages_reply_claim"');
+          (err as any).code = '23505';
+          throw err;
+        }
+      }
       const created = {
         id: m.id ?? crypto.randomUUID(),
         threadId: m.threadId,
@@ -85,6 +95,7 @@ function createMockThreadStore(): ChatThreadStore & {
         role: m.role,
         content: m.content,
         sequence: messages.length,
+        replyToMessageId: m.replyToMessageId ?? null,
         createdAt: new Date().toISOString(),
       };
       messages.push(created);
@@ -486,4 +497,311 @@ test('model budget limit enforcement: limit exceeded or unset refuses calls with
   const textB = await streamResB.text();
   assert.ok(textB.includes('budget limit poori ho gayi') || textB.includes('budget_exceeded'));
 });
+
+test('1. duplicate stream: concurrent streams on same message call model once and produce 1 assistant message', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const sharedStore = createMockThreadStore();
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'parallel stream test' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env, fetch: mockFetch, threadStore: sharedStore, killReader });
+  const messageId = (await sendRes.json()).data.message_id;
+
+  let modelCallCount = 0;
+  const mockGateway: ChatGateway = {
+    async callStream(req, onChunk) {
+      modelCallCount++;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await onChunk('Parallel response chunk');
+      return { ok: true, text: 'Parallel response chunk', usage: { tokensIn: 5, tokensOut: 5, costUsd: 0.0001 } };
+    },
+  };
+  const testSlot = { provider: 'anthropic' as const, model: 'claude', tier: 'paid' as const };
+  const opts = {
+    env,
+    fetch: mockFetch,
+    threadStore: sharedStore,
+    killReader,
+    gateway: mockGateway,
+    modelConfig: { fast: testSlot, normal: testSlot, deep: testSlot, private: null },
+  };
+
+  const req1 = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+  const req2 = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+
+  const [res1, res2] = await Promise.all([
+    messagesStreamHandler(req1, opts),
+    messagesStreamHandler(req2, opts),
+  ]);
+
+  assert.equal(res1.status, 200);
+  assert.equal(res2.status, 200);
+
+  const [text1, text2] = await Promise.all([res1.text(), res2.text()]);
+  assert.ok(text1.includes('Parallel response chunk'));
+  assert.ok(text2.includes('Parallel response chunk') || text2.includes('thoda intezar karein'));
+
+  assert.equal(modelCallCount, 1, 'model must only be called once');
+  const assistantMsgs = sharedStore.messages.filter((m) => m.role === 'assistant' && m.replyToMessageId === messageId);
+  assert.equal(assistantMsgs.length, 1, 'exactly one assistant message must be stored in DB');
+});
+
+test('2. service key missing + budget set: refuses model call, calls = 0', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+  const noKeyEnv = {
+    ...env,
+    SUPABASE_SERVICE_ROLE_KEY: undefined,
+    MODEL_DAY_LIMIT_INR: '100',
+    MODEL_MONTH_LIMIT_INR: '1000',
+    INR_PER_USD: '84',
+  };
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'kuch batao' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env: noKeyEnv, fetch: mockFetch, threadStore: store, killReader });
+  const messageId = (await sendRes.json()).data.message_id;
+
+  const testSlot = { provider: 'anthropic' as const, model: 'claude', tier: 'paid' as const };
+  const streamReq = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+
+  const streamRes = await messagesStreamHandler(streamReq, {
+    env: noKeyEnv,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    modelConfig: { fast: testSlot, normal: testSlot, deep: testSlot, private: null },
+  });
+
+  assert.equal(streamRes.status, 200);
+  const streamText = await streamRes.text();
+  assert.ok(streamText.includes('budget_exceeded') || streamText.includes('budget limit poori ho gayi'));
+  const assistantMsgs = store.messages.filter((m) => m.role === 'assistant');
+  assert.equal(assistantMsgs.length, 0, 'no assistant message saved when service key missing');
+});
+
+test('3. wrong reply isolation: message A (unanswered) + message B (answered); streaming A does not return B reply', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+
+  let modelCalls = 0;
+  const mockGateway: ChatGateway = {
+    async callStream(req, onChunk) {
+      modelCalls++;
+      const userText = req.input?.user ?? '';
+      const reply = userText.startsWith('Pehla') ? 'Jawab for: Pehla sawaal A' : 'Jawab for: Doosra sawaal B';
+      await onChunk(reply);
+      return { ok: true, text: reply, usage: { tokensIn: 5, tokensOut: 5, costUsd: 0.0001 } };
+    },
+  };
+  const testSlot = { provider: 'anthropic' as const, model: 'claude', tier: 'paid' as const };
+  const opts = {
+    env,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    gateway: mockGateway,
+    modelConfig: { fast: testSlot, normal: testSlot, deep: testSlot, private: null },
+  };
+
+  const sendReqA = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'Pehla sawaal A' }),
+  });
+  const resA = await messagesSendHandler(sendReqA, opts);
+  const msgIdA = (await resA.json()).data.message_id;
+
+  const sendReqB = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'Doosra sawaal B' }),
+  });
+  const resB = await messagesSendHandler(sendReqB, opts);
+  const msgIdB = (await resB.json()).data.message_id;
+
+  const streamReqB = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: msgIdB }),
+  });
+  const streamResB = await messagesStreamHandler(streamReqB, opts);
+  const textB = await streamResB.text();
+  assert.ok(textB.includes('Jawab for: Doosra sawaal B'));
+  assert.equal(modelCalls, 1);
+
+  const streamReqA = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: msgIdA }),
+  });
+  const streamResA = await messagesStreamHandler(streamReqA, opts);
+  const textA = await streamResA.text();
+  assert.ok(textA.includes('Jawab for: Pehla sawaal A'));
+  assert.ok(!textA.includes('Doosra sawaal B'));
+  assert.equal(modelCalls, 2, 'model must be called for message A independently');
+});
+
+test('4. error save nahi: needs_model / budget fallback text is not saved to DB; retrying after fix creates new reply', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'kavita sunao' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env, fetch: mockFetch, threadStore: store, killReader });
+  const messageId = (await sendRes.json()).data.message_id;
+
+  const streamReq1 = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+  const streamRes1 = await messagesStreamHandler(streamReq1, { env, fetch: mockFetch, threadStore: store, killReader });
+  const text1 = await streamRes1.text();
+  assert.ok(text1.includes('model configured nahi hai') || text1.includes('Model slot set nahi hai'));
+
+  let assistantMsgs = store.messages.filter((m) => m.role === 'assistant');
+  assert.equal(assistantMsgs.length, 0, 'error text must NOT be saved in DB as assistant message');
+
+  let modelCalls = 0;
+  const mockGateway: ChatGateway = {
+    async callStream(req, onChunk) {
+      modelCalls++;
+      await onChunk('Yeh rahi sundar kavita');
+      return { ok: true, text: 'Yeh rahi sundar kavita', usage: { tokensIn: 5, tokensOut: 5, costUsd: 0.0001 } };
+    },
+  };
+  const testSlot = { provider: 'anthropic' as const, model: 'claude', tier: 'paid' as const };
+  const fixedOpts = {
+    env,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    gateway: mockGateway,
+    modelConfig: { fast: testSlot, normal: testSlot, deep: testSlot, private: null },
+  };
+
+  const streamReq2 = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+  const streamRes2 = await messagesStreamHandler(streamReq2, fixedOpts);
+  const text2 = await streamRes2.text();
+  assert.ok(text2.includes('Yeh rahi sundar kavita'));
+  assert.equal(modelCalls, 1);
+
+  assistantMsgs = store.messages.filter((m) => m.role === 'assistant' && m.replyToMessageId === messageId);
+  assert.equal(assistantMsgs.length, 1, 'now exactly one assistant message saved in DB');
+  assert.equal(assistantMsgs[0].content, 'Yeh rahi sundar kavita');
+});
+
+test('5. INR_PER_USD missing or invalid refuses model call with calls = 0', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+
+  const missingInrEnv = {
+    ...env,
+    MODEL_DAY_LIMIT_INR: '100',
+    MODEL_MONTH_LIMIT_INR: '1000',
+    INR_PER_USD: undefined,
+  };
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'currency test' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env: missingInrEnv, fetch: mockFetch, threadStore: store, killReader });
+  const messageId = (await sendRes.json()).data.message_id;
+
+  const testSlot = { provider: 'anthropic' as const, model: 'claude', tier: 'paid' as const };
+  const streamReq = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+  const streamRes = await messagesStreamHandler(streamReq, {
+    env: missingInrEnv,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    modelConfig: { fast: testSlot, normal: testSlot, deep: testSlot, private: null },
+  });
+
+  assert.equal(streamRes.status, 200);
+  const text = await streamRes.text();
+  assert.ok(text.includes('budget_exceeded') || text.includes('budget limit poori ho gayi'));
+  const assistantMsgs = store.messages.filter((m) => m.role === 'assistant');
+  assert.equal(assistantMsgs.length, 0);
+});
+
+test('6. empty modelConfig without S13 registry responds with needs_model, calls = 0', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+
+  let modelCalls = 0;
+  const mockGateway: ChatGateway = {
+    async callStream() {
+      modelCalls++;
+      return { ok: true, text: 'should not be called' };
+    },
+  };
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'namaste' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env, fetch: mockFetch, threadStore: store, killReader });
+  const messageId = (await sendRes.json()).data.message_id;
+
+  const streamReq = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+  const streamRes = await messagesStreamHandler(streamReq, {
+    env,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    gateway: mockGateway,
+  });
+
+  assert.equal(streamRes.status, 200);
+  const text = await streamRes.text();
+  assert.ok(text.includes('model configured nahi hai') || text.includes('Model slot set nahi hai'));
+  assert.equal(modelCalls, 0, 'gateway must not be called when model slots are null');
+  const assistantMsgs = store.messages.filter((m) => m.role === 'assistant');
+  assert.equal(assistantMsgs.length, 0, 'fallback needs_model text must not be saved in DB');
+});
+
 

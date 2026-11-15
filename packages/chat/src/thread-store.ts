@@ -3,7 +3,7 @@ import type { ChatMessage, ChatThread, ChatThreadStore } from './types.ts';
 type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 type Row = {
   id: string; thread_id: string; owner_id: string; role: 'user' | 'assistant';
-  content: string; sequence: number | string; created_at: string;
+  content: string; sequence: number | string; reply_to_message_id?: string | null; created_at: string;
 };
 
 /**
@@ -101,7 +101,7 @@ export function createRlsChatThreadStore(input: {
     },
     async listMessages(query) {
       const url = new URL(base);
-      url.searchParams.set('select', 'id,thread_id,owner_id,role,content,sequence,created_at');
+      url.searchParams.set('select', 'id,thread_id,owner_id,role,content,sequence,reply_to_message_id,created_at');
       url.searchParams.set('owner_id', `eq.${query.ownerId}`);
       url.searchParams.set('thread_id', `eq.${query.threadId}`);
       if (query.beforeSequence !== undefined) {
@@ -117,12 +117,13 @@ export function createRlsChatThreadStore(input: {
         role: row.role,
         content: row.content,
         sequence: Number(row.sequence),
+        replyToMessageId: row.reply_to_message_id ? String(row.reply_to_message_id) : null,
         createdAt: row.created_at,
       }));
     },
     async getMessage(query) {
       const url = new URL(base);
-      url.searchParams.set('select', 'id,thread_id,owner_id,role,content,sequence,created_at');
+      url.searchParams.set('select', 'id,thread_id,owner_id,role,content,sequence,reply_to_message_id,created_at');
       url.searchParams.set('owner_id', `eq.${query.ownerId}`);
       url.searchParams.set('thread_id', `eq.${query.threadId}`);
       url.searchParams.set('id', `eq.${query.messageId}`);
@@ -137,6 +138,7 @@ export function createRlsChatThreadStore(input: {
         role: row.role,
         content: row.content,
         sequence: Number(row.sequence),
+        replyToMessageId: row.reply_to_message_id ? String(row.reply_to_message_id) : null,
         createdAt: row.created_at,
       };
     },
@@ -160,6 +162,7 @@ export function createRlsChatThreadStore(input: {
             role: message.role,
             content: message.content,
             sequence,
+            ...(message.replyToMessageId ? { reply_to_message_id: message.replyToMessageId } : {}),
           }),
         });
         if (!response.ok) throw new Error('chat RLS write failed');

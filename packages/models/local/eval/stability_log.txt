@@ -1,0 +1,35 @@
+=== STABILITY TEST START: 2026-11-15T07:26:44.069Z ===
+[2026-11-15T07:26:44.084Z] Starting Stability Test. Duration: 50s (0.8 mins), Idle timeout: 10s, Poll: 3000ms
+[2026-11-15T07:26:44.097Z] Initial Available RAM: 1865 MB
+[2026-11-15T07:26:45.186Z] --- Phase 1: Initial Cold Start & Inference (t = 0m) ---
+[2026-11-15T07:26:53.422Z] Query 1 [Cold Start] | Model: gemma-3-270m-it | Full Query: "कल सुबह 8 बजे दवाई लेनी है"
+[2026-11-15T07:26:53.425Z]   Duration: 7.95s | RAM: 1865MB -> 1565MB | Server Running: true
+[2026-11-15T07:26:53.426Z]   Extracted: {"काम":"कल सुबह 8 बजे दवाई लेनी है","समय":"कल सुबह 8:00 बजे"}
+[2026-11-15T07:26:53.430Z]   Mismatch Check: PASS (Match OK)
+[2026-11-15T07:26:55.438Z] --- Phase 2: Warm Inference Test ---
+[2026-11-15T07:26:57.521Z] Query 2 [Warm] | Model: gemma-3-270m-it | Full Query: "आज दोपहर 2 बजे मीटिंग है"
+[2026-11-15T07:26:57.745Z]   Duration: 2.08s | Server Running: true
+[2026-11-15T07:26:57.747Z]   Extracted: {"काम":"आज दोपहर 2 बजे मीटिंग है","समय":"रात्र में"}
+[2026-11-15T07:26:57.749Z]   Mismatch Check: FAIL (Time ("रात्र में") does not match input sentence ("आज दोपहर 2 बजे मीटिंग है"))
+[2026-11-15T07:26:57.970Z] [t=0.2m / 13s] Health OK=true, Server Running=true, Available RAM=1570MB
+[2026-11-15T07:27:01.243Z] [t=0.3m / 16s] Health OK=true, Server Running=true, Available RAM=1588MB
+[2026-11-15T07:27:04.476Z] [t=0.3m / 20s] Health OK=true, Server Running=true, Available RAM=1604MB
+[2026-11-15T07:27:08.027Z] [t=0.4m / 23s] Health OK=true, Server Running=true, Available RAM=1683MB
+[2026-11-15T07:27:18.045Z] [t=0.6m / 33s] Health OK=true, Server Running=false, Available RAM=2013MB
+[2026-11-15T07:27:18.046Z] [VERIFIED] Server automatically shut down on idle after 10s! RAM freed: 2013MB
+[2026-11-15T07:27:18.047Z] --- Phase 3: Mid-Point Auto-Restart & Inference ---
+[2026-11-15T07:27:26.753Z] Query 3 [Mid Auto-Restart] | Model: gemma-3-270m-it | Full Query: "सोमवार शाम 5 बजे टीम मीटिंग है"
+[2026-11-15T07:27:27.032Z]   Duration: 6.93s | RAM: 2013MB -> 1670MB | Server Running: true
+[2026-11-15T07:27:27.034Z]   Extracted: {"काम":"सोमवार शाम 5 बजे टीम मीटिंग है","समय":"5:00 बजे"}
+[2026-11-15T07:27:27.035Z]   Mismatch Check: PASS (Match OK)
+[2026-11-15T07:27:30.357Z] [t=0.8m / 45s] Health OK=true, Server Running=true, Available RAM=1661MB
+[2026-11-15T07:27:34.141Z] --- Phase 4: Final Inference Verification ---
+[2026-11-15T07:27:45.639Z] Query 4 [Final Verification] | Model: gemma-3-270m-it | Full Query: "शुक्रवार दोपहर 2 बजे बिजली का बिल भरना है"
+[2026-11-15T07:27:45.803Z]   Duration: 6.88s | RAM: 1996MB -> 1687MB | Server Running: true
+[2026-11-15T07:27:45.804Z]   Extracted: {"काम":"बिजली का बिल भरना है","समय":"शुक्रवार दोपहर 2 बजे"}
+[2026-11-15T07:27:45.806Z]   Mismatch Check: PASS (Match OK)
+[2026-11-15T07:27:45.808Z] === STABILITY TEST COMPLETED: Total elapsed 61s (1.0 mins) ===
+[2026-11-15T07:27:45.809Z] Total Crashes: 0
+[2026-11-15T07:27:45.809Z] Idle Shutdown 1 Verified: true
+[2026-11-15T07:27:45.811Z] Idle Shutdown 2 Verified: false
+[2026-11-15T07:27:45.812Z] Final RAM: 1688 MB

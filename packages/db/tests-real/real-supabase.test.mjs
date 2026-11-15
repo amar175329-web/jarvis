@@ -36,9 +36,20 @@ const hasCredentials = Boolean(
 );
 
 test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCredentials && 'real Supabase credentials not set in ~/.jarvis.env or env' }, async (t) => {
+  const fetchWithRetry = async (url, opts, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        return await fetch(url, opts);
+      } catch (err) {
+        if (i === retries - 1) throw err;
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+    }
+  };
+
   // 1. Authenticate User A and User B
   const login = async (email, password) => {
-    const res = await fetch(`${env.TEST_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+    const res = await fetchWithRetry(`${env.TEST_SUPABASE_URL}/auth/v1/token?grant_type=password`, {
       method: 'POST',
       headers: { 'apikey': env.TEST_SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -57,7 +68,7 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
   await t.test('storage: user B cannot read or upload to user A files', async () => {
     const testPayload = `isolation-test-${Date.now()}`;
     // User A uploads own file
-    const upA = await fetch(`${env.TEST_SUPABASE_URL}/storage/v1/object/files/${userA.uid}/isolation.txt`, {
+    const upA = await fetchWithRetry(`${env.TEST_SUPABASE_URL}/storage/v1/object/files/${userA.uid}/isolation.txt`, {
       method: 'POST',
       headers: { 'apikey': env.TEST_SUPABASE_ANON_KEY, 'Authorization': `Bearer ${userA.token}`, 'Content-Type': 'text/plain', 'x-upsert': 'true' },
       body: testPayload
@@ -65,19 +76,19 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
     assert.ok(upA.status === 200 || upA.status === 409, `Upload A status ${upA.status}`);
 
     // User A downloads own file
-    const downA = await fetch(`${env.TEST_SUPABASE_URL}/storage/v1/object/authenticated/files/${userA.uid}/isolation.txt`, {
+    const downA = await fetchWithRetry(`${env.TEST_SUPABASE_URL}/storage/v1/object/authenticated/files/${userA.uid}/isolation.txt`, {
       headers: { 'apikey': env.TEST_SUPABASE_ANON_KEY, 'Authorization': `Bearer ${userA.token}` }
     });
     assert.equal(downA.status, 200);
 
     // User B attempts to download User A's file (must be 400/404/403)
-    const downB = await fetch(`${env.TEST_SUPABASE_URL}/storage/v1/object/authenticated/files/${userA.uid}/isolation.txt`, {
+    const downB = await fetchWithRetry(`${env.TEST_SUPABASE_URL}/storage/v1/object/authenticated/files/${userA.uid}/isolation.txt`, {
       headers: { 'apikey': env.TEST_SUPABASE_ANON_KEY, 'Authorization': `Bearer ${userB.token}` }
     });
     assert.ok(downB.status === 400 || downB.status === 403 || downB.status === 404, 'User B must not download User A file');
 
     // User B attempts to upload into User A's folder (must be rejected)
-    const upBtoA = await fetch(`${env.TEST_SUPABASE_URL}/storage/v1/object/files/${userA.uid}/injected.txt`, {
+    const upBtoA = await fetchWithRetry(`${env.TEST_SUPABASE_URL}/storage/v1/object/files/${userA.uid}/injected.txt`, {
       method: 'POST',
       headers: { 'apikey': env.TEST_SUPABASE_ANON_KEY, 'Authorization': `Bearer ${userB.token}`, 'Content-Type': 'text/plain' },
       body: 'injected by B'
@@ -85,7 +96,7 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
     assert.ok(upBtoA.status === 400 || upBtoA.status === 403, 'User B must not upload into User A folder');
 
     // User B uploads into own folder
-    const upB = await fetch(`${env.TEST_SUPABASE_URL}/storage/v1/object/files/${userB.uid}/own.txt`, {
+    const upB = await fetchWithRetry(`${env.TEST_SUPABASE_URL}/storage/v1/object/files/${userB.uid}/own.txt`, {
       method: 'POST',
       headers: { 'apikey': env.TEST_SUPABASE_ANON_KEY, 'Authorization': `Bearer ${userB.token}`, 'Content-Type': 'text/plain', 'x-upsert': 'true' },
       body: 'User B content'
@@ -204,7 +215,7 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
 
   await t.test('chat HTTP PostgREST flow: User A creates thread, User B cannot see or query it', async () => {
     // User A creates thread via PostgREST
-    const createRes = await fetch(`${env.TEST_SUPABASE_URL}/rest/v1/chat_threads`, {
+    const createRes = await fetchWithRetry(`${env.TEST_SUPABASE_URL}/rest/v1/chat_threads`, {
       method: 'POST',
       headers: {
         'apikey': env.TEST_SUPABASE_ANON_KEY,
@@ -223,7 +234,7 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
     assert.ok(threadAId, 'Thread ID must exist');
 
     // User A adds message
-    const msgRes = await fetch(`${env.TEST_SUPABASE_URL}/rest/v1/chat_messages`, {
+    const msgRes = await fetchWithRetry(`${env.TEST_SUPABASE_URL}/rest/v1/chat_messages`, {
       method: 'POST',
       headers: {
         'apikey': env.TEST_SUPABASE_ANON_KEY,
@@ -242,7 +253,7 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
     assert.equal(msgRes.status, 201, `Message creation status ${msgRes.status}`);
 
     // User B attempts to read threads (must be empty or not contain threadAId)
-    const listResB = await fetch(`${env.TEST_SUPABASE_URL}/rest/v1/chat_threads?id=eq.${threadAId}`, {
+    const listResB = await fetchWithRetry(`${env.TEST_SUPABASE_URL}/rest/v1/chat_threads?id=eq.${threadAId}`, {
       method: 'GET',
       headers: {
         'apikey': env.TEST_SUPABASE_ANON_KEY,
@@ -254,7 +265,7 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
     assert.equal(threadsB.length, 0, 'User B must not see User A thread');
 
     // User B attempts to read messages in thread A (must return 0 messages)
-    const msgListB = await fetch(`${env.TEST_SUPABASE_URL}/rest/v1/chat_messages?thread_id=eq.${threadAId}`, {
+    const msgListB = await fetchWithRetry(`${env.TEST_SUPABASE_URL}/rest/v1/chat_messages?thread_id=eq.${threadAId}`, {
       method: 'GET',
       headers: {
         'apikey': env.TEST_SUPABASE_ANON_KEY,
@@ -266,7 +277,7 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
     assert.equal(msgsB.length, 0, 'User B must not see messages from User A thread');
 
     // User B attempts to inject a message into User A's thread (must fail)
-    const injectResB = await fetch(`${env.TEST_SUPABASE_URL}/rest/v1/chat_messages`, {
+    const injectResB = await fetchWithRetry(`${env.TEST_SUPABASE_URL}/rest/v1/chat_messages`, {
       method: 'POST',
       headers: {
         'apikey': env.TEST_SUPABASE_ANON_KEY,
@@ -282,6 +293,107 @@ test('Real Supabase: full A/B RLS, chat, and storage isolation', { skip: !hasCre
       }),
     });
     assert.ok(injectResB.status >= 400, 'User B must be rejected when inserting into User A thread');
+  });
+
+  await t.test('migration 0050: model_usage columns, model_registry RLS A/B, and guard trigger', async () => {
+    // 1. Verify model_usage columns
+    const colsRes = await client.query(`
+      select column_name from information_schema.columns
+      where table_schema = 'public' and table_name = 'model_usage'
+        and column_name in ('cache_read_tokens', 'cache_write_tokens', 'tier', 'fallback_from');
+    `);
+    const foundCols = colsRes.rows.map((r) => r.column_name);
+    assert.ok(foundCols.includes('cache_read_tokens'), 'cache_read_tokens column missing');
+    assert.ok(foundCols.includes('cache_write_tokens'), 'cache_write_tokens column missing');
+    assert.ok(foundCols.includes('tier'), 'tier column missing');
+    assert.ok(foundCols.includes('fallback_from'), 'fallback_from column missing');
+
+    // 2. RLS A/B on model_registry: User A inserts, User B sees 0 rows
+    const freeEntry = JSON.stringify({ tier: 'free', provider: 'gemini', model: 'gemini-2.0-flash-exp' });
+    await as(userA.uid, async () => {
+      await client.query(`
+        insert into public.model_registry (owner_id, id, entry, enabled)
+        values ('${userA.uid}', 'gemini/gemini-2.0-flash-exp', '${freeEntry}'::jsonb, true)
+        on conflict (owner_id, id) do update set enabled = true;
+      `);
+    });
+
+    await as(userB.uid, async () => {
+      const bRes = await client.query(`select * from public.model_registry where id = 'gemini/gemini-2.0-flash-exp'`);
+      assert.equal(bRes.rows.length, 0, 'User B must not see User A model_registry rows');
+    });
+
+    // 3. model_registry_guard trigger: paid_big model blocked if models.paid_big_enabled != true
+    const paidBigEntry = JSON.stringify({ tier: 'paid_big', provider: 'anthropic', model: 'claude-3-opus' });
+    await as(userA.uid, async () => {
+      // Ensure settings key models.paid_big_enabled is absent or false
+      await client.query(`delete from public.settings where owner_id = '${userA.uid}' and key = 'models.paid_big_enabled'`);
+
+      await assert.rejects(
+        () => client.query(`
+          insert into public.model_registry (owner_id, id, entry, enabled)
+          values ('${userA.uid}', 'anthropic/claude-3-opus', '${paidBigEntry}'::jsonb, true)
+          on conflict (owner_id, id) do update set enabled = true;
+        `),
+        /paid_big model needs settings models\.paid_big_enabled = true/
+      );
+
+      // Now enable it in settings
+      await client.query(`
+        insert into public.settings (owner_id, key, value)
+        values ('${userA.uid}', 'models.paid_big_enabled', 'true'::jsonb)
+        on conflict (owner_id, key) do update set value = 'true'::jsonb;
+      `);
+
+      // Now insert should succeed
+      await client.query(`
+        insert into public.model_registry (owner_id, id, entry, enabled)
+        values ('${userA.uid}', 'anthropic/claude-3-opus', '${paidBigEntry}'::jsonb, true)
+        on conflict (owner_id, id) do update set enabled = true;
+      `);
+
+      // Cleanup
+      await client.query(`delete from public.model_registry where owner_id = '${userA.uid}'`);
+      await client.query(`delete from public.settings where owner_id = '${userA.uid}' and key = 'models.paid_big_enabled'`);
+    });
+  });
+
+  await t.test('migration 0036: chat_messages reply_to_message_id unique claim constraint', async () => {
+    await as(userA.uid, async () => {
+      // Create a thread
+      const threadRes = await client.query(`
+        insert into public.chat_threads (owner_id, title)
+        values ('${userA.uid}', 'Claim Test Thread')
+        returning id;
+      `);
+      const threadId = threadRes.rows[0].id;
+
+      // Create a user message
+      const userMsgRes = await client.query(`
+        insert into public.chat_messages (owner_id, thread_id, role, content, sequence)
+        values ('${userA.uid}', '${threadId}', 'user', 'hello claim', 1)
+        returning id;
+      `);
+      const userMsgId = userMsgRes.rows[0].id;
+
+      // Insert first assistant reply claiming userMsgId
+      await client.query(`
+        insert into public.chat_messages (owner_id, thread_id, role, content, sequence, reply_to_message_id)
+        values ('${userA.uid}', '${threadId}', 'assistant', 'first reply', 2, '${userMsgId}');
+      `);
+
+      // Attempt duplicate assistant reply claiming the SAME userMsgId in this thread -> must fail with unique constraint
+      await assert.rejects(
+        () => client.query(`
+          insert into public.chat_messages (owner_id, thread_id, role, content, sequence, reply_to_message_id)
+          values ('${userA.uid}', '${threadId}', 'assistant', 'duplicate reply', 3, '${userMsgId}');
+        `),
+        /unique|chat_messages_thread_reply_to_idx/i
+      );
+
+      // Cleanup
+      await client.query(`delete from public.chat_threads where id = '${threadId}'`);
+    });
   });
 
   await client.end();

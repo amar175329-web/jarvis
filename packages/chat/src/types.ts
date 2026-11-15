@@ -55,6 +55,7 @@ export type ChatMessage = {
   content: string;
   sequence: number;
   createdAt: string;
+  replyToMessageId?: string | null;
 };
 export type ChatAttachmentRef = {
   id: string;
@@ -76,7 +77,7 @@ export interface ChatMemoryPort {
 /** Server-side adapter backed only by migration 0034 tables and authenticated RLS. */
 export interface ChatThreadStore {
   listMessages(input: { ownerId: string; threadId: string; limit: number; beforeSequence?: number }): Promise<ChatMessage[]>;
-  appendMessage(input: { id?: string; ownerId: string; threadId: string; role: ChatMessage['role']; content: string }): Promise<void | ChatMessage>;
+  appendMessage(input: { id?: string; ownerId: string; threadId: string; role: ChatMessage['role']; content: string; replyToMessageId?: string | null }): Promise<void | ChatMessage>;
   getMessage?(input: { ownerId: string; threadId: string; messageId: string }): Promise<ChatMessage | null>;
   listThreads?(input: { ownerId: string; before?: string; limit?: number }): Promise<ChatThread[]>;
   createThread?(input: { ownerId: string; id?: string; title?: string | null }): Promise<ChatThread>;

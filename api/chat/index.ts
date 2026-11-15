@@ -39,14 +39,7 @@ type ChatConfig = {
   fetcher: typeof fetch;
 };
 
-const DEFAULT_MODEL_SPECS: ModelSpec[] = [
-  { provider: 'anthropic', model: 'claude-3-5-sonnet-20241022', price: { in_per_mtok: 3, out_per_mtok: 15 } },
-  { provider: 'anthropic', model: 'claude', price: { in_per_mtok: 3, out_per_mtok: 15 } },
-  { provider: 'gemini', model: 'gemini-1.5-flash', free: true, maxRequestsPerDay: 1500 },
-  { provider: 'gemini', model: 'gemini-2.0-flash-exp', free: true, maxRequestsPerDay: 1500 },
-  { provider: 'openai', model: 'gpt-4o-mini', price: { in_per_mtok: 0.15, out_per_mtok: 0.6 } },
-  { provider: 'openai', model: 'gpt-4o', price: { in_per_mtok: 2.5, out_per_mtok: 10 } },
-];
+const inFlightStreams = new Map<string, Promise<{ ok: boolean; text?: string; code?: string }>>();
 
 function config(options: ChatOptions): ChatConfig | null {
   const env = options.env ?? process.env;
@@ -337,7 +330,7 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
 
   // Idempotency: check if an assistant reply already exists following this user message in this thread
   const history = await threadStore.listMessages({ ownerId: owner.user.id, threadId: parsed.data.thread_id, limit: 50 });
-  const existingReply = history.find((m) => m.role === 'assistant' && m.sequence > userMessage!.sequence);
+  const existingReply = history.find((m) => m.role === 'assistant' && m.replyToMessageId === userMessage!.id);
 
   if (existingReply) {
     const stream = new ReadableStream({
@@ -352,6 +345,34 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
     return new Response(stream, { status: 200, headers });
   }
 
+  // Concurrent stream claim: if another stream is already in-flight for this message, wait for it or return progress
+  const claimKey = `${owner.user.id}:${parsed.data.thread_id}:${userMessage.id}`;
+  const inFlight = inFlightStreams.get(claimKey);
+  if (inFlight) {
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        try {
+          const res = await inFlight;
+          if (res.ok && res.text) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.started', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id })}\n\n`));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.delta', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, index: 0, text: res.text })}\n\n`));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.completed', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, chunk_count: 1 })}\n\n`));
+          } else {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.started', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id })}\n\n`));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.delta', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, index: 0, text: 'Jawab taiyar ho raha hai, thoda intezar karein.' })}\n\n`));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.completed', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, chunk_count: 1 })}\n\n`));
+          }
+        } catch {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chat.message.error', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, code: 'stream_in_progress' })}\n\n`));
+        } finally {
+          controller.close();
+        }
+      },
+    });
+    return new Response(stream, { status: 200, headers });
+  }
+
   // Model gateway & budget limits: read strictly from env/settings (MODEL_DAY_LIMIT_INR, MODEL_MONTH_LIMIT_INR)
   const env = c?.env ?? options.env ?? process.env;
   const dayLimitInrStr = env.MODEL_DAY_LIMIT_INR;
@@ -359,6 +380,9 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
   const hasDayLimit = dayLimitInrStr !== undefined && dayLimitInrStr.trim() !== '' && !Number.isNaN(Number(dayLimitInrStr));
   const hasMonthLimit = monthLimitInrStr !== undefined && monthLimitInrStr.trim() !== '' && !Number.isNaN(Number(monthLimitInrStr));
   const budgetConfigured = hasDayLimit && hasMonthLimit;
+
+  const inrPerUsdVal = env.INR_PER_USD;
+  const inrPerUsd = (inrPerUsdVal !== undefined && inrPerUsdVal.trim() !== '') ? Number(inrPerUsdVal) : NaN;
 
   let gateway: ChatGateway;
   if (options.gateway) {
@@ -373,14 +397,31 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
         return { ok: false, code: 'budget_exceeded', message: 'budget set nahi hai: MODEL_DAY_LIMIT_INR aur MODEL_MONTH_LIMIT_INR set karein' };
       },
     };
+  } else if (Number.isNaN(inrPerUsd) || inrPerUsd <= 0) {
+    // CR-3: INR_PER_USD missing / invalid -> refuse model call
+    gateway = {
+      async callStream() {
+        return { ok: false, code: 'budget_exceeded', message: 'INR_PER_USD rate missing: cannot calculate INR budget' };
+      },
+      async call() {
+        return { ok: false, code: 'budget_exceeded', message: 'INR_PER_USD rate missing: cannot calculate INR budget' };
+      },
+    };
+  } else if (!options.usageStore && !c?.serviceKey) {
+    // Requirement 2: SERVICE KEY NA HO + budget set: DO NOT fall back to memoryUsageStore! Fail-closed.
+    gateway = {
+      async callStream() {
+        return { ok: false, code: 'budget_exceeded', message: 'SUPABASE_SERVICE_ROLE_KEY missing: persistent usage store required when budget is set' };
+      },
+      async call() {
+        return { ok: false, code: 'budget_exceeded', message: 'SUPABASE_SERVICE_ROLE_KEY missing: persistent usage store required when budget is set' };
+      },
+    };
   } else {
-    const inrPerUsd = Number(env.INR_PER_USD ?? '84');
     const perDayUsd = Number(dayLimitInrStr) / inrPerUsd;
     const perMonthUsd = Number(monthLimitInrStr) / inrPerUsd;
 
-    const usageStore = options.usageStore ?? (c?.serviceKey
-      ? supabaseUsageStore({ url: c.url, serviceKey: c.serviceKey, ownerId: owner.user.id, fetch: c.fetcher })
-      : memoryUsageStore());
+    const usageStore = options.usageStore ?? supabaseUsageStore({ url: c!.url, serviceKey: c!.serviceKey!, ownerId: owner.user.id, fetch: c?.fetcher });
 
     const rawGateway = createGateway({
       kill: killReader,
@@ -395,7 +436,7 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
         envName(provider) { return `${provider.toUpperCase()}_API_KEY`; },
       },
       providers: [],
-      models: options.models ?? DEFAULT_MODEL_SPECS,
+      models: options.models ?? [],
       budget: { perDayUsd, perMonthUsd },
       logger: createLogger({ service: 'chat', sinks: [] }),
     });
@@ -410,6 +451,10 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
     messageId: userMessage.id,
     text: userMessage.content,
   };
+
+  let resolveFlight!: (val: { ok: boolean; text?: string; code?: string }) => void;
+  const flightPromise = new Promise<{ ok: boolean; text?: string; code?: string }>((res) => { resolveFlight = res; });
+  inFlightStreams.set(claimKey, flightPromise);
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -454,7 +499,10 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
           emit,
         });
 
-        if (result.status === 'needs_model' || result.status === 'failed') {
+        if (result.status === 'ok' || result.status === 'care') {
+          resolveFlight({ ok: true, text: result.text });
+        } else if (result.status === 'needs_model' || result.status === 'failed') {
+          resolveFlight({ ok: false, code: result.status });
           // Model slot is unconfigured, or budget limit exceeded / budget not set
           const fallbackText = result.text || (result.status === 'needs_model'
             ? 'Model slot set nahi hai. Settings mein model configure karein.'
@@ -464,13 +512,15 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
           }
           await emit({ type: 'chat.message.delta', index: 0, text: fallbackText });
           await emit({ type: 'chat.message.completed' });
-          try {
-            await threadStore.appendMessage({ ownerId: owner.user.id, threadId: parsed.data.thread_id, role: 'assistant', content: fallbackText });
-          } catch { /* persistence failure handled cleanly */ }
+          // ERROR SAVE NAHI: Do not persist fallbackText to chat_messages in DB!
+        } else {
+          resolveFlight({ ok: false, code: result.status });
         }
       } catch (err: any) {
+        resolveFlight({ ok: false, code: err?.code ?? 'internal_error' });
         sendFrame({ type: 'chat.message.error', thread_id: parsed.data.thread_id, message_id: parsed.data.message_id, code: err?.code ?? 'internal_error' });
       } finally {
+        inFlightStreams.delete(claimKey);
         controller.close();
       }
     },

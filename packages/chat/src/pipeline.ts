@@ -100,10 +100,16 @@ function selectHistory(messages: Awaited<ReturnType<ChatThreadStore['listMessage
   return { messages: selected.reverse(), includedPrivate };
 }
 
-async function persistThreadMessage(deps: ChatDependencies, input: ChatInput, role: 'user' | 'assistant', content: string): Promise<boolean> {
+async function persistThreadMessage(deps: ChatDependencies, input: ChatInput, role: 'user' | 'assistant', content: string, replyToMessageId?: string | null): Promise<boolean> {
   if (!deps.threads || !deps.ownerId || !input.threadId) return false;
   try {
-    await deps.threads.appendMessage({ ownerId: deps.ownerId, threadId: input.threadId, role, content });
+    await deps.threads.appendMessage({
+      ownerId: deps.ownerId,
+      threadId: input.threadId,
+      role,
+      content,
+      ...(role === 'assistant' && (replyToMessageId ?? input.messageId) ? { replyToMessageId: replyToMessageId ?? input.messageId } : {}),
+    });
     return true;
   } catch {
     // Do not log chat text or storage errors that may contain private data.
