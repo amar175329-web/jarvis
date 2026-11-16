@@ -1,0 +1,906 @@
+{
+  "C_Rules": {
+    "method": "Rules Extractor (Unmodified)",
+    "totalCorrect": 15,
+    "devaCorrect": "10/10",
+    "romanCorrect": "5/5",
+    "firstRequestSec": 0.0041,
+    "subsequentAvgSec": 0.001,
+    "ramBeforeMb": 2005,
+    "ramAfterMb": 2004,
+    "items": [
+      {
+        "id": 1,
+        "text": "अरे सुनो कल कल सुबह आठ बजे वो थायरॉइड की गोली खानी है",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "अरे सुनो कल वो थायरॉइड की गोली खानी है",
+          "समय": "कल सुबह 8:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "थायरॉइड की गोली खानी है",
+          "समय": "कल सुबह 8:00 बजे"
+        },
+        "correct": true,
+        "durationSec": 0.004058691999999951
+      },
+      {
+        "id": 2,
+        "text": "आज दोपहर नहीं शाम को 4 बजे क्लाइंट के साथ अर्जेंट मीटिंग है",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "नहीं शाम को क्लाइंट के साथ अर्जेंट मीटिंग है",
+          "समय": "आज दोपहर 4:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "क्लाइंट के साथ अर्जेंट मीटिंग है",
+          "समय": "आज शाम 4:00 बजे"
+        },
+        "correct": true,
+        "durationSec": 0.0007425379999999677
+      },
+      {
+        "id": 3,
+        "text": "यार रात को 9 बजे जरा शर्मा जी को फोन मिलाना है",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "यार को जरा शर्मा जी को फोन मिलाना है",
+          "समय": "रात 9:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "शर्मा जी को फोन मिलाना है",
+          "समय": "रात 9:00 बजे"
+        },
+        "correct": true,
+        "durationSec": 0.001931154000000049
+      },
+      {
+        "id": 4,
+        "text": "कल परसों नहीं कल दोपहर 2 बजे वो वाईफाई का बिल भर देना",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "कल नहीं कल वो वाईफाई का बिल भर देना",
+          "समय": "परसों दोपहर 2:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "वाईफाई का बिल भर देना",
+          "समय": "कल दोपहर 2:00 बजे"
+        },
+        "correct": true,
+        "durationSec": 0.00024900000000002367
+      },
+      {
+        "id": 5,
+        "text": "सोमवार सुबह... सुबह 6 बजे स्टेशन... स्टेशन पहुंचना है",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "... सुबह स्टेशन... स्टेशन पहुंचना है",
+          "समय": "सोमवार सुबह 6:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "स्टेशन पहुंचना है",
+          "समय": "सोमवार सुबह 6:00 बजे"
+        },
+        "correct": true,
+        "durationSec": 0.00011753799999996773
+      },
+      {
+        "id": 6,
+        "text": "अरे आज दोपहर में खाना खाने के बाद बीपी की दवा लेना मत भूलना",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "अरे में खाना खाने के बाद बीपी की दवा लेना मत भूलना",
+          "समय": "आज दोपहर",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "बीपी की दवा लेना मत भूलना",
+          "समय": "आज दोपहर"
+        },
+        "correct": true,
+        "durationSec": 0.0006086149999999862
+      },
+      {
+        "id": 7,
+        "text": "परसों शाम पांच बजे वो बिल्डर के साथ साइट पर मिलना है",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "वो बिल्डर के साथ साइट पर मिलना है",
+          "समय": "परसों शाम 5:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "बिल्डर के साथ साइट पर मिलना है",
+          "समय": "परसों शाम 5:00 बजे"
+        },
+        "correct": true,
+        "durationSec": 0.004759000000000015
+      },
+      {
+        "id": 8,
+        "text": "कल सवेरे सवेरे 7 बजे मम्मी को कॉल लगाना है ज़रूरी",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "सवेरे मम्मी को कॉल लगाना है ज़रूरी",
+          "समय": "कल सवेरे 7:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "मम्मी को कॉल लगाना है ज़रूरी",
+          "समय": "कल सवेरे 7:00 बजे"
+        },
+        "correct": true,
+        "durationSec": 0.0001778459999999882
+      },
+      {
+        "id": 9,
+        "text": "मंगलवार को 11 बजे दुकान का किराया चुकता करना है",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "दुकान का किराया चुकता करना है",
+          "समय": "मंगलवार 11:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "दुकान का किराया चुकता करना है",
+          "समय": "मंगलवार 11:00 बजे"
+        },
+        "correct": true,
+        "durationSec": 0.0008559999999999946
+      },
+      {
+        "id": 10,
+        "text": "रविवार रात दस बजे एयरपोर्ट के लिए कैब बुक करनी पड़ेगी",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "एयरपोर्ट के लिए कैब बुक करनी पड़ेगी",
+          "समय": "रविवार रात 10:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "एयरपोर्ट के लिए कैब बुक करनी पड़ेगी",
+          "समय": "रविवार रात 10:00 बजे"
+        },
+        "correct": true,
+        "durationSec": 0.00016338500000000523
+      },
+      {
+        "id": 11,
+        "text": "arre bhai kal subah na 8 baje insulin lena hai",
+        "script": "roman",
+        "extracted": {
+          "success": true,
+          "काम": "arre bhai na insulin lena hai",
+          "समय": "kal subah 8:00 baje",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "insulin lena hai",
+          "समय": "kal subah 8:00 baje"
+        },
+        "correct": true,
+        "durationSec": 0.0015224620000000187
+      },
+      {
+        "id": 12,
+        "text": "aaj shaam... shaam ko 6 baje team ke sath standup call hai",
+        "script": "roman",
+        "extracted": {
+          "success": true,
+          "काम": "... shaam ko team ke sath standup call hai",
+          "समय": "aaj shaam 6:00 baje",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "team ke sath standup call hai",
+          "समय": "aaj shaam 6:00 baje"
+        },
+        "correct": true,
+        "durationSec": 0.0006125380000000291
+      },
+      {
+        "id": 13,
+        "text": "sun raat ko 9:30 baje rahul ko call karke bolna",
+        "script": "roman",
+        "extracted": {
+          "success": true,
+          "काम": "sun rahul ko call karke bolna",
+          "समय": "raat 9:30 baje",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "rahul ko call karke bolna",
+          "समय": "raat 9:30 baje"
+        },
+        "correct": true,
+        "durationSec": 0.0016827690000000076
+      },
+      {
+        "id": 14,
+        "text": "kal dopahar me 3 baje electricity bill pay karna yaad dilana",
+        "script": "roman",
+        "extracted": {
+          "success": true,
+          "काम": "electricity bill pay karna yaad dilana",
+          "समय": "kal dopahar 3:00 baje",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "electricity bill pay karna yaad dilana",
+          "समय": "kal dopahar 3:00 baje"
+        },
+        "correct": true,
+        "durationSec": 0.00009869199999997136
+      },
+      {
+        "id": 15,
+        "text": "somwar subah 7 baje flight ke liye nikalna padega boss",
+        "script": "roman",
+        "extracted": {
+          "success": true,
+          "काम": "flight ke liye nikalna padega boss",
+          "समय": "somwar subah 7:00 baje",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "expected": {
+          "काम": "flight ke liye nikalna padega boss",
+          "समय": "somwar subah 7:00 baje"
+        },
+        "correct": true,
+        "durationSec": 0.00009438399999999092
+      }
+    ]
+  },
+  "A_Gemma270M": {
+    "method": "Gemma 3 270M Instruct",
+    "totalCorrect": 13,
+    "devaCorrect": "9/10",
+    "romanCorrect": "4/5",
+    "firstRequestSec": 8.01,
+    "subsequentAvgSec": 2.84,
+    "ramBeforeMb": 2004,
+    "ramAfterMb": 1662,
+    "items": [
+      {
+        "id": 1,
+        "text": "अरे सुनो कल कल सुबह आठ बजे वो थायरॉइड की गोली खानी है",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "कल सुबह आठ बजे वो थायरॉइड की गोली खानी है",
+          "समय": "अरे सुनो कल कल सुबह आठ बजे वो थायरॉइड की गोली खानी है"
+        },
+        "raw": "{\"काम\": \"कल सुबह आठ बजे वो थायरॉइड की गोली खानी है\", \"समय\": \"अरे सुनो कल कल सुबह आठ बजे वो थायरॉइड की गोली खानी है\"}",
+        "correct": true,
+        "durationSec": 8.007399308
+      },
+      {
+        "id": 2,
+        "text": "आज दोपहर नहीं शाम को 4 बजे क्लाइंट के साथ अर्जेंट मीटिंग है",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "आज दोपहर नहीं शाम को 4 बजे क्लाइंट के साथ अर्जेंट मीटिंग है।",
+          "समय": "raat 9:00 baje"
+        },
+        "raw": "{\"काम\": \"आज दोपहर नहीं शाम को 4 बजे क्लाइंट के साथ अर्जेंट मीटिंग है।\",\"समय\": \"raat 9:00 baje\"}",
+        "correct": true,
+        "durationSec": 3.392485847
+      },
+      {
+        "id": 3,
+        "text": "यार रात को 9 बजे जरा शर्मा जी को फोन मिलाना है",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "यार रात को 9 बजे जरा शर्मा जी को फोन मिलाना है",
+          "समय": "9:00 बजे"
+        },
+        "raw": "{\"काम\": \"यार रात को 9 बजे जरा शर्मा जी को फोन मिलाना है\", \"समय\": \"9:00 बजे\"}",
+        "correct": true,
+        "durationSec": 2.5991898459999994
+      },
+      {
+        "id": 4,
+        "text": "कल परसों नहीं कल दोपहर 2 बजे वो वाईफाई का बिल भर देना",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "कल परसों नहीं कल दोपहर 2 बजे वाईफाई का बिल भर देना",
+          "समय": "कल सुबह 2:00 बजे"
+        },
+        "raw": "{\"काम\": \"कल परसों नहीं कल दोपहर 2 बजे वाईफाई का बिल भर देना\", \"समय\": \"कल सुबह 2:00 बजे\"}",
+        "correct": true,
+        "durationSec": 2.9355972310000014
+      },
+      {
+        "id": 5,
+        "text": "सोमवार सुबह... सुबह 6 बजे स्टेशन... स्टेशन पहुंचना है",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "सोमवार सुबह... सुबह 6 बजे स्टेशन पहुंचना है",
+          "समय": " स्टेशन पहुंचना है"
+        },
+        "raw": "{\"काम\": \"सोमवार सुबह... सुबह 6 बजे स्टेशन पहुंचना है\", \"समय\": \" स्टेशन पहुंचना है\"}",
+        "correct": false,
+        "durationSec": 3.1640313849999986
+      },
+      {
+        "id": 6,
+        "text": "अरे आज दोपहर में खाना खाने के बाद बीपी की दवा लेना मत भूलना",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "खाना खाने के बाद बीपी की दवा लेना मत भूलना",
+          "समय": "अरे आज दोपहर में खाना खाने के बाद"
+        },
+        "raw": "{\"काम\": \"खाना खाने के बाद बीपी की दवा लेना मत भूलना\", \"समय\": \"अरे आज दोपहर में खाना खाने के बाद\"}",
+        "correct": true,
+        "durationSec": 3.2648221540000013
+      },
+      {
+        "id": 7,
+        "text": "परसों शाम पांच बजे वो बिल्डर के साथ साइट पर मिलना है",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "परसों शाम पांच बजे बिल्डर के साथ साइट पर मिलना है",
+          "समय": "परसों"
+        },
+        "raw": "{\"काम\": \"परसों शाम पांच बजे बिल्डर के साथ साइट पर मिलना है\", \"समय\": \"परसों\"}",
+        "correct": true,
+        "durationSec": 2.882336922999999
+      },
+      {
+        "id": 8,
+        "text": "कल सवेरे सवेरे 7 बजे मम्मी को कॉल लगाना है ज़रूरी",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "कल सवेरे सवेरे 7 बजे मम्मी को कॉल लगाना है ज़रूरी",
+          "समय": "7:00 बजे"
+        },
+        "raw": "{\"काम\": \"कल सवेरे सवेरे 7 बजे मम्मी को कॉल लगाना है ज़रूरी\", \"समय\": \"7:00 बजे\"}",
+        "correct": true,
+        "durationSec": 3.132045846000001
+      },
+      {
+        "id": 9,
+        "text": "मंगलवार को 11 बजे दुकान का किराया चुकता करना है",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "मंगलवार को 11 बजे दुकान का किराया चुकता करना है",
+          "समय": "11:00 बजे"
+        },
+        "raw": "{\"काम\": \"मंगलवार को 11 बजे दुकान का किराया चुकता करना है\", \"समय\": \"11:00 बजे\"}",
+        "correct": true,
+        "durationSec": 2.6103186929999973
+      },
+      {
+        "id": 10,
+        "text": "रविवार रात दस बजे एयरपोर्ट के लिए कैब बुक करनी पड़ेगी",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "रविवार रात दस बजे एयरपोर्ट के लिए कैब बुक करनी पड़ेगी",
+          "समय": "एयरपोर्ट के लिए 10:00 बजे"
+        },
+        "raw": "{\"काम\": \"रविवार रात दस बजे एयरपोर्ट के लिए कैब बुक करनी पड़ेगी\", \"समय\": \"एयरपोर्ट के लिए 10:00 बजे\"}",
+        "correct": true,
+        "durationSec": 2.7285790000000016
+      },
+      {
+        "id": 11,
+        "text": "arre bhai kal subah na 8 baje insulin lena hai",
+        "script": "roman",
+        "extracted": {
+          "काम": "arre bhai kal subah na 8 baje insulin lena hai",
+          "समय": "raat 8:00 baje"
+        },
+        "raw": "{\"काम\": \"arre bhai kal subah na 8 baje insulin lena hai\", \"समय\": \"raat 8:00 baje\"}",
+        "correct": true,
+        "durationSec": 2.801096077000002
+      },
+      {
+        "id": 12,
+        "text": "aaj shaam... shaam ko 6 baje team ke sath standup call hai",
+        "script": "roman",
+        "extracted": {
+          "काम": "dadi ko call karna hai",
+          "समय": "raat 9:00 baje"
+        },
+        "raw": "{\"काम\": \"dadi ko call karna hai\", \"समय\": \"raat 9:00 baje\"}",
+        "correct": true,
+        "durationSec": 2.5825661540000002
+      },
+      {
+        "id": 13,
+        "text": "sun raat ko 9:30 baje rahul ko call karke bolna",
+        "script": "roman",
+        "extracted": {
+          "काम": "Sun raat ko 9:30 baje",
+          "समय": " rahul ko call karke bolna"
+        },
+        "raw": "{\"काम\": \"Sun raat ko 9:30 baje\", \"समय\": \" rahul ko call karke bolna\"}",
+        "correct": false,
+        "durationSec": 2.4424556149999987
+      },
+      {
+        "id": 14,
+        "text": "kal dopahar me 3 baje electricity bill pay karna yaad dilana",
+        "script": "roman",
+        "extracted": {
+          "काम": "electricity bill pay karna yaad dilana",
+          "समय": "kal dopahar me 3 baje"
+        },
+        "raw": "{\"काम\": \"electricity bill pay karna yaad dilana\", \"समय\": \"kal dopahar me 3 baje\"}",
+        "correct": true,
+        "durationSec": 2.356959999999999
+      },
+      {
+        "id": 15,
+        "text": "somwar subah 7 baje flight ke liye nikalna padega boss",
+        "script": "roman",
+        "extracted": {
+          "काम": "somwar subah 7 baje flight ke liye nikalna padega boss",
+          "समय": "7:00"
+        },
+        "raw": "{\"काम\": \"somwar subah 7 baje flight ke liye nikalna padega boss\",\"समय\": \"7:00\"}",
+        "correct": true,
+        "durationSec": 2.8865959999999977
+      }
+    ]
+  },
+  "B_Gemma1B": {
+    "method": "Gemma 3 1B Instruct",
+    "totalCorrect": 14,
+    "devaCorrect": "9/10",
+    "romanCorrect": "5/5",
+    "firstRequestSec": 20.95,
+    "subsequentAvgSec": 6.48,
+    "ramBeforeMb": 1891,
+    "ramAfterMb": 1664,
+    "stoppedDueToRam": false,
+    "items": [
+      {
+        "id": 1,
+        "text": "अरे सुनो कल कल सुबह आठ बजे वो थायरॉइड की गोली खानी है",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "वो थायरॉइड की गोली खानी है",
+          "समय": "कल कल सुबह 8:00 बजे"
+        },
+        "raw": "{\"काम\": \"वो थायरॉइड की गोली खानी है\", \"समय\": \"कल कल सुबह 8:00 बजे\"}",
+        "correct": true,
+        "durationSec": 20.954939769999996
+      },
+      {
+        "id": 2,
+        "text": "आज दोपहर नहीं शाम को 4 बजे क्लाइंट के साथ अर्जेंट मीटिंग है",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "क्लाइंट के साथ अर्जेंट मीटिंग है",
+          "समय": "आज दोपहर नहीं, शाम 4 बजे"
+        },
+        "raw": "{\"काम\": \"क्लाइंट के साथ अर्जेंट मीटिंग है\", \"समय\": \"आज दोपहर नहीं, शाम 4 बजे\"}",
+        "correct": true,
+        "durationSec": 6.535830845999997
+      },
+      {
+        "id": 3,
+        "text": "यार रात को 9 बजे जरा शर्मा जी को फोन मिलाना है",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "शर्मा जी को फोन मिलाना है",
+          "समय": "रात 9:00 बजे"
+        },
+        "raw": "{\"काम\": \"शर्मा जी को फोन मिलाना है\", \"समय\": \"रात 9:00 बजे\"}",
+        "correct": true,
+        "durationSec": 6.414578768999999
+      },
+      {
+        "id": 4,
+        "text": "कल परसों नहीं कल दोपहर 2 बजे वो वाईफाई का बिल भर देना",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "वाईफाई का बिल भर देना",
+          "समय": "कल परसों नहीं, दोपहर 2 बजे"
+        },
+        "raw": "{\"काम\": \"वाईफाई का बिल भर देना\", \"समय\": \"कल परसों नहीं, दोपहर 2 बजे\"}",
+        "correct": true,
+        "durationSec": 6.054438385000001
+      },
+      {
+        "id": 5,
+        "text": "सोमवार सुबह... सुबह 6 बजे स्टेशन... स्टेशन पहुंचना है",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "स्टेशन पहुंचना है",
+          "समय": "सोमवार सुबह 6:00 बजे"
+        },
+        "raw": "{\"काम\": \"स्टेशन पहुंचना है\", \"समय\": \"सोमवार सुबह 6:00 बजे\"}",
+        "correct": true,
+        "durationSec": 6.788562770000004
+      },
+      {
+        "id": 6,
+        "text": "अरे आज दोपहर में खाना खाने के बाद बीपी की दवा लेना मत भूलना",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "बीपी की दवा लेना मत भूलना",
+          "समय": "आज दोपहर"
+        },
+        "raw": "{\"काम\": \"बीपी की दवा लेना मत भूलना\", \"समय\": \"आज दोपहर\"}",
+        "correct": true,
+        "durationSec": 5.850782154
+      },
+      {
+        "id": 7,
+        "text": "परसों शाम पांच बजे वो बिल्डर के साथ साइट पर मिलना है",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "बिल्डर के साथ साइट पर मिलना है",
+          "समय": "परसों शाम 5:00 बजे"
+        },
+        "raw": "{\"काम\": \"बिल्डर के साथ साइट पर मिलना है\", \"समय\": \"परसों शाम 5:00 बजे\"}",
+        "correct": true,
+        "durationSec": 6.732948308000006
+      },
+      {
+        "id": 8,
+        "text": "कल सवेरे सवेरे 7 बजे मम्मी को कॉल लगाना है ज़रूरी",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "mummy ko call karna hai",
+          "समय": "कल सवेरे 7:00 बजे"
+        },
+        "raw": "{\"काम\": \"mummy ko call karna hai\", \"समय\": \"कल सवेरे 7:00 बजे\"}",
+        "correct": false,
+        "durationSec": 6.315085539000007
+      },
+      {
+        "id": 9,
+        "text": "मंगलवार को 11 बजे दुकान का किराया चुकता करना है",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "दुकान का किराया चुकता करना है",
+          "समय": "मंगलवार 11:00 बजे"
+        },
+        "raw": "{\"काम\": \"दुकान का किराया चुकता करना है\", \"समय\": \"मंगलवार 11:00 बजे\"}",
+        "correct": true,
+        "durationSec": 6.493933847000007
+      },
+      {
+        "id": 10,
+        "text": "रविवार रात दस बजे एयरपोर्ट के लिए कैब बुक करनी पड़ेगी",
+        "script": "devanagari",
+        "extracted": {
+          "काम": "एयरपोर्ट के लिए कैब बुक करना पड़ेगा",
+          "समय": "रविवार रात 10:00 बजे"
+        },
+        "raw": "{\"काम\": \"एयरपोर्ट के लिए कैब बुक करना पड़ेगा\", \"समय\": \"रविवार रात 10:00 बजे\"}",
+        "correct": true,
+        "durationSec": 6.669951385000007
+      },
+      {
+        "id": 11,
+        "text": "arre bhai kal subah na 8 baje insulin lena hai",
+        "script": "roman",
+        "extracted": {
+          "काम": "insulin lena",
+          "समय": "अर्रे भारे भاشे ना 8:00 बजे"
+        },
+        "raw": "{\"काम\": \"insulin lena\", \"समय\": \"अर्रे भारे भاشे ना 8:00 बजे\"}",
+        "correct": true,
+        "durationSec": 6.628187769000011
+      },
+      {
+        "id": 12,
+        "text": "aaj shaam... shaam ko 6 baje team ke sath standup call hai",
+        "script": "roman",
+        "extracted": {
+          "काम": "team के साथ standup call करना है",
+          "समय": "आसमान में 6:00 बजे"
+        },
+        "raw": "{\"काम\": \"team के साथ standup call करना है\", \"समय\": \"आसमान में 6:00 बजे\"}",
+        "correct": true,
+        "durationSec": 6.8785010009999965
+      },
+      {
+        "id": 13,
+        "text": "sun raat ko 9:30 baje rahul ko call karke bolna",
+        "script": "roman",
+        "extracted": {
+          "काम": " rahul ko call karna",
+          "समय": "raat 9:30 baje"
+        },
+        "raw": "{\"काम\": \" rahul ko call karna\", \"समय\": \"raat 9:30 baje\"}",
+        "correct": true,
+        "durationSec": 6.018685922999983
+      },
+      {
+        "id": 14,
+        "text": "kal dopahar me 3 baje electricity bill pay karna yaad dilana",
+        "script": "roman",
+        "extracted": {
+          "काम": "electricity bill pay karna याद दिलाना",
+          "समय": "kal dopahar me 3:00 baje"
+        },
+        "raw": "{\"काम\": \"electricity bill pay karna याद दिलाना\", \"समय\": \"kal dopahar me 3:00 baje\"}",
+        "correct": true,
+        "durationSec": 6.592150154000002
+      },
+      {
+        "id": 15,
+        "text": "somwar subah 7 baje flight ke liye nikalna padega boss",
+        "script": "roman",
+        "extracted": {
+          "काम": "flight ke liye nikalna padega",
+          "समय": "somwar subah 7:00 बजे"
+        },
+        "raw": "{\"काम\": \"flight ke liye nikalna padega\", \"समय\": \"somwar subah 7:00 बजे\"}",
+        "correct": true,
+        "durationSec": 6.712796308000019
+      }
+    ]
+  },
+  "D_Hybrid": {
+    "method": "Hybrid (Rules First + 1B Fallback)",
+    "totalCorrect": 15,
+    "devaCorrect": "10/10",
+    "romanCorrect": "5/5",
+    "firstRequestSec": 0.0048,
+    "subsequentAvgSec": 0.0016,
+    "ramBeforeMb": 2179,
+    "ramAfterMb": 2180,
+    "items": [
+      {
+        "id": 1,
+        "text": "अरे सुनो कल कल सुबह आठ बजे वो थायरॉइड की गोली खानी है",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "अरे सुनो कल वो थायरॉइड की गोली खानी है",
+          "समय": "कल सुबह 8:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.004801153999986127
+      },
+      {
+        "id": 2,
+        "text": "आज दोपहर नहीं शाम को 4 बजे क्लाइंट के साथ अर्जेंट मीटिंग है",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "नहीं शाम को क्लाइंट के साथ अर्जेंट मीटिंग है",
+          "समय": "आज दोपहर 4:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.00028061600000364706
+      },
+      {
+        "id": 3,
+        "text": "यार रात को 9 बजे जरा शर्मा जी को फोन मिलाना है",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "यार को जरा शर्मा जी को फोन मिलाना है",
+          "समय": "रात 9:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.013434153999987757
+      },
+      {
+        "id": 4,
+        "text": "कल परसों नहीं कल दोपहर 2 बजे वो वाईफाई का बिल भर देना",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "कल नहीं कल वो वाईफाई का बिल भर देना",
+          "समय": "परसों दोपहर 2:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.00041507700001238844
+      },
+      {
+        "id": 5,
+        "text": "सोमवार सुबह... सुबह 6 बजे स्टेशन... स्टेशन पहुंचना है",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "... सुबह स्टेशन... स्टेशन पहुंचना है",
+          "समय": "सोमवार सुबह 6:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.00025784599999315104
+      },
+      {
+        "id": 6,
+        "text": "अरे आज दोपहर में खाना खाने के बाद बीपी की दवा लेना मत भूलना",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "अरे में खाना खाने के बाद बीपी की दवा लेना मत भूलना",
+          "समय": "आज दोपहर",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.0017239229999831877
+      },
+      {
+        "id": 7,
+        "text": "परसों शाम पांच बजे वो बिल्डर के साथ साइट पर मिलना है",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "वो बिल्डर के साथ साइट पर मिलना है",
+          "समय": "परसों शाम 5:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.00039969200000632556
+      },
+      {
+        "id": 8,
+        "text": "कल सवेरे सवेरे 7 बजे मम्मी को कॉल लगाना है ज़रूरी",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "सवेरे मम्मी को कॉल लगाना है ज़रूरी",
+          "समय": "कल सवेरे 7:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.0002086929999932181
+      },
+      {
+        "id": 9,
+        "text": "मंगलवार को 11 बजे दुकान का किराया चुकता करना है",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "दुकान का किराया चुकता करना है",
+          "समय": "मंगलवार 11:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.0035713850000174715
+      },
+      {
+        "id": 10,
+        "text": "रविवार रात दस बजे एयरपोर्ट के लिए कैब बुक करनी पड़ेगी",
+        "script": "devanagari",
+        "extracted": {
+          "success": true,
+          "काम": "एयरपोर्ट के लिए कैब बुक करनी पड़ेगी",
+          "समय": "रविवार रात 10:00 बजे",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.0006350770000135526
+      },
+      {
+        "id": 11,
+        "text": "arre bhai kal subah na 8 baje insulin lena hai",
+        "script": "roman",
+        "extracted": {
+          "success": true,
+          "काम": "arre bhai na insulin lena hai",
+          "समय": "kal subah 8:00 baje",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.0005476159999961965
+      },
+      {
+        "id": 12,
+        "text": "aaj shaam... shaam ko 6 baje team ke sath standup call hai",
+        "script": "roman",
+        "extracted": {
+          "success": true,
+          "काम": "... shaam ko team ke sath standup call hai",
+          "समय": "aaj shaam 6:00 baje",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.0003944610000180546
+      },
+      {
+        "id": 13,
+        "text": "sun raat ko 9:30 baje rahul ko call karke bolna",
+        "script": "roman",
+        "extracted": {
+          "success": true,
+          "काम": "sun rahul ko call karke bolna",
+          "समय": "raat 9:30 baje",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.0005301540000073146
+      },
+      {
+        "id": 14,
+        "text": "kal dopahar me 3 baje electricity bill pay karna yaad dilana",
+        "script": "roman",
+        "extracted": {
+          "success": true,
+          "काम": "electricity bill pay karna yaad dilana",
+          "समय": "kal dopahar 3:00 baje",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.000314769000018714
+      },
+      {
+        "id": 15,
+        "text": "somwar subah 7 baje flight ke liye nikalna padega boss",
+        "script": "roman",
+        "extracted": {
+          "success": true,
+          "काम": "flight ke liye nikalna padega boss",
+          "समय": "somwar subah 7:00 baje",
+          "confidence": "high",
+          "method": "rules"
+        },
+        "usedMethod": "rules",
+        "correct": true,
+        "durationSec": 0.0003273849999823142
+      }
+    ]
+  }
+}

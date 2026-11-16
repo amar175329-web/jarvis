@@ -1,0 +1,96 @@
+{
+  "test": "Stability and Lifecycle Test",
+  "status": "PASSED",
+  "totalDurationSec": 61,
+  "totalCrashes": 0,
+  "idleShutdown1Verified": true,
+  "idleShutdown2Verified": false,
+  "events": [
+    {
+      "timeSec": 0,
+      "type": "cold_query",
+      "query": "कल सुबह 8 बजे दवाई लेनी है",
+      "ok": true,
+      "durationSec": 7.95,
+      "result": {
+        "काम": "कल सुबह 8 बजे दवाई लेनी है",
+        "समय": "कल सुबह 8:00 बजे"
+      },
+      "mismatch": {
+        "ok": true,
+        "reason": "Task and time match input text keywords"
+      },
+      "modelName": "gemma-3-270m-it",
+      "fullQuery": "कल सुबह 8 बजे दवाई लेनी है",
+      "raw": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"काम\\\": \\\"कल सुबह 8 बजे दवाई लेनी है\\\", \\\"समय\\\": \\\"कल सुबह 8:00 बजे\\\"}\"}}],\"created\":1794727613,\"model\":\"/root/models/gemma-3-270m-it-Q4_K_M.gguf\",\"system_fingerprint\":\"b12396-d20426bbb\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":27,\"prompt_tokens\":166,\"total_tokens\":193,\"prompt_tokens_details\":{\"cached_tokens\":0}},\"id\":\"chatcmpl-JrYR1syzs0RbTyukJHojfn20LR4PlfS0\",\"timings\":{\"cache_n\":0,\"prompt_n\":166,\"prompt_ms\":1779.389,\"prompt_per_token_ms\":10.719210843373494,\"prompt_per_second\":93.2904496993069,\"predicted_n\":27,\"predicted_ms\":1786.237,\"predicted_per_token_ms\":68.70142307692308,\"predicted_per_second\":14.555739244008494}}",
+      "ramBefore": 1865,
+      "ramAfter": 1565,
+      "serverRunning": true
+    },
+    {
+      "timeSec": 13,
+      "type": "warm_query",
+      "query": "आज दोपहर 2 बजे मीटिंग है",
+      "ok": false,
+      "durationSec": 2.08,
+      "result": {
+        "काम": "आज दोपहर 2 बजे मीटिंग है",
+        "समय": "रात्र में"
+      },
+      "mismatch": {
+        "ok": false,
+        "reason": "Time (\"रात्र में\") does not match input sentence (\"आज दोपहर 2 बजे मीटिंग है\")"
+      },
+      "modelName": "gemma-3-270m-it",
+      "fullQuery": "आज दोपहर 2 बजे मीटिंग है",
+      "raw": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"काम\\\": \\\"आज दोपहर 2 बजे मीटिंग है\\\", \\\"समय\\\": \\\"रात्र में\\\"}\"}}],\"created\":1794727617,\"model\":\"/root/models/gemma-3-270m-it-Q4_K_M.gguf\",\"system_fingerprint\":\"b12396-d20426bbb\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":21,\"prompt_tokens\":165,\"total_tokens\":186,\"prompt_tokens_details\":{\"cached_tokens\":149}},\"id\":\"chatcmpl-kEuS2DX0QyjKw6a2qvw5djrBoGhwrCye\",\"timings\":{\"cache_n\":149,\"prompt_n\":16,\"prompt_ms\":381.877,\"prompt_per_token_ms\":23.8673125,\"prompt_per_second\":41.898307570238586,\"predicted_n\":21,\"predicted_ms\":1351.108,\"predicted_per_token_ms\":67.55539999999999,\"predicted_per_second\":14.80266566403278}}"
+    },
+    {
+      "timeSec": 33,
+      "type": "idle_shutdown_1",
+      "ram": 2013,
+      "success": true
+    },
+    {
+      "timeSec": 33,
+      "type": "mid_query",
+      "query": "सोमवार शाम 5 बजे टीम मीटिंग है",
+      "ok": true,
+      "durationSec": 6.93,
+      "result": {
+        "काम": "सोमवार शाम 5 बजे टीम मीटिंग है",
+        "समय": "5:00 बजे"
+      },
+      "mismatch": {
+        "ok": true,
+        "reason": "Task and time match input text keywords"
+      },
+      "modelName": "gemma-3-270m-it",
+      "fullQuery": "सोमवार शाम 5 बजे टीम मीटिंग है",
+      "raw": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"काम\\\": \\\"सोमवार शाम 5 बजे टीम मीटिंग है\\\", \\\"समय\\\": \\\"5:00 बजे\\\"}\"}}],\"created\":1794727646,\"model\":\"/root/models/gemma-3-270m-it-Q4_K_M.gguf\",\"system_fingerprint\":\"b12396-d20426bbb\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":26,\"prompt_tokens\":168,\"total_tokens\":194,\"prompt_tokens_details\":{\"cached_tokens\":0}},\"id\":\"chatcmpl-xprx86KzUjs05YbnpXyTUDcHaatP4uHZ\",\"timings\":{\"cache_n\":0,\"prompt_n\":168,\"prompt_ms\":1880.546,\"prompt_per_token_ms\":11.193726190476191,\"prompt_per_second\":89.33575674298848,\"predicted_n\":26,\"predicted_ms\":2049.391,\"predicted_per_token_ms\":81.97564,\"predicted_per_second\":12.19874587133446}}",
+      "ramBefore": 2013,
+      "ramAfter": 1670
+    },
+    {
+      "timeSec": 61,
+      "type": "final_query",
+      "query": "शुक्रवार दोपहर 2 बजे बिजली का बिल भरना है",
+      "ok": true,
+      "durationSec": 6.88,
+      "result": {
+        "काम": "बिजली का बिल भरना है",
+        "समय": "शुक्रवार दोपहर 2 बजे"
+      },
+      "mismatch": {
+        "ok": true,
+        "reason": "Task and time match input text keywords"
+      },
+      "modelName": "gemma-3-270m-it",
+      "fullQuery": "शुक्रवार दोपहर 2 बजे बिजली का बिल भरना है",
+      "raw": "{\"choices\":[{\"finish_reason\":\"stop\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"{\\\"काम\\\": \\\"बिजली का बिल भरना है\\\", \\\"समय\\\": \\\"शुक्रवार दोपहर 2 बजे\\\"}\"}}],\"created\":1794727665,\"model\":\"/root/models/gemma-3-270m-it-Q4_K_M.gguf\",\"system_fingerprint\":\"b12396-d20426bbb\",\"object\":\"chat.completion\",\"usage\":{\"completion_tokens\":25,\"prompt_tokens\":170,\"total_tokens\":195,\"prompt_tokens_details\":{\"cached_tokens\":0}},\"id\":\"chatcmpl-WMZVx9kQQhPoHhmlNQWU26Y0c50a3z6w\",\"timings\":{\"cache_n\":0,\"prompt_n\":170,\"prompt_ms\":1864.759,\"prompt_per_token_ms\":10.969170588235293,\"prompt_per_second\":91.16459553218404,\"predicted_n\":25,\"predicted_ms\":1357.218,\"predicted_per_token_ms\":56.55075,\"predicted_per_second\":17.683231433712194}}",
+      "ramBefore": 1996,
+      "ramAfter": 1687
+    }
+  ],
+  "completedAt": "2026-11-15T07:27:45.813Z"
+}

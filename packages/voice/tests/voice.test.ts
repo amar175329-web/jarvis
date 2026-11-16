@@ -90,6 +90,11 @@ test('speak: after the free period the cloud tier switches off (unless paid is a
   assert.equal(calls.length, 0);
   assert.equal((await V.speak('Hello Boss.', ctx({ now: after, allowPaid: true }), okCloud(calls))).route, 'fish');
 });
+test('fish: daysUntilFishFreeExpiry counts down to 30 Nov 2026', () => {
+  assert.equal(V.daysUntilFishFreeExpiry(new Date('2026-11-12T00:00:00Z')), 19);
+  assert.equal(V.daysUntilFishFreeExpiry(new Date('2026-11-30T18:30:00Z')), 0);
+  assert.ok(V.daysUntilFishFreeExpiry(new Date('2026-12-01T00:00:00Z')) < 0);
+});
 test('speak: cloud failure falls back to device voice with NO tags; later sentences too', async () => {
   let n = 0;
   const flaky: V.CloudSpeak = async () => { if (++n === 2) throw new Error('fish_http_429'); return new Uint8Array([9]); };

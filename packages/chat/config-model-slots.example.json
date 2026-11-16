@@ -1,0 +1,21 @@
+{
+  "fast": { "provider": "", "model": "", "tier": "unknown" },
+  "normal": { "provider": "", "model": "", "tier": "unknown" },
+  "deep": { "provider": "", "model": "", "tier": "unknown" },
+  "private": { "provider": "", "model": "", "tier": "unknown", "privateDataApproved": false },
+  "tasks": {
+    "chat": null,
+    "reasoning": null,
+    "summarize": null,
+    "code": null,
+    "creative": null,
+    "action": null
+  },
+  "gateway_pricing_slots": {
+    "fast": null,
+    "normal": null,
+    "deep": null,
+    "private": null,
+    "tasks": {}
+  }
+}

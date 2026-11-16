@@ -6,7 +6,7 @@ import type { MemoryStore } from '../store.ts';
 import type { NewMemory } from '../types.ts';
 import { tokensFor } from '../text.ts';
 
-export const mk = (o: Partial<NewMemory> = {}): NewMemory => { const title = o.title ?? 'chai pasand'; const body = o.body ?? 'Amit ko subah chai pasand hai'; return { kind: 'preference', title, body, source: 'amit_said', confidence: 1, why: 'Amit ne kaha', private: false, subject: 'amit', subject_key: null, tags: [], pinned: false, ref_type: null, ref_id: null, tokens: tokensFor(title, body), expires_at: null, ...o }; };
+export const mk = (o: Partial<NewMemory> = {}): NewMemory => { const title = o.title ?? 'chai pasand'; const body = o.body ?? 'Amit ko subah chai pasand hai'; const row = { kind: 'preference' as const, title, body, source: 'amit_said' as const, confidence: 1, why: 'Amit ne kaha', tier: 'normal' as const, private: false, subject: 'amit' as const, subject_key: null, tags: [], pinned: false, ref_type: null, ref_id: null, tokens: tokensFor(title, body), expires_at: null, ...o }; return { ...row, tier: o.tier ?? (row.private ? 'sensitive' : 'normal') }; };
 
 export function runStoreContract(name: string, make: () => Promise<{ a: MemoryStore; b: MemoryStore }>): void {
   test(`[${name}] create/get/update with revision`, async () => {
@@ -17,7 +17,7 @@ export function runStoreContract(name: string, make: () => Promise<{ a: MemorySt
   test(`[${name}] user B cannot see or touch user A's data`, async () => {
     const { a, b } = await make(); const m = await a.create(mk({ title: 'secret-ish', body: 'A ki baat', tokens: ['secret', 'baat'] }));
     assert.equal(await b.get(m.id), null); assert.equal((await b.list({ includePrivate: true })).items.length, 0);
-    assert.equal((await b.search({ tokens: ['baat'], allowPrivate: true, limit: 10, now: new Date() })).length, 0);
+    assert.equal((await b.search({ tokens: ['baat'], purpose: 'ask', limit: 10, now: new Date() })).length, 0);
     await assert.rejects(() => b.update(m.id, { body: 'hack' }, 1)); assert.equal((await b.forget(m.id)).deleted, 0); assert.ok(await a.get(m.id));
     await assert.rejects(() => b.forgetAll(1)); assert.ok(await a.get(m.id));
     assert.equal((await b.stats()).memories, 0);
@@ -27,18 +27,18 @@ export function runStoreContract(name: string, make: () => Promise<{ a: MemorySt
     await assert.rejects(() => a.create(mk({ why: '' }))); await assert.rejects(() => a.create(mk({ source: 'inferred', confidence: 0.9 }))); await assert.rejects(() => a.create(mk({ body: 'x'.repeat(1001) })));
   });
   test(`[${name}] private rows never get a vector; skip marker works`, async () => {
-    const { a } = await make(); const p = await a.create(mk({ private: true })); const v = new Array(a.capabilities().dim ?? 768).fill(0.1);
+    const { a } = await make(); const p = await a.create(mk({ private: true, tier: 'sensitive' })); const v = new Array(a.capabilities().dim ?? 768).fill(0.1);
     await assert.rejects(() => a.setEmbedding(p.id, v, 'm')); const n = await a.create(mk({ title: 'doosri', body: 'doosri baat', tokens: ['doosri'] }));
     assert.equal((await a.pendingEmbeddings(10)).some((x) => x.id === p.id), false); await a.setEmbedding(n.id, v, 'm'); assert.equal((await a.pendingEmbeddings(10)).length, 0);
   });
   test(`[${name}] keyword search honours private, kind and expiry`, async () => {
     const { a } = await make(); const now = new Date('2026-11-10T00:00:00Z');
     await a.create(mk({ title: 'rahul', body: 'Rahul team mein hai', kind: 'person', tokens: ['rahul', 'team'] }));
-    await a.create(mk({ title: 'rahul number', body: 'Rahul ka number', kind: 'person', private: true, tokens: ['rahul', 'number'] }));
+    await a.create(mk({ title: 'rahul number', body: 'Rahul ka number', kind: 'person', private: true, tier: 'sensitive', tags: ['contact'], tokens: ['rahul', 'number'] }));
     await a.create(mk({ title: 'rahul purana', body: 'Rahul purani baat', tokens: ['rahul', 'purani'], expires_at: '2026-01-01T00:00:00Z' }));
-    const pub = await a.search({ tokens: ['rahul'], allowPrivate: false, limit: 10, now }); assert.equal(pub.length, 1);
-    assert.equal((await a.search({ tokens: ['rahul'], allowPrivate: true, limit: 10, now })).length, 2);
-    assert.equal((await a.search({ tokens: ['rahul'], kinds: ['fact'], allowPrivate: true, limit: 10, now })).length, 0);
+    const pub = await a.search({ tokens: ['rahul'], limit: 10, now }); assert.equal(pub.length, 1);
+    assert.equal((await a.search({ tokens: ['rahul'], purpose: 'ask', limit: 10, now })).length, 2);
+    assert.equal((await a.search({ tokens: ['rahul'], kinds: ['fact'], purpose: 'ask', limit: 10, now })).length, 0);
   });
   test(`[${name}] supersede keeps one active row`, async () => {
     const { a } = await make(); const o = await a.create(mk({ kind: 'fact', title: 'city', body: 'Delhi', subject_key: 'amit.city', tokens: ['city', 'delhi'] }));

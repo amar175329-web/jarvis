@@ -1,3 +1,4 @@
+Private paid slot wala hissa 015 se REPLACE ho gaya.
 # Memory for a best friend: three tiers instead of "refuse"
 Status: Accepted (LEAD, Amit's order 11 Nov 2026). Replaces the blanket REFUSE list in self/identity/memory-behaviour.md v1.0.0 (S09) -> v1.1.0.
 

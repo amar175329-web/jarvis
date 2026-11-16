@@ -1,0 +1,488 @@
+{
+  "schema": 1,
+  "checked_on": "2026-11-14",
+  "note": "Every price below was read from the OFFICIAL provider page on checked_on. status != verified means the router/gateway REFUSE the model. Prices in USD per 1M tokens. Limits marked third_party_unverified are ceilings only: confirm in Google AI Studio (the rate limits page shows exact numbers only to the logged-in owner).",
+  "models": [
+    {
+      "id": "gemini-free/gemini-3.5-flash-lite",
+      "provider": "gemini-free",
+      "adapter": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "tier": "free",
+      "size": "small",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": true,
+      "limits": {
+        "rpd": 500,
+        "rpm": 10,
+        "reset_tz": "America/Los_Angeles",
+        "status": "third_party_unverified",
+        "source_url": "https://www.scriptbyai.com/gemini-api-free-tier-limits/"
+      },
+      "data_use": {
+        "trains_on_inputs": true,
+        "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "note": "Pricing page: free tier 'Used to improve our products: Yes'. Never send private text."
+      },
+      "source": {
+        "url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "checked_on": "2026-11-14"
+      },
+      "status": "verified"
+    },
+    {
+      "id": "gemini-free/gemini-3.1-flash-lite",
+      "provider": "gemini-free",
+      "adapter": "gemini",
+      "model": "gemini-3.1-flash-lite",
+      "tier": "free",
+      "size": "small",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": true,
+      "limits": {
+        "rpd": 500,
+        "rpm": 10,
+        "reset_tz": "America/Los_Angeles",
+        "status": "third_party_unverified",
+        "source_url": "https://www.scriptbyai.com/gemini-api-free-tier-limits/"
+      },
+      "data_use": {
+        "trains_on_inputs": true,
+        "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "note": "Free tier content used to improve products."
+      },
+      "source": {
+        "url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "checked_on": "2026-11-14"
+      },
+      "status": "verified"
+    },
+    {
+      "id": "gemini-free/gemini-3.6-flash",
+      "provider": "gemini-free",
+      "adapter": "gemini",
+      "model": "gemini-3.6-flash",
+      "tier": "free",
+      "size": "big",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": true,
+      "limits": {
+        "rpd": 20,
+        "rpm": 5,
+        "reset_tz": "America/Los_Angeles",
+        "status": "third_party_unverified",
+        "source_url": "https://www.scriptbyai.com/gemini-api-free-tier-limits/"
+      },
+      "data_use": {
+        "trains_on_inputs": true,
+        "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "note": "Free tier content used to improve products."
+      },
+      "source": {
+        "url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "checked_on": "2026-11-14"
+      },
+      "status": "verified"
+    },
+    {
+      "id": "gemini-free/gemini-3.8-flash",
+      "provider": "gemini-free",
+      "adapter": "gemini",
+      "model": "gemini-3.8-flash",
+      "tier": "free",
+      "size": "big",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": true,
+      "limits": {
+        "rpd": 20,
+        "rpm": 5,
+        "reset_tz": "America/Los_Angeles",
+        "status": "third_party_unverified",
+        "source_url": "https://www.scriptbyai.com/gemini-api-free-tier-limits/"
+      },
+      "data_use": {
+        "trains_on_inputs": true,
+        "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "note": "Free tier content used to improve products."
+      },
+      "source": {
+        "url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "checked_on": "2026-11-14"
+      },
+      "status": "verified"
+    },
+    {
+      "id": "anthropic/claude-haiku-5-5",
+      "provider": "anthropic",
+      "adapter": "anthropic",
+      "model": "claude-haiku-5-5",
+      "tier": "almost_zero",
+      "size": "small",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": false,
+      "price_schedule": [
+        {
+          "from": "2000-01-01",
+          "price": {
+            "in": 0.1,
+            "out": 0.5,
+            "cache_read": 0.01,
+            "cache_write_5m": 0.125,
+            "cache_write_1h": 0.2
+          }
+        }
+      ],
+      "max_prompt_tokens": 100000,
+      "context_window": 1000000,
+      "data_use": {
+        "trains_on_inputs": "unknown",
+        "source_url": "https://www.anthropic.com/legal/commercial-terms",
+        "note": "Terms not read in this pass. Cloud model: never private data."
+      },
+      "source": {
+        "url": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "checked_on": "2026-11-14"
+      },
+      "status": "verified",
+      "notes": "Prompts over 100K tokens cost $0.50 in / $2.50 out: router caps prompt at 100K so the higher bracket never applies."
+    },
+    {
+      "id": "gemini-paid/gemini-3.5-flash-lite",
+      "provider": "gemini-paid",
+      "adapter": "gemini",
+      "model": "gemini-3.5-flash-lite",
+      "tier": "almost_zero",
+      "size": "small",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": false,
+      "price_schedule": [
+        {
+          "from": "2000-01-01",
+          "price": {
+            "in": 0.3,
+            "out": 2.5,
+            "cache_read": 0.03
+          }
+        }
+      ],
+      "data_use": {
+        "trains_on_inputs": false,
+        "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "note": "Pricing page: paid tier 'Used to improve our products: No'."
+      },
+      "source": {
+        "url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "checked_on": "2026-11-14"
+      },
+      "status": "verified",
+      "notes": "Explicit cache storage also costs $1.00 per 1M tokens per hour: use implicit caching only."
+    },
+    {
+      "id": "gemini-paid/gemini-3.1-flash-lite",
+      "provider": "gemini-paid",
+      "adapter": "gemini",
+      "model": "gemini-3.1-flash-lite",
+      "tier": "almost_zero",
+      "size": "small",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": false,
+      "price_schedule": [
+        {
+          "from": "2000-01-01",
+          "price": {
+            "in": 0.25,
+            "out": 1.5,
+            "cache_read": 0.025
+          }
+        }
+      ],
+      "data_use": {
+        "trains_on_inputs": false,
+        "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "note": "Paid tier: not used to improve products."
+      },
+      "source": {
+        "url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "checked_on": "2026-11-14"
+      },
+      "status": "verified"
+    },
+    {
+      "id": "anthropic/claude-sonnet-5-5",
+      "provider": "anthropic",
+      "adapter": "anthropic",
+      "model": "claude-sonnet-5-5",
+      "tier": "paid_big",
+      "size": "big",
+      "privacy": "cloud",
+      "enabled": false,
+      "free": false,
+      "price_schedule": [
+        {
+          "from": "2000-01-01",
+          "price": {
+            "in": 2,
+            "out": 10,
+            "cache_read": 0.1,
+            "cache_write_5m": 2.5,
+            "cache_write_1h": 4
+          }
+        }
+      ],
+      "data_use": {
+        "trains_on_inputs": "unknown",
+        "source_url": "https://www.anthropic.com/legal/commercial-terms",
+        "note": "not read"
+      },
+      "source": {
+        "url": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "checked_on": "2026-11-14"
+      },
+      "status": "verified"
+    },
+    {
+      "id": "anthropic/claude-opus-5-5",
+      "provider": "anthropic",
+      "adapter": "anthropic",
+      "model": "claude-opus-5-5",
+      "tier": "paid_big",
+      "size": "big",
+      "privacy": "cloud",
+      "enabled": false,
+      "free": false,
+      "price_schedule": [
+        {
+          "from": "2000-01-01",
+          "price": {
+            "in": 4,
+            "out": 20,
+            "cache_read": 0.2,
+            "cache_write_5m": 5,
+            "cache_write_1h": 8
+          }
+        }
+      ],
+      "data_use": {
+        "trains_on_inputs": "unknown",
+        "source_url": "https://www.anthropic.com/legal/commercial-terms",
+        "note": "not read"
+      },
+      "source": {
+        "url": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "checked_on": "2026-11-14"
+      },
+      "status": "verified"
+    },
+    {
+      "id": "anthropic/claude-fable-5-2",
+      "provider": "anthropic",
+      "adapter": "anthropic",
+      "model": "claude-fable-5-2",
+      "tier": "paid_big",
+      "size": "big",
+      "privacy": "cloud",
+      "enabled": false,
+      "free": false,
+      "price_schedule": [
+        {
+          "from": "2000-01-01",
+          "price": {
+            "in": 8,
+            "out": 40,
+            "cache_read": 0.2,
+            "cache_write_5m": 10,
+            "cache_write_1h": 16
+          }
+        }
+      ],
+      "data_use": {
+        "trains_on_inputs": "unknown",
+        "source_url": "https://www.anthropic.com/legal/commercial-terms",
+        "note": "not read"
+      },
+      "source": {
+        "url": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "checked_on": "2026-11-14"
+      },
+      "status": "verified"
+    },
+    {
+      "id": "gemini-paid/gemini-4-argon",
+      "provider": "gemini-paid",
+      "adapter": "gemini",
+      "model": "gemini-4-argon",
+      "tier": "paid_big",
+      "size": "big",
+      "privacy": "cloud",
+      "enabled": false,
+      "free": false,
+      "price_schedule": [
+        {
+          "from": "2000-01-01",
+          "price": {
+            "in": 2.0,
+            "out": 10.0,
+            "cache_read": 0.1
+          }
+        },
+        {
+          "from": "2026-12-01",
+          "price": {
+            "in": 4.0,
+            "out": 20.0,
+            "cache_read": 0.2
+          }
+        }
+      ],
+      "data_use": {
+        "trains_on_inputs": false,
+        "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "note": "Not on free tier; paid: not used to improve products."
+      },
+      "source": {
+        "url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "checked_on": "2026-11-14"
+      },
+      "status": "verified",
+      "notes": "Price doubles on 2026-12-01 per official page."
+    },
+    {
+      "id": "gemini-paid/gemini-3.8-flash",
+      "provider": "gemini-paid",
+      "adapter": "gemini",
+      "model": "gemini-3.8-flash",
+      "tier": "paid_big",
+      "size": "big",
+      "privacy": "cloud",
+      "enabled": false,
+      "free": false,
+      "price_schedule": [
+        {
+          "from": "2000-01-01",
+          "price": {
+            "in": 0.75,
+            "out": 3.75,
+            "cache_read": 0.075
+          }
+        },
+        {
+          "from": "2027-01-01",
+          "price": {
+            "in": 1.5,
+            "out": 7.5,
+            "cache_read": 0.15
+          }
+        }
+      ],
+      "data_use": {
+        "trains_on_inputs": false,
+        "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "note": "Paid tier: not used to improve products."
+      },
+      "source": {
+        "url": "https://ai.google.dev/gemini-api/docs/pricing",
+        "checked_on": "2026-11-14"
+      },
+      "status": "verified",
+      "notes": "Price doubles on 2027-01-01 per official page."
+    },
+    {
+      "id": "openai/gpt-6-luna",
+      "provider": "openai",
+      "adapter": "openai",
+      "model": "gpt-6-luna",
+      "tier": "almost_zero",
+      "size": "small",
+      "privacy": "cloud",
+      "enabled": false,
+      "free": false,
+      "data_use": {
+        "trains_on_inputs": "unknown",
+        "source_url": "",
+        "note": "not read"
+      },
+      "source": {
+        "url": "",
+        "checked_on": "2026-11-14"
+      },
+      "status": "unverified",
+      "notes": "Price seen only in a news article, no official OpenAI page read. REFUSED until verified."
+    },
+    {
+      "id": "local/gemma-3-1b-it",
+      "provider": "local",
+      "adapter": "local",
+      "model": "gemma-3-1b-it",
+      "tier": "local",
+      "size": "small",
+      "privacy": "local",
+      "enabled": true,
+      "free": true,
+      "context_window": 2048,
+      "data_use": {
+        "trains_on_inputs": false,
+        "source_url": "https://ai.google.dev/gemma/terms",
+        "note": "Runs on Amit's own device; nothing leaves it. Gemma Terms of Use."
+      },
+      "source": {
+        "url": "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF",
+        "checked_on": "2026-11-15"
+      },
+      "status": "verified",
+      "notes": "Local fallback after rules.ts for private info extraction. File 806,058,496 bytes (Q4_K_M). Measured on Amit's phone 15 Nov 2026: cold start ~21 s, warm ~6.5 s. Starts on request, stops after 5 min idle."
+    },
+    {
+      "id": "local/gemma-3-1b-chat",
+      "provider": "local",
+      "adapter": "local",
+      "model": "gemma-3-1b-chat",
+      "tier": "local",
+      "size": "small",
+      "privacy": "local",
+      "enabled": false,
+      "free": true,
+      "context_window": 2048,
+      "data_use": {
+        "trains_on_inputs": false,
+        "source_url": "https://ai.google.dev/gemma/terms",
+        "note": "Runs on Amit's own device; nothing leaves it. Gemma Terms of Use."
+      },
+      "source": {
+        "url": "https://huggingface.co/bartowski/google_gemma-3-1b-it-GGUF",
+        "checked_on": "2026-11-15"
+      },
+      "status": "unverified",
+      "notes": "LIMITED: open private conversation on the same 1B file. Slow and basic on this phone; tokens/second figure not measured. Keep off until Amit turns it on."
+    },
+    {
+      "id": "local/gemma-3-270m-it",
+      "provider": "local",
+      "adapter": "local",
+      "model": "gemma-3-270m-it",
+      "tier": "local",
+      "size": "small",
+      "privacy": "local",
+      "enabled": false,
+      "free": true,
+      "context_window": 2048,
+      "data_use": {
+        "trains_on_inputs": false,
+        "source_url": "https://ai.google.dev/gemma/terms",
+        "note": "Runs on Amit's own device; nothing leaves it. Gemma Terms of Use."
+      },
+      "source": {
+        "url": "https://huggingface.co/bartowski/google_gemma-3-270m-it-GGUF",
+        "checked_on": "2026-11-15"
+      },
+      "status": "unverified",
+      "notes": "REMOVED from the private route: makes up times and tasks (4/35 correct on strict test). Kept only as a record."
+    }
+  ]
+}

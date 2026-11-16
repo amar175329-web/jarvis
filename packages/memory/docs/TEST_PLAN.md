@@ -1,19 +1,44 @@
-# Tests ke cases (kya chal chuka, kya baaki)
-Chala (sandbox, `node --test packages/memory/tests/`): 68 pass, 0 fail, 2 skip (pglite).
-| Fayl | Kya jaanchta hai |
-|---|---|
-| rules.test.ts | secrets (OTP, card Luhn, Aadhaar, PAN, bank, UPI PIN, password, key) refuse, "haan" se bhi; jhoothe alarm nahi ("password manager", "pin code", UUID); NEVER topics (paise ank, sehat, minor, self-harm, abuse) refuse + care signal; allowed ("Rahul doctor hai", "EMI ki tarikh 5"); bahari text kabhi memory nahi; kill ON/unreadable; inferred ask + 90 din + 0.7; private contact + voice-only confirm nahi; doosron ki nazuk baat; gussa skip; tarikh expiry; lambi baat |
-| store.test.ts + src/testing/contract.ts | har store ka contract: revision conflict, **user B, user A ka kuch nahi dekh/badal/mita sakta**, galat row refuse (why/inferred/lambi), private par vector nahi, keyword search private/kind/expiry, supersede, forget hard delete + derived, forgetAll exact ginti + declines saaf, export paging, purge |
-| service.test.ts | event mein text nahi; refuse = kuch store nahi; decline fingerprint; supersede/dedupe; recall card + keyword bina embedding + private chhupi; vector tabhi jab allowed, kill/budget par shabd-search; stale secret wali row nahi dikhti; wrapper band nahi ho sakta; update policy+vector clear+conflict; forget confirm; findToForget kuch nahi mitata; export bina vector/tokens; embed batch off/kill/budget/private skip; growth thresholds |
-| supabase.test.ts | har request mein owner filter + user bearer; rpc mein owner; vector sirf text; optimistic update; galat owner id; 403/503 |
-| sql-static.test.mjs | meri range 0030-0039; har nayi table mein owner_id + RLS enable+force + policy + anon revoke; koi SECURITY DEFINER nahi; search_path; purge sirf service_role; halfvec+partial HNSW; private-no-vector; why zaroori; file path owner folder |
-| db-rls.test.mjs (SKIP: pglite nahi) | asli "B, A ka nahi dekh sakta" har table + function par; DB ke niyam; forget derived |
+# S09 memory test plan — v1.1.0
 
-## Baaki (Antigravity, test project par)
-1. `npm i -D @electric-sql/pglite` phir db-rls.test.mjs (halfvec na mile to 0030 ka fallback).
-2. SupabaseMemoryStore ko `runStoreContract` ke saath asli test project par (do user).
-3. Storage bucket policy: B, A ki file nahi padh sakta.
-4. Golden recall set (nijee data, git ke bahar): recall@5 keyword vs hybrid.
-5. Hinglish shabd-soochi ke jhoothe alarm/chhoote: Amit ki asli baatchit se 200 vakya (nijee) -> precision/recall.
-6. Load: 30k rows par search p95 (memory_search) aur HNSW build time, Supabase free compute par.
-7. Gateway embed() aane par: kill ON, budget khatam, key gayab ke 3 raaste.
+## Policy cases
+
+- T1 preference/project/routine/person facts save and appear in default recall.
+- T2 direct facts save immediately with `tier='sensitive'` + `private=true`: health, medicine/timing, weight/workout, money numbers, family facts, deep/recurring feelings.
+- A weight example (`wazan 72`) is saved as T2 with no age-only expiry.
+- `dawai 8 baje` is saved as T2 and produces a typed reminder hand-off; an actual S08 reminder is not asserted unless S08 integration exists.
+- Deep/recurring feelings are T2; a passing mood is skipped. Self-harm/abuse always signal care; only an explicit `yaad rakho` stores a generic summary with no methods/plans.
+- Inferred T2 asks first; no inference is silently saved.
+- Child photo/school address refusal follows accepted Decision 014 until LEAD changes that shared decision.
+- T3 credentials and identity numbers are refused even with explicit confirmation; a PAN label alone is enough to refuse and offer the vault-handle path.
+
+## Retrieval / privacy cases
+
+- `card()` and default `recall()` never fetch T2; no boolean `allowPrivate` escape hatch.
+- Purpose-scoped recall returns only matching T2 tags for `plan_workout`, `day_status`, `medicine_reminder`, `budget`, or `ask`.
+- Purpose-scoped queries do not go to embedding providers; T2 rows never have a vector and cannot receive one through store or DB.
+- T2 writes do not emit general memory events; usage updates carry row IDs/counts only, no memory text.
+- User B cannot read/search/update/delete User A's T2 rows; test through PGlite/RLS and the in-memory store contract.
+- T2 stays outside the ordinary GIN keyword index; purpose-scoped keyword filtering is database-enforced.
+
+## History growth
+
+- User-stated T2 history has no age-only expiry.
+- Compaction considers only old workout/weight fact/episode rows; it must store a private summary before hard-deleting selected source rows. Medicine/family/money/emotion/location/milestones and recent records stay.
+- Without a private summarizer or with kill switch on, compaction does nothing.
+- Compaction is a hook only; worker schedule and approved private summarizer are not part of this S09 bundle.
+
+## Existing suite / environment
+
+Run from repo root:
+
+```sh
+npm i
+npm i -D @electric-sql/pglite@0.2.17
+cd packages/memory && node --test tests/*.test.ts tests/*.test.mjs
+cd ../..
+npm run register
+npm run check
+node scripts/test-all.mjs
+```
+
+The repo's baseline notes one unrelated pre-existing `packages/db` test failure. Do not change that package to hide it. Real Supabase is NOT used by this test plan.

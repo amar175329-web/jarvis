@@ -1,0 +1,167 @@
+[
+  {
+    "id": 1,
+    "text": "अरे सुनो कल कल सुबह आठ बजे वो थायरॉइड की गोली खानी है",
+    "script": "devanagari",
+    "category": "medicine",
+    "voice_traits": "filler (अरे सुनो), repetition (कल कल)",
+    "expected": {
+      "काम": "थायरॉइड की गोली खानी है",
+      "समय": "कल सुबह 8:00 बजे"
+    }
+  },
+  {
+    "id": 2,
+    "text": "आज दोपहर नहीं शाम को 4 बजे क्लाइंट के साथ अर्जेंट मीटिंग है",
+    "script": "devanagari",
+    "category": "meeting",
+    "voice_traits": "self-correction (दोपहर नहीं शाम को 4 बजे)",
+    "expected": {
+      "काम": "क्लाइंट के साथ अर्जेंट मीटिंग है",
+      "समय": "आज शाम 4:00 बजे"
+    }
+  },
+  {
+    "id": 3,
+    "text": "यार रात को 9 बजे जरा शर्मा जी को फोन मिलाना है",
+    "script": "devanagari",
+    "category": "call",
+    "voice_traits": "colloquial fillers (यार, जरा)",
+    "expected": {
+      "काम": "शर्मा जी को फोन मिलाना है",
+      "समय": "रात 9:00 बजे"
+    }
+  },
+  {
+    "id": 4,
+    "text": "कल परसों नहीं कल दोपहर 2 बजे वो वाईफाई का बिल भर देना",
+    "script": "devanagari",
+    "category": "bill",
+    "voice_traits": "hesitative restart (कल परसों नहीं कल)",
+    "expected": {
+      "काम": "वाईफाई का बिल भर देना",
+      "समय": "कल दोपहर 2:00 बजे"
+    }
+  },
+  {
+    "id": 5,
+    "text": "सोमवार सुबह... सुबह 6 बजे स्टेशन... स्टेशन पहुंचना है",
+    "script": "devanagari",
+    "category": "travel",
+    "voice_traits": "speech pause / stammer (सुबह... सुबह, स्टेशन... स्टेशन)",
+    "expected": {
+      "काम": "स्टेशन पहुंचना है",
+      "समय": "सोमवार सुबह 6:00 बजे"
+    }
+  },
+  {
+    "id": 6,
+    "text": "अरे आज दोपहर में खाना खाने के बाद बीपी की दवा लेना मत भूलना",
+    "script": "devanagari",
+    "category": "medicine",
+    "voice_traits": "filler (अरे), contextual condition (खाना खाने के बाद), partial time",
+    "expected": {
+      "काम": "बीपी की दवा लेना मत भूलना",
+      "समय": "आज दोपहर"
+    }
+  },
+  {
+    "id": 7,
+    "text": "परसों शाम पांच बजे वो बिल्डर के साथ साइट पर मिलना है",
+    "script": "devanagari",
+    "category": "meeting",
+    "voice_traits": "spoken demonstrative (वो बिल्डर के साथ)",
+    "expected": {
+      "काम": "बिल्डर के साथ साइट पर मिलना है",
+      "समय": "परसों शाम 5:00 बजे"
+    }
+  },
+  {
+    "id": 8,
+    "text": "कल सवेरे सवेरे 7 बजे मम्मी को कॉल लगाना है ज़रूरी",
+    "script": "devanagari",
+    "category": "call",
+    "voice_traits": "repetition (सवेरे सवेरे), trailing adjective (ज़रूरी)",
+    "expected": {
+      "काम": "मम्मी को कॉल लगाना है ज़रूरी",
+      "समय": "कल सवेरे 7:00 बजे"
+    }
+  },
+  {
+    "id": 9,
+    "text": "मंगलवार को 11 बजे दुकान का किराया चुकता करना है",
+    "script": "devanagari",
+    "category": "bill",
+    "voice_traits": "spoken colloquial vocabulary (किराया चुकता करना)",
+    "expected": {
+      "काम": "दुकान का किराया चुकता करना है",
+      "समय": "मंगलवार 11:00 बजे"
+    }
+  },
+  {
+    "id": 10,
+    "text": "रविवार रात दस बजे एयरपोर्ट के लिए कैब बुक करनी पड़ेगी",
+    "script": "devanagari",
+    "category": "travel",
+    "voice_traits": "colloquial future modal verb (करनी पड़ेगी)",
+    "expected": {
+      "काम": "एयरपोर्ट के लिए कैब बुक करनी पड़ेगी",
+      "समय": "रविवार रात 10:00 बजे"
+    }
+  },
+  {
+    "id": 11,
+    "text": "arre bhai kal subah na 8 baje insulin lena hai",
+    "script": "roman",
+    "category": "medicine",
+    "voice_traits": "slang fillers (arre bhai, na)",
+    "expected": {
+      "काम": "insulin lena hai",
+      "समय": "kal subah 8:00 baje"
+    }
+  },
+  {
+    "id": 12,
+    "text": "aaj shaam... shaam ko 6 baje team ke sath standup call hai",
+    "script": "roman",
+    "category": "meeting",
+    "voice_traits": "pause repetition (shaam... shaam ko)",
+    "expected": {
+      "काम": "team ke sath standup call hai",
+      "समय": "aaj shaam 6:00 baje"
+    }
+  },
+  {
+    "id": 13,
+    "text": "sun raat ko 9:30 baje rahul ko call karke bolna",
+    "script": "roman",
+    "category": "call",
+    "voice_traits": "spoken vocative (sun), colloquial phrasing (karke bolna)",
+    "expected": {
+      "काम": "rahul ko call karke bolna",
+      "समय": "raat 9:30 baje"
+    }
+  },
+  {
+    "id": 14,
+    "text": "kal dopahar me 3 baje electricity bill pay karna yaad dilana",
+    "script": "roman",
+    "category": "bill",
+    "voice_traits": "conversational reminder phrasing (yaad dilana)",
+    "expected": {
+      "काम": "electricity bill pay karna yaad dilana",
+      "समय": "kal dopahar 3:00 baje"
+    }
+  },
+  {
+    "id": 15,
+    "text": "somwar subah 7 baje flight ke liye nikalna padega boss",
+    "script": "roman",
+    "category": "travel",
+    "voice_traits": "vocative slang (boss), colloquial obligation (nikalna padega)",
+    "expected": {
+      "काम": "flight ke liye nikalna padega boss",
+      "समय": "somwar subah 7:00 baje"
+    }
+  }
+]
