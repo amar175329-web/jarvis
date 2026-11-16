@@ -133,7 +133,15 @@
             "out": 0.5,
             "cache_read": 0.01,
             "cache_write_5m": 0.125,
-            "cache_write_1h": 0.2
+            "cache_write_1h": 0.2,
+            "bracket": {
+              "over_prompt_tokens": 100000,
+              "in": 0.5,
+              "out": 2.5,
+              "cache_read": 0.05,
+              "cache_write_5m": 0.625,
+              "cache_write_1h": 1.0
+            }
           }
         }
       ],
@@ -146,7 +154,7 @@
       },
       "source": {
         "url": "https://platform.claude.com/docs/en/about-claude/pricing",
-        "checked_on": "2026-11-14"
+        "checked_on": "2026-11-16"
       },
       "status": "verified",
       "notes": "Prompts over 100K tokens cost $0.50 in / $2.50 out: router caps prompt at 100K so the higher bracket never applies."

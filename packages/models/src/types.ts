@@ -2,8 +2,23 @@ export type Tier = 'free' | 'almost_zero' | 'paid_big' | 'local';
 export type SizeClass = 'small' | 'big';
 export type Depth = 'FAST' | 'NORMAL' | 'DEEP';
 export type Task = 'chat' | 'reasoning' | 'summarize' | 'code' | 'creative' | 'action' | 'extract';
+export type PriceBracketUsd = {
+  over_prompt_tokens: number;
+  in: number;
+  out: number;
+  cache_read?: number;
+  cache_write_5m?: number;
+  cache_write_1h?: number;
+};
 /** USD per 1M tokens. */
-export type PriceUsd = { in: number; out: number; cache_read?: number; cache_write_5m?: number; cache_write_1h?: number };
+export type PriceUsd = {
+  in: number;
+  out: number;
+  cache_read?: number;
+  cache_write_5m?: number;
+  cache_write_1h?: number;
+  bracket?: PriceBracketUsd;
+};
 export type PriceStep = { from: string; price: PriceUsd }; // from = UTC date YYYY-MM-DD (inclusive)
 export type LimitStatus = 'official' | 'third_party_unverified' | 'user_confirmed';
 export type Limits = { rpd?: number; rpm?: number; reset_tz: string; status: LimitStatus; source_url: string };

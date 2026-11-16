@@ -3,7 +3,7 @@
 import { KilledError, readKillFailClosed, type KillSwitchReader, type Clock, systemClock } from '../../shared/src/index.ts';
 import { startOfDayIST, startOfMonthIST } from '../../locale/src/index.ts';
 import type { Logger } from '../../logging/src/index.ts';
-import { checkBudget, computeCost, modelKey } from './budget.ts';
+import { checkBudget, computeCost, modelKey, startOfDayInTz } from './budget.ts';
 import type { Budget, GatewayRequest, GatewayResult, KeyProvider, ModelSpec, Provider, ProviderChunkHandler, UsageStore } from './types.ts';
 
 export type GatewayOptions = {
@@ -37,8 +37,13 @@ export function createGateway(o: GatewayOptions) {
     if (!provider) return fail('unknown_provider', `no adapter for provider ${req.provider}`);
 
     const now = clock.now();
+    const modelDayStarts: Record<string, Date> = {};
+    for (const m of o.models) {
+      const tz = m.resetTz ?? 'Asia/Kolkata';
+      modelDayStarts[modelKey(m)] = startOfDayInTz(now, tz);
+    }
     let usage;
-    try { usage = await o.usage.summary(startOfDayIST(now), startOfMonthIST(now)); }
+    try { usage = await o.usage.summary(startOfDayIST(now), startOfMonthIST(now), modelDayStarts); }
     catch { return fail('budget_exceeded', 'could not read usage, so spending is blocked (fail-closed)'); }
     // checkBudget charges the full configured max output plus estimated input (worst case), BEFORE a key or call.
     const decision = checkBudget({ budget: o.budget, usage, spec, estIn: req.estimatedInputTokens, maxOut: req.maxOutputTokens });
@@ -63,13 +68,57 @@ export function createGateway(o: GatewayOptions) {
       });
       // Compatibility for older Provider implementations that return one final text only.
       if (onChunk && chunkCount === 0 && result.text) await onChunk(result.text);
-      const costUsd = spec.free ? 0 : computeCost(result.tokensIn, result.tokensOut, spec.price!);
-      await o.usage.record({ provider: req.provider, model: req.model, task: req.task, tokens_in: result.tokensIn, tokens_out: result.tokensOut, cost_usd: costUsd, ok: true });
+      const costUsd = spec.free
+        ? 0
+        : computeCost(result.tokensIn, result.tokensOut, spec.price!, {
+            cacheRead: result.cacheReadTokens,
+            cacheWrite5m: result.cacheWriteTokens,
+            cacheWrite1h: result.cacheWrite1hTokens,
+          });
+      await o.usage.record({
+        provider: req.provider,
+        model: req.model,
+        task: req.task,
+        tokens_in: result.tokensIn,
+        tokens_out: result.tokensOut,
+        cost_usd: costUsd,
+        ok: true,
+        cache_read_tokens: result.cacheReadTokens ?? req.cache_read_tokens ?? 0,
+        cache_write_tokens: result.cacheWriteTokens ?? req.cache_write_tokens ?? 0,
+        tier: req.tier,
+        fallback_from: req.fallback_from,
+      });
       log.info('model call ok', { tokens_in: result.tokensIn, tokens_out: result.tokensOut, cost_usd: costUsd });
-      return { ok: true, text: result.text, usage: { tokensIn: result.tokensIn, tokensOut: result.tokensOut, costUsd }, ...(decision.warning ? { warning: decision.warning } : {}) };
+      return {
+        ok: true,
+        text: result.text,
+        usage: {
+          tokensIn: result.tokensIn,
+          tokensOut: result.tokensOut,
+          costUsd,
+          ...(result.cacheReadTokens !== undefined ? { cacheReadTokens: result.cacheReadTokens } : {}),
+          ...(result.cacheWriteTokens !== undefined ? { cacheWriteTokens: result.cacheWriteTokens } : {}),
+          ...(result.cacheWrite1hTokens !== undefined ? { cacheWrite1hTokens: result.cacheWrite1hTokens } : {}),
+        },
+        ...(decision.warning ? { warning: decision.warning } : {}),
+      };
     } catch (error) {
       const timedOut = ctl.signal.aborted;
-      await o.usage.record({ provider: req.provider, model: req.model, task: req.task, tokens_in: 0, tokens_out: 0, cost_usd: 0, ok: false }).catch(() => {});
+      await o.usage
+        .record({
+          provider: req.provider,
+          model: req.model,
+          task: req.task,
+          tokens_in: 0,
+          tokens_out: 0,
+          cost_usd: 0,
+          ok: false,
+          cache_read_tokens: 0,
+          cache_write_tokens: 0,
+          tier: req.tier,
+          fallback_from: req.fallback_from,
+        })
+        .catch(() => {});
       // Error message may include a key or prompt from a provider SDK; omit it completely.
       log.error('model call failed', { timed_out: timedOut });
       return { ok: false, code: timedOut ? 'timeout' : 'provider_error', message: timedOut ? 'the model took too long' : 'the model provider returned an error' };

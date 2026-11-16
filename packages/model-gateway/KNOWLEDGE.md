@@ -3,10 +3,12 @@ STATUS: built
 WHAT IT IS: हर AI model बुलाने का एक ही दरवाज़ा। हर call का क्रम पक्का: kill switch -> model सूची में है? -> खर्चे की सीमा -> key -> call -> usage दर्ज। (Router की समझ, यानी कौन सा model कब, S13/S07 की है; यहाँ सिर्फ़ plumbing है।)
 WHAT IT CAN DO:
 - `createGateway({...}).call(request)` -> `{ok:true,text,usage,warning?}` या `{ok:false,code,message}`। Codes: `kill_switch_on`, `unknown_model`, `unknown_provider`, `unpriced_model`, `budget_exceeded`, `no_key`, `provider_error`, `timeout`। (built)
-- खर्चे की सीमा (`Budget`): रोज़ की और महीने की (भारत की आधी रात से), हर model की रोज़ की सीमा, और free models की रोज़ के requests की सीमा। Call से पहले "सबसे बुरा खर्चा" (अनुमानित input + पूरा output) जोड़कर देखा जाता है, इसलिए सीमा पार करने वाली call होती ही नहीं। 80% पर चेतावनी। (built)
+- खर्चे की सीमा (`Budget`): रोज़ की और महीने की (भारत की आधी रात से), हर model की रोज़ की सीमा, और free models की रोज़ के requests की सीमा (model के अपने `resetTz`, जैसे America/Los_Angeles, DST का ध्यान रखकर, डिफ़ॉल्ट Asia/Kolkata; USD बजट का दिन IST ही रहता है)। Call से पहले "सबसे बुरा खर्चा" (अनुमानित input + पूरा output, सबसे महँगे bracket दाम से) जोड़कर देखा जाता है, इसलिए सीमा पार करने वाली call होती ही नहीं। 80% पर चेतावनी। (built)
 - बिना कीमत वाला (non-free) model मना: कीमत हम अंदाज़े से नहीं भरते। (built)
+- Cache दाम व Bracket: `Price` में वैकल्पिक `cache_read_per_mtok`, `cache_write_5m_per_mtok`, `cache_write_1h_per_mtok`, और `bracket: { over_prompt_tokens, in_per_mtok, out_per_mtok, cache_read_per_mtok?, cache_write_5m_per_mtok?, cache_write_1h_per_mtok? }`। `computeCost` में अगर cache दाम न हो पर cache टोकन आएँ तो सामान्य इनपुट दाम पर गिनता है (सुरक्षित अनुमान)। कुल इनपुट टोकन bracket से ऊपर हों तो bracket का दाम लगता है। (built)
+- नियम: `ProviderResult` में `tokensIn` सिर्फ़ बिना-cache वाला इनपुट है; cache टोकन (`cacheReadTokens`, `cacheWriteTokens`, `cacheWrite1hTokens`) अलग गिने जाएँगे। (built)
 - Keys: `envKeys()` env से पढ़ता है (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, नाम `.env.example` वाले)। Key न हो तो बताता है कौन सा variable भरना है, कीमत कभी नहीं। (built)
-- Usage: `model_usage` table में हर call (असफल भी, ok=false) दर्ज; `supabaseUsageStore` (service_role, इस महीने की अधिकतम 5000 पंक्तियाँ पढ़ता है) और `memoryUsageStore` (tests)। (built)
+- Usage: `model_usage` table में हर call (असफल भी, ok=false) दर्ज; नए कॉलम `cache_read_tokens`, `cache_write_tokens`, `tier`, `fallback_from` लिखे जाते हैं। `supabaseUsageStore` (service_role, इस महीने की अधिकतम 5000 पंक्तियाँ पढ़ता है) और `memoryUsageStore` (tests)। (built)
 - Timeout (default 60 s), और logs में prompt, जवाब या key कभी नहीं। (built)
 WHAT IT CANNOT DO / LIMITS:
 - असली providers (Anthropic/OpenAI/Gemini के adapters) अभी नहीं हैं; `Provider` interface है, adapters S13/S07 लिखेंगे। Tests नकली provider से हैं।
@@ -25,3 +27,4 @@ CHANGE LOG:
 - (append-only) folder-first: created as planned, version 0.0.1. Owner: S00.
 - 2026-11-07 - gateway, budget, keys, usage stores बने; 18 tests pass; planned -> built - 0.1.0
 - 2026-11-07 - Added type-only AudioModelAdapter contract for S21/S13/S07; no implementation wired - 0.1.1
+- 2026-11-16 - CR-2: cache token pricing, bracket rates, Pacific day reset (resetTz), tokensIn uncached rule, and new usage columns wired; 36 tests pass - 0.2.0
