@@ -119,3 +119,30 @@ test('alias providers keep separate keys for free vs paid Gemini', () => {
   const k = envKeys({ GEMINI_FREE_API_KEY: 'f'.repeat(30), GEMINI_PAID_API_KEY: 'p'.repeat(30) }, PROVIDER_KEY_ENV);
   assert.notEqual(k.get('gemini-free'), k.get('gemini-paid'));
 });
+
+test('CR-2: toModelSpecs correctly passes cache prices, resetTz, and bracket', () => {
+  const specs = toModelSpecs(reg, new Date('2026-11-16T10:00:00Z'));
+
+  // Haiku 5.5 should have base cache prices and bracket
+  const haiku = specs.find((s) => s.model === 'claude-haiku-5-5');
+  assert.ok(haiku);
+  assert.equal(haiku.price?.in_per_mtok, 0.1);
+  assert.equal(haiku.price?.out_per_mtok, 0.5);
+  assert.equal(haiku.price?.cache_read_per_mtok, 0.01);
+  assert.equal(haiku.price?.cache_write_5m_per_mtok, 0.125);
+  assert.equal(haiku.price?.cache_write_1h_per_mtok, 0.2);
+
+  assert.ok(haiku.price?.bracket);
+  assert.equal(haiku.price.bracket.over_prompt_tokens, 100000);
+  assert.equal(haiku.price.bracket.in_per_mtok, 0.5);
+  assert.equal(haiku.price.bracket.out_per_mtok, 2.5);
+  assert.equal(haiku.price.bracket.cache_read_per_mtok, 0.05);
+  assert.equal(haiku.price.bracket.cache_write_5m_per_mtok, 0.625);
+  assert.equal(haiku.price.bracket.cache_write_1h_per_mtok, 1.0);
+
+  // Free Gemini models should pass resetTz: 'America/Los_Angeles'
+  const freeGemini = specs.find((s) => s.model === 'gemini-3.5-flash-lite' && s.free);
+  assert.ok(freeGemini);
+  assert.equal(freeGemini.resetTz, 'America/Los_Angeles');
+  assert.equal(freeGemini.maxRequestsPerDay, 500);
+});
