@@ -228,6 +228,82 @@
       "response": "PhoneCommandsListResponse"
     },
     {
+      "name": "chat.threads.list",
+      "path": "/api/chat/threads.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "List only the authenticated owner threads, newest first.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "unavailable"
+      ],
+      "request": "ChatThreadsListRequest",
+      "response": "ChatThreadsListResponse"
+    },
+    {
+      "name": "chat.threads.create",
+      "path": "/api/chat/threads.create",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Create an owner-scoped chat thread. Database RLS remains the authorization boundary.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "unavailable"
+      ],
+      "request": "ChatThreadsCreateRequest",
+      "response": "ChatThreadsCreateResponse"
+    },
+    {
+      "name": "chat.messages.list",
+      "path": "/api/chat/messages.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "List messages from one owner-scoped thread, in sequence order.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "not_found",
+        "unavailable"
+      ],
+      "request": "ChatMessagesListRequest",
+      "response": "ChatMessagesListResponse"
+    },
+    {
+      "name": "chat.messages.send",
+      "path": "/api/chat/messages.send",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Accept an owner chat message and start model streaming; content is not written to the events table.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "not_found",
+        "kill_switch_on",
+        "rate_limited",
+        "unavailable"
+      ],
+      "request": "ChatMessagesSendRequest",
+      "response": "ChatMessagesSendResponse"
+    },
+    {
+      "name": "chat.messages.stream",
+      "path": "/api/chat/messages.stream",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Open the authenticated SSE stream for one owner message; text deltas travel only on this response, never in event rows.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "not_found",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "ChatMessagesStreamRequest",
+      "response": "ChatMessagesStreamResponse"
+    },
+    {
       "name": "voice.transcribe",
       "path": "/api/voice/transcribe",
       "method": "POST",
@@ -487,6 +563,466 @@
       "required": [
         "user",
         "expires_in"
+      ],
+      "additionalProperties": false
+    },
+    "ChatMessagesListRequest": {
+      "type": "object",
+      "properties": {
+        "thread_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "before_sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 50
+        }
+      },
+      "required": [
+        "thread_id"
+      ],
+      "additionalProperties": false
+    },
+    "ChatMessagesListResponse": {
+      "type": "object",
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "thread_id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "assistant"
+                ]
+              },
+              "content": {
+                "type": "string",
+                "maxLength": 12000
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "created_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              }
+            },
+            "required": [
+              "id",
+              "thread_id",
+              "role",
+              "content",
+              "sequence",
+              "created_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "next_before_sequence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "messages"
+      ],
+      "additionalProperties": false
+    },
+    "ChatMessagesSendRequest": {
+      "type": "object",
+      "properties": {
+        "thread_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "message_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string",
+                "enum": [
+                  "web",
+                  "file",
+                  "tool",
+                  "screen",
+                  "message"
+                ]
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 12000
+              }
+            },
+            "required": [
+              "source",
+              "text"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 10
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "storage_ref": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "file_name": {
+                "type": "string",
+                "maxLength": 255
+              },
+              "mime_type": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "size_bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10485760
+              }
+            },
+            "required": [
+              "id",
+              "storage_ref",
+              "mime_type"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 10
+        },
+        "voice": {
+          "type": "object",
+          "properties": {
+            "audio_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "mime_type": {
+              "type": "string",
+              "enum": [
+                "audio/webm",
+                "audio/wav",
+                "audio/mp4",
+                "audio/mpeg",
+                "audio/ogg"
+              ]
+            },
+            "language": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 35
+            }
+          },
+          "required": [
+            "audio_ref",
+            "mime_type"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "thread_id",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "ChatMessagesSendResponse": {
+      "type": "object",
+      "properties": {
+        "accepted": {
+          "type": "boolean",
+          "const": true
+        },
+        "thread_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "message_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "stream_path": {
+          "type": "string",
+          "const": "/api/chat/messages.stream"
+        }
+      },
+      "required": [
+        "accepted",
+        "thread_id",
+        "message_id",
+        "stream_path"
+      ],
+      "additionalProperties": false
+    },
+    "ChatMessagesStreamRequest": {
+      "type": "object",
+      "properties": {
+        "thread_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "message_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "after_index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "thread_id",
+        "message_id"
+      ],
+      "additionalProperties": false
+    },
+    "ChatMessagesStreamResponse": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "chat.message.started"
+            },
+            "thread_id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "message_id": {
+              "$ref": "#/definitions/Device/properties/id"
+            }
+          },
+          "required": [
+            "type",
+            "thread_id",
+            "message_id"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "chat.message.delta"
+            },
+            "thread_id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "message_id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "text": {
+              "type": "string",
+              "maxLength": 12000
+            }
+          },
+          "required": [
+            "type",
+            "thread_id",
+            "message_id",
+            "index",
+            "text"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "chat.message.completed"
+            },
+            "thread_id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "message_id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "chunk_count": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "type",
+            "thread_id",
+            "message_id",
+            "chunk_count"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "chat.message.error"
+            },
+            "thread_id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "message_id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "code": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            }
+          },
+          "required": [
+            "type",
+            "thread_id",
+            "message_id",
+            "code"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ChatThreadsCreateRequest": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "maxLength": 200
+        }
+      },
+      "additionalProperties": false
+    },
+    "ChatThreadsCreateResponse": {
+      "type": "object",
+      "properties": {
+        "thread": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "title": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "created_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "created_at",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "thread"
+      ],
+      "additionalProperties": false
+    },
+    "ChatThreadsListRequest": {
+      "type": "object",
+      "properties": {
+        "before": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 30
+        }
+      },
+      "additionalProperties": false
+    },
+    "ChatThreadsListResponse": {
+      "type": "object",
+      "properties": {
+        "threads": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "title": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "created_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              },
+              "updated_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "created_at",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "next_before": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        }
+      },
+      "required": [
+        "threads"
       ],
       "additionalProperties": false
     },

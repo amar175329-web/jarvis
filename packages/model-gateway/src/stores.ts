@@ -25,7 +25,8 @@ export function summarize(rows: { provider: string; model: string; cost_usd: num
 /** model_usage table through Supabase REST. Server-side only (service_role). Reads at most 5000 rows of this month. */
 export function supabaseUsageStore(o: { url: string; serviceKey: string; ownerId: string; fetch?: typeof fetch }): UsageStore {
   const f = o.fetch ?? fetch;
-  const headers = { apikey: o.serviceKey, Authorization: `Bearer ${o.serviceKey}`, 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = { apikey: o.serviceKey, 'Content-Type': 'application/json' };
+  if (o.serviceKey.includes('.')) headers.Authorization = `Bearer ${o.serviceKey}`;
   return {
     async summary(dayStart, monthStart) {
       const q = `select=provider,model,cost_usd,ts&owner_id=eq.${o.ownerId}&ts=gte.${encodeURIComponent(monthStart.toISOString())}&limit=5000`;

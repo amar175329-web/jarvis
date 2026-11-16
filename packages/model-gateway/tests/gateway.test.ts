@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createGateway, checkBudget, computeCost, envKeys, memoryUsageStore, supabaseUsageStore, type ModelSpec, type Provider, type GatewayRequest } from '../src/index.ts';
-import { createLogger, memorySink } from '../../logging/src/index.ts';
+import { createLogger, memorySink } from '../../logging/src/logger.ts';
 import { fixedClock } from '../../shared/src/index.ts';
 
 const NOW = '2026-11-07T11:40:00Z'; // 17:10 IST
@@ -129,4 +129,41 @@ test('audio model gateway interface is type-only and exposes metadata/reference 
   const result = await adapter.transcribe({ audio_ref: 'storage://voice/input-1', mime_type: 'audio/webm', language: 'hi-IN' });
   assert.equal(result.text, 'transcribed:audio/webm');
   // This structural test does not wire an adapter into createGateway or call a model provider.
+});
+
+test('callStream forwards live chunks and preserves usage accounting', async () => {
+  const chunks: string[] = [];
+  const { gw, usage, seen } = setup({ provider: { invoke: async (args) => {
+    seen.push(args);
+    await args.onChunk?.('first ');
+    await args.onChunk?.('second');
+    return { text: 'first second', tokensIn: 12, tokensOut: 3 };
+  } } });
+  const result = await gw.callStream(req(), (chunk) => { chunks.push(chunk); });
+  assert.ok(result.ok);
+  assert.equal(result.text, 'first second');
+  assert.deepEqual(chunks, ['first ', 'second']);
+  assert.equal(usage.rows.length, 1);
+  assert.deepEqual([usage.rows[0]?.tokens_in, usage.rows[0]?.tokens_out, usage.rows[0]?.ok], [12, 3, true]);
+});
+
+test('callStream still blocks kill, unpriced model, budget and missing key before any delta', async () => {
+  const blocked = async (gw: ReturnType<typeof setup>['gw'], code: string, request: GatewayRequest = req()) => {
+    const chunks: string[] = [];
+    const result = await gw.callStream(request, (chunk) => { chunks.push(chunk); });
+    assert.ok(!result.ok && result.code === code);
+    assert.deepEqual(chunks, []);
+  };
+  const killed = setup({ kill: true }); await blocked(killed.gw, 'kill_switch_on'); assert.equal(killed.seen.length, 0);
+  const unpriced = setup(); await blocked(unpriced.gw, 'unpriced_model', req({ provider: 'openai', model: 'mystery' }));
+  const budget = setup({ budget: { perDayUsd: 0 } }); await blocked(budget.gw, 'budget_exceeded'); assert.equal(budget.seen.length, 0);
+  const noKey = setup({ env: { ANTHROPIC_API_KEY: '' } }); await blocked(noKey.gw, 'no_key'); assert.equal(noKey.seen.length, 0);
+});
+
+test('registered provider adapters can be added without bypassing model allow-list', async () => {
+  const { gw, seen } = setup();
+  gw.registerProvider({ name: 'custom', invoke: async (args) => ({ text: 'custom', tokensIn: 1, tokensOut: 1 }) });
+  const result = await gw.call(req({ provider: 'custom', model: 'big' }));
+  assert.ok(!result.ok && result.code === 'unknown_model');
+  assert.equal(seen.length, 0);
 });

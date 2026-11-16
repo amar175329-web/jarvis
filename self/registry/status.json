@@ -3,6 +3,10 @@
     "status": "built",
     "evidence": null
   },
+  "api.chat": {
+    "status": "built",
+    "evidence": null
+  },
   "api.system": {
     "status": "built",
     "evidence": null
@@ -531,6 +535,10 @@
     "status": "built",
     "evidence": null
   },
+  "packages.chat": {
+    "status": "built",
+    "evidence": null
+  },
   "packages.contracts": {
     "status": "built",
     "evidence": null
@@ -576,7 +584,7 @@
     "evidence": null
   },
   "packages.models": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "packages.presence": {

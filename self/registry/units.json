@@ -13,6 +13,19 @@
     "path": "api/auth"
   },
   {
+    "id": "api.chat",
+    "name": "chat API",
+    "kind": "ops-part",
+    "group": "api",
+    "owner_squad": "S07",
+    "phase": 1,
+    "status": "built",
+    "does": "Owner-authenticated chat endpoints (threads and messages) with RLS thread store, model streaming, and metadata-only events",
+    "autonomy_default": "L0",
+    "version": "0.1.0",
+    "path": "api/chat"
+  },
+  {
     "id": "api.system",
     "name": "system API",
     "kind": "ops-part",
@@ -1729,6 +1742,19 @@
     "path": "packages/brain"
   },
   {
+    "id": "packages.chat",
+    "name": "chat",
+    "kind": "package",
+    "group": "packages",
+    "owner_squad": "S07",
+    "phase": 1,
+    "status": "built",
+    "does": "S07 chat message pipeline, privacy-aware model routing, provider adapters, threads and safe power hand-off",
+    "autonomy_default": "L0",
+    "version": "0.1.0",
+    "path": "packages/chat"
+  },
+  {
     "id": "packages.contracts",
     "name": "contracts",
     "kind": "package",
@@ -1855,7 +1881,7 @@
     "status": "built",
     "does": "Memory ka code: store interface (Supabase pehle), rules/redaction, hybrid search, chat recall, export, size alarm",
     "autonomy_default": "L0",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "path": "packages/memory"
   },
   {
@@ -1878,10 +1904,10 @@
     "group": "packages",
     "owner_squad": "S13",
     "phase": 2,
-    "status": "planned",
-    "does": "model router का code",
+    "status": "built",
+    "does": "Local Gemma-3 model runner, 60s health ping to settings, models registry, and privacy router",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "packages/models"
   },
   {

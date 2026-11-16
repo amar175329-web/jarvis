@@ -1,0 +1,222 @@
+[
+  {
+    "id": 1,
+    "text": "कल सुबह आठ बजे दवाई लेनी है",
+    "script": "devanagari",
+    "category": "medicine",
+    "time_clarity": "clear",
+    "expected": {
+      "काम": "दवाई लेनी है",
+      "समय": "कल सुबह 8:00 बजे"
+    }
+  },
+  {
+    "id": 2,
+    "text": "आज दोपहर में सिरदर्द की गोली खानी है",
+    "script": "devanagari",
+    "category": "medicine",
+    "time_clarity": "partial",
+    "expected": {
+      "काम": "सिरदर्द की गोली खानी है",
+      "समय": "आज दोपहर"
+    }
+  },
+  {
+    "id": 3,
+    "text": "रात को दस बजे खांसी का सिरप पीना मत भूलना",
+    "script": "devanagari",
+    "category": "medicine",
+    "time_clarity": "clear",
+    "expected": {
+      "काम": "खांसी का सिरप पीना",
+      "समय": "रात 10:00 बजे"
+    }
+  },
+  {
+    "id": 4,
+    "text": "शाम को ब्लड प्रेशर की दवा लेनी है",
+    "script": "devanagari",
+    "category": "medicine",
+    "time_clarity": "partial",
+    "expected": {
+      "काम": "ब्लड प्रेशर की दवा लेनी है",
+      "समय": "शाम"
+    }
+  },
+  {
+    "id": 5,
+    "text": "आज शाम पांच बजे टीम मीटिंग है",
+    "script": "devanagari",
+    "category": "meeting",
+    "time_clarity": "clear",
+    "expected": {
+      "काम": "टीम मीटिंग",
+      "समय": "आज शाम 5:00 बजे"
+    }
+  },
+  {
+    "id": 6,
+    "text": "सोमवार को 11 बजे क्लाइंट के साथ ज़ूम कॉल है",
+    "script": "devanagari",
+    "category": "meeting",
+    "time_clarity": "clear",
+    "expected": {
+      "काम": "क्लाइंट के साथ ज़ूम कॉल",
+      "समय": "सोमवार 11:00 बजे"
+    }
+  },
+  {
+    "id": 7,
+    "text": "कल दोपहर में बॉस से प्रोजेक्ट डिस्कस करना है",
+    "script": "devanagari",
+    "category": "meeting",
+    "time_clarity": "partial",
+    "expected": {
+      "काम": "बॉस से प्रोजेक्ट डिस्कस करना है",
+      "समय": "कल दोपहर"
+    }
+  },
+  {
+    "id": 8,
+    "text": "रात नौ बजे पापा को फोन करना है",
+    "script": "devanagari",
+    "category": "call",
+    "time_clarity": "clear",
+    "expected": {
+      "काम": "पापा को फोन करना है",
+      "समय": "रात 9:00 बजे"
+    }
+  },
+  {
+    "id": 9,
+    "text": "कल सुबह 9:30 बजे डॉक्टर को कॉल करके अपॉइंटमेंट लेना है",
+    "script": "devanagari",
+    "category": "call",
+    "time_clarity": "clear",
+    "expected": {
+      "काम": "डॉक्टर को कॉल करके अपॉइंटमेंट लेना है",
+      "समय": "कल सुबह 9:30 बजे"
+    }
+  },
+  {
+    "id": 10,
+    "text": "आज शाम को राहुल को कॉल बैक करना है",
+    "script": "devanagari",
+    "category": "call",
+    "time_clarity": "partial",
+    "expected": {
+      "काम": "राहुल को कॉल बैक करना है",
+      "समय": "आज शाम"
+    }
+  },
+  {
+    "id": 11,
+    "text": "परसों शाम चार बजे बिजली का बिल भरना है",
+    "script": "devanagari",
+    "category": "bill",
+    "time_clarity": "clear",
+    "expected": {
+      "काम": "बिजली का बिल भरना है",
+      "समय": "परसों शाम 4:00 बजे"
+    }
+  },
+  {
+    "id": 12,
+    "text": "आज रात तक वाईफ़ाई का रिचार्ज करना है",
+    "script": "devanagari",
+    "category": "bill",
+    "time_clarity": "partial",
+    "expected": {
+      "काम": "वाईफ़ाई का रिचार्ज करना है",
+      "समय": "आज रात"
+    }
+  },
+  {
+    "id": 13,
+    "text": "शुक्रवार को 12 बजे क्रेडिट कार्ड का भुगतान करना है",
+    "script": "devanagari",
+    "category": "bill",
+    "time_clarity": "clear",
+    "expected": {
+      "काम": "क्रेडिट कार्ड का भुगतान करना है",
+      "समय": "शुक्रवार 12:00 बजे"
+    }
+  },
+  {
+    "id": 14,
+    "text": "कल सुबह छह बजे रेलवे स्टेशन के लिए निकलना है",
+    "script": "devanagari",
+    "category": "travel",
+    "time_clarity": "clear",
+    "expected": {
+      "काम": "रेलवे स्टेशन के लिए निकलना है",
+      "समय": "कल सुबह 6:00 बजे"
+    }
+  },
+  {
+    "id": 15,
+    "text": "रविवार को दोपहर में दिल्ली के लिए बस पकड़नी है",
+    "script": "devanagari",
+    "category": "travel",
+    "time_clarity": "partial",
+    "expected": {
+      "काम": "दिल्ली के लिए बस पकड़नी है",
+      "समय": "रविवार दोपहर"
+    }
+  },
+  {
+    "id": 16,
+    "text": "kal subah 8 baje sugar ki dawai leni hai",
+    "script": "roman",
+    "category": "medicine",
+    "time_clarity": "clear",
+    "expected": {
+      "काम": "sugar ki dawai leni hai",
+      "समय": "kal subah 8:00 baje"
+    }
+  },
+  {
+    "id": 17,
+    "text": "aaj shaam 6 baje design review meeting attend karni hai",
+    "script": "roman",
+    "category": "meeting",
+    "time_clarity": "clear",
+    "expected": {
+      "काम": "design review meeting attend karni hai",
+      "समय": "aaj shaam 6:00 baje"
+    }
+  },
+  {
+    "id": 18,
+    "text": "raat ko mummy ko call karna hai",
+    "script": "roman",
+    "category": "call",
+    "time_clarity": "partial",
+    "expected": {
+      "काम": "mummy ko call karna hai",
+      "समय": "raat"
+    }
+  },
+  {
+    "id": 19,
+    "text": "somwar subah 10 baje rent pay karna hai",
+    "script": "roman",
+    "category": "bill",
+    "time_clarity": "clear",
+    "expected": {
+      "काम": "rent pay karna hai",
+      "समय": "somwar subah 10:00 baje"
+    }
+  },
+  {
+    "id": 20,
+    "text": "parson shaam ko airport ke liye nikalna hai",
+    "script": "roman",
+    "category": "travel",
+    "time_clarity": "partial",
+    "expected": {
+      "काम": "airport ke liye nikalna hai",
+      "समय": "parson shaam"
+    }
+  }
+]

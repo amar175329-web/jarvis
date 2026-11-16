@@ -52,6 +52,14 @@ export const EVENT_TYPES = {
   'brain.confirm.needed': stored(z.object({ trace_id: z.string().min(1).max(100), power_id: z.string().max(100), channel: z.enum(['phone_voice', 'app_tap', 'app_voice']), needs_fingerprint: z.boolean() }).strict()),
   'brain.confirm.answered': stored(z.object({ trace_id: z.string().min(1).max(100), answer: z.enum(['yes', 'no', 'unclear', 'no_answer']), fingerprint_ok: z.boolean().optional() }).strict()),
   'brain.action.done': stored(z.object({ trace_id: z.string().min(1).max(100), power_id: z.string().max(100), ok: z.boolean(), error: z.string().max(500).optional() }).strict()),
+  // S07 CHAT events (LEAD accepted CR-2, 2026-11-13). Metadata only: never text, deltas, file refs or transcripts.
+  'chat.thread.created': stored(z.object({ thread_id: uuid }).strict()),
+  'chat.message.created': stored(z.object({ thread_id: uuid, message_id: uuid, role: z.enum(['user', 'assistant']) }).strict()),
+  'chat.message.started': stored(z.object({ thread_id: uuid, message_id: uuid }).strict()),
+  'chat.message.delta': stored(z.object({ thread_id: uuid, message_id: uuid, index: z.number().int().min(0) }).strict()),
+  'chat.message.completed': stored(z.object({ thread_id: uuid, message_id: uuid, chunk_count: z.number().int().min(0) }).strict()),
+  'chat.message.error': stored(z.object({ thread_id: uuid, message_id: uuid, code: z.string().min(1).max(80) }).strict()),
+  'chat.attachment.referenced': stored(z.object({ thread_id: uuid, message_id: uuid, attachment_id: uuid, mime_type: z.string().min(1).max(100) }).strict()),
   // S09 MEMORY events (LEAD accepted CR-2, 2026-11-11). Metadata only: NEVER memory text.
   'memory.updated': stored(z.object({ memory_id: z.string().uuid(), kind: z.string().max(40) }).strict()),
   'memory.forgotten': stored(z.object({ count: z.number().int().min(0), all: z.boolean().optional() }).strict()),

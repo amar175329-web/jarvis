@@ -1,0 +1,24 @@
+{
+  "id": "packages.chat",
+  "name": "chat",
+  "kind": "package",
+  "group": "packages",
+  "owner_squad": "S07",
+  "phase": 1,
+  "status": "built",
+  "does": "S07 chat message pipeline, privacy-aware model routing, provider adapters, threads and safe power hand-off",
+  "uses": [
+    "packages.brain",
+    "packages.memory",
+    "packages.model-gateway",
+    "packages.shared",
+    "packages.db"
+  ],
+  "knows": [
+    "packages.events",
+    "packages.harness",
+    "packages.voice"
+  ],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}
