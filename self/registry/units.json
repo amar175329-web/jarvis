@@ -1894,7 +1894,7 @@
     "status": "built",
     "does": "AI model gateway with budgets/usage controls plus a type-only audio adapter interface for future S13/S07 work",
     "autonomy_default": "L1",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "path": "packages/model-gateway"
   },
   {
@@ -1907,7 +1907,7 @@
     "status": "built",
     "does": "Local Gemma-3 model runner, 60s health ping to settings, models registry, and privacy router",
     "autonomy_default": "L0",
-    "version": "0.1.0",
+    "version": "0.2.1",
     "path": "packages/models"
   },
   {

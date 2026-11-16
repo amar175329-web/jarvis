@@ -35,10 +35,42 @@ export function toModelSpecs(r: Registry, now: Date): ModelSpec[] {
   const out: ModelSpec[] = [];
   for (const e of r.models) {
     if (e.status !== 'verified' || validateEntry(e).length) continue;
-    if (e.free) { out.push({ provider: e.provider, model: e.model, free: true, ...(e.limits?.rpd !== undefined ? { maxRequestsPerDay: e.limits.rpd } : {}) }); continue; }
-    const p = priceAt(e, now); if (!p) continue;
-    // Gateway has only in/out prices today: cache tokens are billed as normal input (over-estimate = safe). See CONTRACT REQUEST 2.
-    out.push({ provider: e.provider, model: e.model, price: { in_per_mtok: p.in, out_per_mtok: p.out } });
+    if (e.free) {
+      out.push({
+        provider: e.provider,
+        model: e.model,
+        free: true,
+        ...(e.limits?.rpd !== undefined ? { maxRequestsPerDay: e.limits.rpd } : {}),
+        ...(e.limits?.reset_tz ? { resetTz: e.limits.reset_tz } : {}),
+      });
+      continue;
+    }
+    const p = priceAt(e, now);
+    if (!p) continue;
+    out.push({
+      provider: e.provider,
+      model: e.model,
+      price: {
+        in_per_mtok: p.in,
+        out_per_mtok: p.out,
+        ...(p.cache_read !== undefined ? { cache_read_per_mtok: p.cache_read } : {}),
+        ...(p.cache_write_5m !== undefined ? { cache_write_5m_per_mtok: p.cache_write_5m } : {}),
+        ...(p.cache_write_1h !== undefined ? { cache_write_1h_per_mtok: p.cache_write_1h } : {}),
+        ...(p.bracket
+          ? {
+              bracket: {
+                over_prompt_tokens: p.bracket.over_prompt_tokens,
+                in_per_mtok: p.bracket.in,
+                out_per_mtok: p.bracket.out,
+                ...(p.bracket.cache_read !== undefined ? { cache_read_per_mtok: p.bracket.cache_read } : {}),
+                ...(p.bracket.cache_write_5m !== undefined ? { cache_write_5m_per_mtok: p.bracket.cache_write_5m } : {}),
+                ...(p.bracket.cache_write_1h !== undefined ? { cache_write_1h_per_mtok: p.bracket.cache_write_1h } : {}),
+              },
+            }
+          : {}),
+      },
+      ...(e.limits?.reset_tz ? { resetTz: e.limits.reset_tz } : {}),
+    });
   }
   return out;
 }
