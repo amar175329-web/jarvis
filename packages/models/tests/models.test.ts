@@ -146,3 +146,77 @@ test('CR-2: toModelSpecs correctly passes cache prices, resetTz, and bracket', (
   assert.equal(freeGemini.resetTz, 'America/Los_Angeles');
   assert.equal(freeGemini.maxRequestsPerDay, 500);
 });
+
+test('runChain: sends tier on each call, omits fallback_from on first slot (stripping stale base), and passes previous failed slot id to next', async () => {
+  const calls2: any[] = [];
+  const chain2 = [
+    { id: 'first/free-1', provider: 'p1', model: 'm1', tier: 'free' as const },
+    { id: 'second/almost-zero-1', provider: 'p2', model: 'm2', tier: 'almost_zero' as const },
+  ];
+  const baseWithStaleFallback = {
+    input: 'test',
+    maxOutputTokens: 100,
+    estimatedInputTokens: 50,
+    fallback_from: 'stale/previous-run-id',
+  };
+  const okResult = { ok: true as const, text: 'success', usage: { tokensIn: 10, tokensOut: 10, costUsd: 0 } };
+
+  // 2-slot chain where first fails and second succeeds
+  const r2 = await runChain(
+    {
+      call: async (r) => {
+        calls2.push(r);
+        if (r.provider === 'p1') return { ok: false, code: 'provider_error', message: 'down' };
+        return okResult;
+      },
+    },
+    chain2,
+    baseWithStaleFallback,
+    'normal',
+  );
+
+  assert.equal(r2.result.ok, true);
+  assert.equal(calls2.length, 2);
+  // Slot 1: tier passed, fallback_from omitted (stale base fallback_from stripped)
+  assert.equal(calls2[0].tier, 'free');
+  assert.equal('fallback_from' in calls2[0], false);
+  assert.equal(calls2[0].fallback_from, undefined);
+  // Slot 2: tier passed, fallback_from has first slot's id
+  assert.equal(calls2[1].tier, 'almost_zero');
+  assert.equal(calls2[1].fallback_from, 'first/free-1');
+
+  // 3-slot chain where first and second fail, third succeeds
+  const calls3: any[] = [];
+  const chain3 = [
+    { id: 'slot-1/free', provider: 'p1', model: 'm1', tier: 'free' as const },
+    { id: 'slot-2/almost-zero', provider: 'p2', model: 'm2', tier: 'almost_zero' as const },
+    { id: 'slot-3/paid-big', provider: 'p3', model: 'm3', tier: 'paid_big' as const },
+  ];
+
+  const r3 = await runChain(
+    {
+      call: async (r) => {
+        calls3.push(r);
+        if (r.provider === 'p1') return { ok: false, code: 'budget_exceeded', message: 'rate limit' };
+        if (r.provider === 'p2') return { ok: false, code: 'provider_error', message: 'timeout' };
+        return okResult;
+      },
+    },
+    chain3,
+    { input: 'chain3 test', maxOutputTokens: 50, estimatedInputTokens: 50 },
+    'normal',
+  );
+
+  assert.equal(r3.result.ok, true);
+  assert.equal(r3.usedTier, 'paid_big');
+  assert.equal(calls3.length, 3);
+  // Slot 1: tier passed, no fallback_from
+  assert.equal(calls3[0].tier, 'free');
+  assert.equal('fallback_from' in calls3[0], false);
+  // Slot 2: tier passed, fallback_from is slot 1
+  assert.equal(calls3[1].tier, 'almost_zero');
+  assert.equal(calls3[1].fallback_from, 'slot-1/free');
+  // Slot 3: tier passed, fallback_from is slot 2 (previous failed slot)
+  assert.equal(calls3[2].tier, 'paid_big');
+  assert.equal(calls3[2].fallback_from, 'slot-2/almost-zero');
+});

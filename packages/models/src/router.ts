@@ -65,11 +65,21 @@ export async function runChain(
   base: Omit<GatewayRequest, 'provider' | 'model'>, privacy: 'normal' | 'private',
 ): Promise<{ result: GatewayResult; tried: { id: string; code?: string }[]; usedTier?: Tier }> {
   const tried: { id: string; code?: string }[] = []; let last: GatewayResult = { ok: false, code: 'unknown_model', message: 'empty chain' };
+  const { fallback_from: _strippedFallback, ...cleanBase } = base;
+  let fallbackFrom: string | undefined = undefined;
   for (const s of chain) {
     if (privacy === 'private' && s.tier !== 'local') throw new Error('private data must never reach a cloud model');
-    const r = await gw.call({ ...base, provider: s.provider, model: s.model });
+    const req: GatewayRequest = {
+      ...cleanBase,
+      provider: s.provider,
+      model: s.model,
+      tier: s.tier,
+      ...(fallbackFrom !== undefined ? { fallback_from: fallbackFrom } : {}),
+    };
+    const r = await gw.call(req);
     if (r.ok) { tried.push({ id: s.id }); return { result: r, tried, usedTier: s.tier }; }
     tried.push({ id: s.id, code: r.code }); last = r;
+    fallbackFrom = s.id;
     if (r.code === 'kill_switch_on') break;
   }
   return { result: last, tried };
