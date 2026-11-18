@@ -432,3 +432,69 @@ test('CR-2: provider failure records zeroed tokens with tier and fallback_from p
   assert.equal(row.tier, 'almost_zero');
   assert.equal(row.fallback_from, 'gemini-free/gemini-3.5-flash-lite');
 });
+
+test('CR-2: Haiku 5.5 computeCost yields 0.00045 and supabaseUsageStore.record payload matches', async () => {
+  const haikuPrice = {
+    in_per_mtok: 0.10,
+    out_per_mtok: 0.50,
+    cache_read_per_mtok: 0.01,
+    cache_write_5m_per_mtok: 0.125,
+    cache_write_1h_per_mtok: 0.20,
+    bracket: {
+      over_prompt_tokens: 100000,
+      in_per_mtok: 0.50,
+      out_per_mtok: 2.50,
+      cache_read_per_mtok: 0.05,
+      cache_write_5m_per_mtok: 0.625,
+      cache_write_1h_per_mtok: 1.0,
+    },
+  };
+
+  // 1200 input, 400 output, 500 cache read, 1000 cache write 5m
+  const cost = computeCost(1200, 400, haikuPrice, {
+    cacheRead: 500,
+    cacheWrite5m: 1000,
+  });
+  assert.equal(cost, 0.00045);
+
+  // Fake fetch to verify supabaseUsageStore.record payload
+  const calls: any[] = [];
+  const fakeFetch = async (url: string, opts: any) => {
+    calls.push({ url, opts });
+    return { ok: true, json: async () => ({}) };
+  };
+  const store = supabaseUsageStore({
+    url: 'https://sb.test',
+    serviceKey: 'sec.ret',
+    ownerId: 'user-42',
+    fetch: fakeFetch as any,
+  });
+
+  await store.record({
+    provider: 'anthropic',
+    model: 'claude-haiku-5-5',
+    tokens_in: 1200,
+    tokens_out: 400,
+    cost_usd: cost,
+    ok: true,
+    cache_read_tokens: 500,
+    cache_write_tokens: 1000,
+    tier: 'almost_zero',
+    fallback_from: 'gemini-free/gemini-3.5-flash-lite',
+  });
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].opts.method, 'POST');
+  const body = JSON.parse(calls[0].opts.body);
+  assert.equal(body.owner_id, 'user-42');
+  assert.equal(body.provider, 'anthropic');
+  assert.equal(body.model, 'claude-haiku-5-5');
+  assert.equal(body.tokens_in, 1200);
+  assert.equal(body.tokens_out, 400);
+  assert.equal(body.cost_usd, 0.00045);
+  assert.equal(body.ok, true);
+  assert.equal(body.cache_read_tokens, 500);
+  assert.equal(body.cache_write_tokens, 1000);
+  assert.equal(body.tier, 'almost_zero');
+  assert.equal(body.fallback_from, 'gemini-free/gemini-3.5-flash-lite');
+});
