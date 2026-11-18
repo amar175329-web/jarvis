@@ -16,8 +16,10 @@ for (const d of dirs.sort()) {
   if (!pkg.scripts?.[script] || (only.length && !only.some((o) => d.includes(o)))) continue;
   const r = spawnSync('npm', ['run', script, '--silent'], { cwd: d, encoding: 'utf8' });
   const out = (r.stdout || '') + (r.stderr || '');
-  const m = /# pass (\d+)/.exec(out) ?? /(\d+) passed/.exec(out); const f = /# fail (\d+)/.exec(out) ?? /(\d+) failed/.exec(out);
-  const pass = m ? +m[1] : (out.match(/^PASS /gm) || []).length; const fail = (f ? +f[1] : 0) + (out.match(/^FAIL /gm) || []).length;
+  const m = /(?:#|ℹ)\s*pass\s*(\d+)/u.exec(out) ?? /(?:^|\n)\s*(\d+)\s+passed/u.exec(out);
+  const f = /(?:#|ℹ)\s*fail\s*(\d+)/u.exec(out);
+  const pass = m ? +m[1] : (out.match(/^PASS /gm) || []).length;
+  const fail = (f ? +f[1] : 0) + (out.match(/^FAIL /gm) || []).length;
   const ok = r.status === 0 && fail === 0; if (!ok) bad++;
   console.log(`\n===== ${d} · ${ok ? 'PASS' : 'FAIL'} =====\n${out.trim() || '(no test output)'}\n`);
   rows.push([d, ok ? 'PASS' : 'FAIL', `${pass} passed, ${fail} failed`]);

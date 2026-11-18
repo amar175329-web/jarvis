@@ -1,4 +1,5 @@
 // Registry rules: a model is usable only if it is VERIFIED (official source URL + checked date + price, or free with a request cap).
+import fs from 'node:fs';
 import type { ModelEntry, PriceUsd, Registry } from './types.ts';
 import type { ModelSpec, Provider } from '../../model-gateway/src/types.ts';
 
@@ -79,5 +80,10 @@ export function toModelSpecs(r: Registry, now: Date): ModelSpec[] {
 export function aliasProvider(base: Provider, name: string): Provider { return { ...base, name }; }
 export const PROVIDER_KEY_ENV: Record<string, string> = {
   anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', gemini: 'GEMINI_API_KEY',
-  'gemini-free': 'GEMINI_FREE_API_KEY', 'gemini-paid': 'GEMINI_PAID_API_KEY', local: 'LOCAL_MODEL_TOKEN',
+  'gemini-free': 'GEMINI_FREE_API_KEY', 'gemini-paid': 'GEMINI_PAID_API_KEY',
+  'opencode-zen': 'OPENCODE_API_KEY', local: 'LOCAL_MODEL_TOKEN',
 };
+
+export function loadDefaultRegistry(): Registry {
+  return JSON.parse(fs.readFileSync(new URL('../registry/models.json', import.meta.url), 'utf8'));
+}

@@ -19,6 +19,13 @@ import { emitEvent, supabaseEventStore } from '../../packages/events/src/index.t
 import { createLogger } from '../../packages/logging/src/index.ts';
 import { detectCareSignal } from '../../packages/chat/src/care.ts';
 import type { KillSwitchReader, KillState } from '../../shared/src/index.ts';
+import {
+  toModelSpecs,
+  loadDefaultRegistry,
+  type ModelEntry,
+  type Settings,
+  type Usage,
+} from '../../packages/models/src/index.ts';
 
 export type ChatOptions = {
   env?: Record<string, string | undefined>;
@@ -29,6 +36,10 @@ export type ChatOptions = {
   modelConfig?: ModelRouterConfig;
   usageStore?: UsageStore;
   models?: ModelSpec[];
+  registry?: ModelEntry[];
+  settings?: Settings;
+  usage?: Usage;
+  budget?: { perDayUsd?: number; perMonthUsd?: number };
 };
 
 type ChatConfig = {
@@ -524,6 +535,10 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
 
     const usageStore = options.usageStore ?? supabaseUsageStore({ url: c!.url, serviceKey: c!.serviceKey!, ownerId: owner.user.id, fetch: c?.fetcher });
 
+    const loadedRegistry = options.registry
+      ? { schema: 1, checked_on: new Date().toISOString(), note: '', models: options.registry }
+      : loadDefaultRegistry();
+
     const rawGateway = createGateway({
       kill: killReader,
       usage: usageStore,
@@ -532,16 +547,25 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
           if (provider === 'anthropic') return env.ANTHROPIC_API_KEY;
           if (provider === 'openai') return env.OPENAI_API_KEY;
           if (provider === 'gemini') return env.GEMINI_API_KEY;
+          if (provider === 'opencode-zen') return env.OPENCODE_API_KEY;
+          if (provider === 'local') return env.LOCAL_MODEL_TOKEN;
           return undefined;
         },
-        envName(provider) { return `${provider.toUpperCase()}_API_KEY`; },
+        envName(provider) {
+          if (provider === 'opencode-zen') return 'OPENCODE_API_KEY';
+          if (provider === 'local') return 'LOCAL_MODEL_TOKEN';
+          return `${provider.toUpperCase()}_API_KEY`;
+        },
       },
       providers: [],
-      models: options.models ?? [],
+      models: options.models ?? toModelSpecs(loadedRegistry, new Date()),
       budget: { perDayUsd, perMonthUsd },
       logger: createLogger({ service: 'chat', sinks: [] }),
     });
-    registerChatProviderAdapters(rawGateway, c?.fetcher);
+    registerChatProviderAdapters(rawGateway, c?.fetcher, {
+      url: env.LOCAL_MODEL_URL,
+      token: env.LOCAL_MODEL_TOKEN,
+    });
     gateway = rawGateway;
   }
 
@@ -587,12 +611,32 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
       };
 
       try {
+        const loadedRegistryForHandle = options.registry
+          ? { schema: 1, checked_on: new Date().toISOString(), note: '', models: options.registry }
+          : loadDefaultRegistry();
+
         const result = await handleMessage(chatInput, {
           killSwitch: killReader,
           threads: threadStore,
           ownerId: owner.user.id,
           gateway,
-          modelConfig,
+          modelConfig: options.modelConfig ?? EMPTY_MODEL_ROUTER_CONFIG,
+          registry: options.registry,
+          settings: options.settings ?? {
+            paidBigEnabled: false,
+            localHealthy: false,
+          },
+          usage: options.usage ?? { dayRequests: {}, dayUsd: 0, monthUsd: 0 },
+          budget: budgetConfigured ? { perDayUsd: Number(dayLimitInrStr) / inrPerUsd, perMonthUsd: Number(monthLimitInrStr) / inrPerUsd } : undefined,
+          now: new Date(),
+          hasKey: (provider) => {
+            if (provider === 'anthropic') return Boolean(env.ANTHROPIC_API_KEY);
+            if (provider === 'openai') return Boolean(env.OPENAI_API_KEY);
+            if (provider === 'gemini') return Boolean(env.GEMINI_API_KEY);
+            if (provider === 'opencode-zen') return Boolean(env.OPENCODE_API_KEY);
+            if (provider === 'local') return Boolean(env.LOCAL_MODEL_TOKEN);
+            return false;
+          },
           emit,
         });
 

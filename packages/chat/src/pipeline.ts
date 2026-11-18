@@ -5,7 +5,17 @@ import { classify } from '../../memory/src/classify.ts';
 import { findSecrets, redactText } from '../../memory/src/redact.ts';
 import { MEMORY_PURPOSES, type MemoryPurpose } from '../../memory/src/types.ts';
 import type { GatewayRequest, GatewayResult, ProviderChunkHandler } from '../../model-gateway/src/types.ts';
-import { routeModel, type ModelRouterConfig } from './model-router.ts';
+import { routeModel as routeModelLegacy, type ModelRouterConfig } from './model-router.ts';
+import {
+  routeModel as routeModelFromRegistry,
+  runChain,
+  runChainStream,
+  loadDefaultRegistry,
+  type ModelEntry,
+  type Settings as ModelSettings,
+  type Usage as ModelUsage,
+  type Task,
+} from '../../models/src/index.ts';
 import { buildSystemPrompt } from './system-prompt.ts';
 import { emitReply } from './stream.ts';
 import { CARE_REPLY, detectCareSignal } from './care.ts';
@@ -24,12 +34,19 @@ export type ChatDependencies = {
   /** Supplied by the authenticated server session, never from request JSON. */
   ownerId?: string;
   gateway: ChatGateway;
-  modelConfig: ModelRouterConfig;
+  modelConfig?: ModelRouterConfig;
   emit?: (event: ChatStreamEvent) => void | Promise<void>;
   onDecisionLog?: ChatDecisionLogger;
   chunkSize?: number;
   /** Configurable context budget for prior thread turns; defaults to a conservative 1,000 tokens. */
   historyTokenBudget?: number;
+  // S07 Round 5 models registry integration
+  registry?: ModelEntry[];
+  settings?: ModelSettings;
+  usage?: ModelUsage;
+  budget?: { perDayUsd?: number; perMonthUsd?: number };
+  now?: Date;
+  hasKey?: (provider: string) => boolean;
 };
 export type HandleMessageResult = {
   status: 'ok' | 'care' | 'killed' | 'needs_model' | 'input_needed' | 'failed';
@@ -53,7 +70,7 @@ function gatewayMessage(result: Extract<GatewayResult, { ok: false }>): string {
   switch (result.code) {
     case 'budget_exceeded': return (result.message && result.message.includes('budget set nahi hai')) ? 'Model budget set nahi hai. Settings mein MODEL_DAY_LIMIT_INR aur MODEL_MONTH_LIMIT_INR set karein.' : 'Aaj ki model budget limit poori ho gayi hai. Main abhi model call nahi kar raha.';
     case 'unpriced_model': return 'Is model ki keemat settings mein set nahi hai. Main keemat ka andaza nahi lagaunga; Amit/S13 ko ise configure karna hoga.';
-    case 'no_key': return 'Model ki server key configured nahi hai. Key sirf server environment mein set honi chahiye.';
+    case 'no_key': return result.message || 'Model ki server key configured nahi hai. Key sirf server environment mein set honi chahiye.';
     case 'kill_switch_on': return 'Kill switch ON hai, main kuch nahi kar raha.';
     case 'unknown_model':
     case 'unknown_provider': return 'Ye model/provider allow-list mein configured nahi hai. Main doosra model khud se nahi chununga.';
@@ -215,7 +232,146 @@ export async function handleMessage(input: ChatInput, deps: ChatDependencies): P
   await persistThreadMessage(deps, input, 'user', originalText);
 
   const taskType = input.taskType ?? 'chat';
-  const routed = routeModel({ depth: depth.depth, privateData, taskType, config: deps.modelConfig });
+  const attachmentNote = (input.attachments ?? []).map((attachment) => ({ fileName: attachment.fileName ?? null, mimeType: attachment.mimeType, sizeBytes: attachment.sizeBytes ?? null }));
+  const attachmentFrame = attachmentNote.length
+    ? `<<DATA source=file-reference: attachment metadata only>>\n${JSON.stringify(attachmentNote)}\n<<END DATA>>`
+    : '';
+  const userContent = [prompt.user, attachmentFrame].filter(Boolean).join('\n\n');
+  const estIn = Math.max(1, estimateTokens(prompt.system + userContent));
+
+  const shouldUseRegistry = Boolean(deps.registry);
+
+  if (shouldUseRegistry) {
+    const registry = deps.registry ?? loadDefaultRegistry().models;
+    const settings: ModelSettings = deps.settings ?? { paidBigEnabled: false, localHealthy: false };
+    const usage: ModelUsage = deps.usage ?? { dayRequests: {}, dayUsd: 0, monthUsd: 0 };
+    const budget = deps.budget ?? {};
+    const now = deps.now ?? new Date();
+    const hasKey = deps.hasKey ?? ((_p: string) => true);
+    const maxOut = depth.budget.maxOutputTokens;
+
+    const routed = routeModelFromRegistry({
+      task: (taskType as Task) || 'chat',
+      depth: depth.depth,
+      privacy: privateData ? 'private' : 'normal',
+      registry,
+      settings,
+      usage,
+      budget,
+      now,
+      estIn,
+      maxOut,
+      hasKey,
+    });
+
+    if (routed.status === 'refused') {
+      const decisionLog = routed.code === 'private_needs_local'
+        ? 'Private context detected; routed strictly to local model (cloud refused). Local model is not available.'
+        : `Model routing refused (${routed.code}): ${routed.message}`;
+      await deps.onDecisionLog?.(decisionLog);
+      return { status: 'needs_model', text: routed.message, decisionLog, depth };
+    }
+
+    const baseRequest: Omit<GatewayRequest, 'provider' | 'model'> = {
+      task: `chat:${taskType}:${depth.depth.toLowerCase()}`,
+      input: { system: prompt.system, user: userContent },
+      maxOutputTokens: depth.budget.maxOutputTokens,
+      estimatedInputTokens: estIn,
+    };
+
+    let modelResult: GatewayResult;
+    if (deps.gateway.callStream) {
+      const emit = deps.emit ?? (() => undefined);
+      let started = false;
+      let index = 0;
+      const start = async () => {
+        if (started) return;
+        started = true;
+        await emit({ type: 'chat.message.started', threadId: input.threadId, messageId: input.messageId });
+      };
+      const onChunk: ProviderChunkHandler = async (delta) => {
+        await start();
+        await emit({ type: 'chat.message.delta', threadId: input.threadId, messageId: input.messageId, index: index++, text: delta });
+      };
+
+      const chainRes = await runChainStream(
+        { callStream: (r, h) => deps.gateway.callStream!(r, h) },
+        routed.chain,
+        baseRequest,
+        privateData ? 'private' : 'normal',
+        onChunk,
+      );
+      modelResult = chainRes.result;
+      if (!modelResult.ok) {
+        await emit({ type: 'chat.message.error', threadId: input.threadId, messageId: input.messageId, code: modelResult.code });
+        const decisionLog = `Model gateway refused/failed (${modelResult.code}); no memory save or power ran.`;
+        await deps.onDecisionLog?.(decisionLog);
+        return { status: 'failed', text: gatewayMessage(modelResult), decisionLog, depth, modelError: modelResult.code };
+      }
+      if (!started) {
+        await start();
+        if (modelResult.text) await onChunk(modelResult.text);
+      }
+      await emit({ type: 'chat.message.completed', threadId: input.threadId, messageId: input.messageId });
+    } else {
+      if (!deps.gateway.call) throw new Error('ChatGateway requires callStream or call');
+      const chainRes = await runChain(
+        { call: (r) => deps.gateway.call!(r) },
+        routed.chain,
+        baseRequest,
+        privateData ? 'private' : 'normal',
+      );
+      modelResult = chainRes.result;
+      if (!modelResult.ok) {
+        const decisionLog = `Model gateway refused/failed (${modelResult.code}); no memory save or power ran.`;
+        await deps.onDecisionLog?.(decisionLog);
+        await deps.emit?.({ type: 'chat.message.error', threadId: input.threadId, messageId: input.messageId, code: modelResult.code });
+        return { status: 'failed', text: gatewayMessage(modelResult), decisionLog, depth, modelError: modelResult.code };
+      }
+      await emitReply(modelResult.text, deps.emit ?? (() => undefined), { threadId: input.threadId, messageId: input.messageId }, deps.chunkSize ?? 48);
+    }
+
+    await persistThreadMessage(deps, input, 'assistant', modelResult.text);
+
+    let memorySaved: boolean | undefined;
+    let memoryNotice: string | undefined;
+    if (input.remember?.explicit && deps.memory) {
+      const save = await deps.memory.remember({
+        text: originalText,
+        kind: input.remember.kind ?? 'fact',
+        title: input.remember.title,
+        tags: input.remember.tags,
+        origin: 'chat',
+        actor: 'jarvis',
+        explicit: true,
+        why: 'Amit ne chat mein yaad rakhne ko kaha',
+      });
+      memorySaved = save.verdict.verdict === 'save';
+      memoryNotice = save.verdict.userMessage || undefined;
+    } else if (input.remember?.explicit && !deps.memory) {
+      memoryNotice = 'Memory service abhi connected nahi hai; main ise save nahi kar paya.';
+    }
+
+    const dataNote = input.data?.length
+      ? (dataScans.some((scan) => scan.flagged) ? 'Possible instruction-like text stayed inside DATA boundaries.' : 'External content stayed inside DATA boundaries.')
+      : 'No external data was supplied.';
+    const historyNote = selectedHistory.messages.length
+      ? `Included ${selectedHistory.messages.length} prior thread messages within ${deps.historyTokenBudget ?? 1000} token history budget; T2 history ${selectedHistory.includedPrivate ? 'used only for typed purpose' : 'excluded without purpose'}.`
+      : 'No eligible prior thread messages were included.';
+    const noticeStr = routed.notices.length ? ` Notices: ${routed.notices.join(' ')}` : '';
+    const decisionLog = [
+      `${depth.depth} selected (${depth.reason}); routed to ${routed.chain.map((c) => c.id).join(' -> ')}.${noticeStr}`,
+      dataNote,
+      historyNote,
+      privateRecall ? 'T2 memory used for a typed purpose; private text omitted from logs.' : 'Default memory recall remained T1-only.',
+      input.remember?.explicit ? 'Explicit memory request passed only through MemoryService policy.' : 'No automatic memory write.',
+      'No power was executed by the chat pipeline.',
+    ].join(' ');
+    await deps.onDecisionLog?.(decisionLog);
+    return { status: 'ok', text: modelResult.text, decisionLog, depth, memorySaved, memoryNotice };
+  }
+
+  const routed = routeModelLegacy({ depth: depth.depth, privateData, taskType, config: deps.modelConfig! });
   if (routed.status === 'ask') {
     const decisionLog = 'Private context detected; no free/unknown model was called because an approved paid/safe slot is missing.';
     await deps.onDecisionLog?.(decisionLog);
@@ -227,11 +383,6 @@ export async function handleMessage(input: ChatInput, deps: ChatDependencies): P
     return { status: 'needs_model', text: routed.message, decisionLog, depth };
   }
 
-  const attachmentNote = (input.attachments ?? []).map((attachment) => ({ fileName: attachment.fileName ?? null, mimeType: attachment.mimeType, sizeBytes: attachment.sizeBytes ?? null }));
-  const attachmentFrame = attachmentNote.length
-    ? `<<DATA source=file-reference: attachment metadata only>>\n${JSON.stringify(attachmentNote)}\n<<END DATA>>`
-    : '';
-  const userContent = [prompt.user, attachmentFrame].filter(Boolean).join('\n\n');
   const request: GatewayRequest = {
     provider: routed.slot.provider,
     model: routed.slot.model,

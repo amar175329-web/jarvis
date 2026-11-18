@@ -1,7 +1,7 @@
 // Router: task x depth x privacy -> ordered chain. Private -> LOCAL only. paid_big only when Amit enabled it. Never silent paid_big.
 import type { Depth, ModelEntry, SizeClass, Task, Tier } from './types.ts';
 import { priceAt, validateEntry } from './registry.ts';
-import type { GatewayRequest, GatewayResult } from '../../model-gateway/src/types.ts';
+import type { GatewayRequest, GatewayResult, ProviderChunkHandler } from '../../model-gateway/src/types.ts';
 
 export type Settings = { paidBigEnabled: boolean; localHealthy: boolean };
 export type Usage = { dayRequests: Record<string, number>; dayUsd: number; monthUsd: number };
@@ -30,10 +30,11 @@ function usable(e: ModelEntry, i: RouteInput): boolean {
   if (e.max_prompt_tokens !== undefined && i.estIn > e.max_prompt_tokens) return false;
   if (e.context_window !== undefined && i.estIn + i.maxOut > e.context_window) return false;
   if (e.free) { const cap = e.limits?.rpd; return cap === undefined || (i.usage.dayRequests[e.id] ?? 0) < cap; }
+  if (i.budget.perDayUsd === undefined || i.budget.perMonthUsd === undefined) return false; // fail-closed: paid models require configured budget
   const p = priceAt(e, i.now); if (!p) return false;
   const worst = (i.estIn * p.in + i.maxOut * p.out) / 1e6;
-  if (i.budget.perDayUsd !== undefined && i.usage.dayUsd + worst > i.budget.perDayUsd) return false;
-  if (i.budget.perMonthUsd !== undefined && i.usage.monthUsd + worst > i.budget.perMonthUsd) return false;
+  if (i.usage.dayUsd + worst > i.budget.perDayUsd) return false;
+  if (i.usage.monthUsd + worst > i.budget.perMonthUsd) return false;
   return true;
 }
 const slot = (e: ModelEntry): Slot => ({ id: e.id, provider: e.provider, model: e.model, tier: e.tier });
@@ -84,3 +85,59 @@ export async function runChain(
   }
   return { result: last, tried };
 }
+
+/**
+ * Tries the chain in order through the streaming gateway. Stops at kill switch.
+ * Fallback to the next slot in the chain is allowed ONLY BEFORE the first delta has been emitted.
+ * Throws if private data would reach a non-local slot.
+ */
+export async function runChainStream(
+  gw: { callStream(r: GatewayRequest, onChunk: ProviderChunkHandler): Promise<GatewayResult> },
+  chain: Slot[],
+  base: Omit<GatewayRequest, 'provider' | 'model'>,
+  privacy: 'normal' | 'private',
+  onChunk: ProviderChunkHandler,
+): Promise<{ result: GatewayResult; tried: { id: string; code?: string }[]; usedTier?: Tier }> {
+  const tried: { id: string; code?: string }[] = [];
+  let last: GatewayResult = { ok: false, code: 'unknown_model', message: 'empty chain' };
+  const { fallback_from: _strippedFallback, ...cleanBase } = base;
+  let fallbackFrom: string | undefined = undefined;
+
+  for (const s of chain) {
+    if (privacy === 'private' && s.tier !== 'local') {
+      throw new Error('private data must never reach a cloud model');
+    }
+    const req: GatewayRequest = {
+      ...cleanBase,
+      provider: s.provider,
+      model: s.model,
+      tier: s.tier,
+      ...(fallbackFrom !== undefined ? { fallback_from: fallbackFrom } : {}),
+    };
+
+    let deltaEmitted = false;
+    const trackingChunkHandler: ProviderChunkHandler = async (delta) => {
+      deltaEmitted = true;
+      await onChunk(delta);
+    };
+
+    const r = await gw.callStream(req, trackingChunkHandler);
+    if (r.ok) {
+      tried.push({ id: s.id });
+      return { result: r, tried, usedTier: s.tier };
+    }
+
+    tried.push({ id: s.id, code: r.code });
+    last = r;
+    fallbackFrom = s.id;
+
+    if (r.code === 'kill_switch_on') break;
+
+    // Spec shart 11 / Requirement 9(h): streaming: fallback sirf pehle delta se pehle.
+    if (deltaEmitted) {
+      break;
+    }
+  }
+  return { result: last, tried };
+}
+

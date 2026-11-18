@@ -323,10 +323,10 @@ test('Anthropic adapter forwards SSE deltas immediately to the gateway callback'
   assert.deepEqual(chunks, ['live-', 'token']);
 });
 
-test('chat registers all three provider adapters without assigning models or prices', () => {
+test('chat registers all provider adapters without assigning models or prices', () => {
   const registered: string[] = [];
   const names = registerChatProviderAdapters({ registerProvider(provider) { registered.push(provider.name); } }, async () => sse());
-  assert.deepEqual(names, ['anthropic', 'openai', 'gemini']);
+  assert.deepEqual(names, ['anthropic', 'openai', 'gemini', 'opencode-zen', 'local']);
   assert.deepEqual(registered, names);
   assert.deepEqual(EMPTY_MODEL_ROUTER_CONFIG, { fast: null, normal: null, deep: null, private: null, tasks: {} });
 });
