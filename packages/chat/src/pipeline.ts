@@ -239,7 +239,9 @@ export async function handleMessage(input: ChatInput, deps: ChatDependencies): P
   const userContent = [prompt.user, attachmentFrame].filter(Boolean).join('\n\n');
   const estIn = Math.max(1, estimateTokens(prompt.system + userContent));
 
-  const shouldUseRegistry = Boolean(deps.registry);
+  // Legacy modelConfig path is only used when a test intentionally provides deps.modelConfig.
+  // In production (and whenever modelConfig is omitted), the registry router is ALWAYS used.
+  const shouldUseRegistry = !deps.modelConfig;
 
   if (shouldUseRegistry) {
     const registry = deps.registry ?? loadDefaultRegistry().models;

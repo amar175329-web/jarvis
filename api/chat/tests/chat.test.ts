@@ -31,6 +31,9 @@ const mockFetch: typeof fetch = async (input, init) => {
   if (url.includes('/rest/v1/system_state')) {
     return Response.json([{ kill: false, epoch: 1 }]);
   }
+  if (url.includes('/rest/v1/model_usage')) {
+    return Response.json([]);
+  }
   return new Response(null, { status: 404 });
 };
 
@@ -1083,6 +1086,248 @@ test('P13 8(d): messages.list does not return pending rows', async () => {
   const completedFound = returnedMsgs.find((m: any) => m.content === 'Completed answer');
   assert.ok(completedFound, 'completed message must be in messages.list');
 });
+
+// -----------------------------------------------------------------------------
+// P18 Requirements: Production Chat Wiring, Default DeepSeek, Usage Store
+// -----------------------------------------------------------------------------
+
+test('P18 Requirement 2: zero-option production flow (no registry/modelConfig) calls opencode-zen model and streams response', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+
+  const prodEnv = {
+    ...env,
+    OPENCODE_API_KEY: 'test-opencode-zen-key',
+    MODEL_DAY_LIMIT_INR: '100',
+    MODEL_MONTH_LIMIT_INR: '1000',
+    INR_PER_USD: '90',
+  };
+
+  const calls: any[] = [];
+  const mockGateway: ChatGateway = {
+    async callStream(req, onChunk) {
+      calls.push(req);
+      await onChunk('DeepSeek production response');
+      return { ok: true, text: 'DeepSeek production response', usage: { tokensIn: 10, tokensOut: 5, costUsd: 0 } };
+    },
+  };
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'Namaste Jarvis' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env: prodEnv, fetch: mockFetch, threadStore: store, killReader });
+  assert.equal(sendRes.status, 200);
+  const messageId = (await sendRes.json()).data.message_id;
+
+  const streamReq = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+
+  // Zero options: NO options.registry and NO options.modelConfig!
+  const streamRes = await messagesStreamHandler(streamReq, {
+    env: prodEnv,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    gateway: mockGateway,
+  });
+
+  assert.equal(streamRes.status, 200);
+  const streamText = await streamRes.text();
+  assert.equal(calls.length, 1, 'gateway must be called exactly once in zero-option production flow');
+  assert.equal(calls[0].provider, 'opencode-zen', 'provider must be opencode-zen');
+  assert.equal(calls[0].model, 'deepseek-v4.1-flash-free', 'Amit default model must be deepseek-v4.1-flash-free');
+  assert.ok(streamText.includes('DeepSeek production response'), 'response text must be streamed');
+
+  const assistantMsgs = store.messages.filter((m) => m.role === 'assistant' && m.replyToMessageId === messageId);
+  assert.equal(assistantMsgs.length, 1);
+  assert.equal(assistantMsgs[0].content, 'DeepSeek production response');
+  assert.equal(assistantMsgs[0].status, 'done');
+});
+
+test('P18 Requirement 2: production flow without OPENCODE_API_KEY returns clear message with calls = 0', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+
+  const noKeyEnv = {
+    ...env,
+    // OPENCODE_API_KEY is deliberately omitted
+    MODEL_DAY_LIMIT_INR: '100',
+    MODEL_MONTH_LIMIT_INR: '1000',
+    INR_PER_USD: '90',
+  };
+
+  let modelCalls = 0;
+  const mockGateway: ChatGateway = {
+    async callStream() {
+      modelCalls++;
+      return { ok: true, text: 'should not be called' };
+    },
+  };
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'namaste' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env: noKeyEnv, fetch: mockFetch, threadStore: store, killReader });
+  const messageId = (await sendRes.json()).data.message_id;
+
+  const streamReq = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+
+  const streamRes = await messagesStreamHandler(streamReq, {
+    env: noKeyEnv,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    gateway: mockGateway,
+  });
+
+  assert.equal(streamRes.status, 200);
+  const text = await streamRes.text();
+  assert.equal(modelCalls, 0, 'gateway must not be called when OPENCODE_API_KEY is missing');
+  assert.ok(text.includes('OPENCODE_API_KEY set karo'), 'must provide clear OPENCODE_API_KEY set karo guidance');
+
+  const assistantMsgs = store.messages.filter((m) => m.role === 'assistant');
+  assert.equal(assistantMsgs.length, 0, 'refused model error must not be saved to DB');
+});
+
+test('P18 Requirement 3: usage store failure fails-closed with calls = 0', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+
+  const prodEnv = {
+    ...env,
+    OPENCODE_API_KEY: 'test-opencode-zen-key',
+    MODEL_DAY_LIMIT_INR: '100',
+    MODEL_MONTH_LIMIT_INR: '1000',
+    INR_PER_USD: '90',
+  };
+
+  let modelCalls = 0;
+  const mockGateway: ChatGateway = {
+    async callStream() {
+      modelCalls++;
+      return { ok: true, text: 'should not be called' };
+    },
+  };
+
+  const failingUsageStore: any = {
+    async summary() {
+      throw new Error('Supabase model_usage table connection failure');
+    },
+    async record() {},
+  };
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'namaste' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env: prodEnv, fetch: mockFetch, threadStore: store, killReader });
+  const messageId = (await sendRes.json()).data.message_id;
+
+  const streamReq = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+
+  const streamRes = await messagesStreamHandler(streamReq, {
+    env: prodEnv,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    gateway: mockGateway,
+    usageStore: failingUsageStore,
+  });
+
+  assert.equal(streamRes.status, 200);
+  const text = await streamRes.text();
+  assert.equal(modelCalls, 0, 'gateway must not be called when usage store fails');
+  assert.ok(text.includes('fail-closed') || text.includes('unreadable'), 'must report fail-closed error');
+});
+
+test('P18 Requirement 3 & 4: router uses real usage numbers from usage store to skip exhausted models', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+
+  const prodEnv = {
+    ...env,
+    OPENCODE_API_KEY: 'test-opencode-zen-key',
+    MODEL_DAY_LIMIT_INR: '100',
+    MODEL_MONTH_LIMIT_INR: '1000',
+    INR_PER_USD: '90',
+  };
+
+  const calls: any[] = [];
+  const mockGateway: ChatGateway = {
+    async callStream(req, onChunk) {
+      calls.push(req);
+      await onChunk('Fallback slot response');
+      return { ok: true, text: 'Fallback slot response', usage: { tokensIn: 10, tokensOut: 5, costUsd: 0 } };
+    },
+  };
+
+  // UsageStore reports that deepseek-v4.1-flash-free (limit 100) has reached its 100 requests limit
+  const exhaustedDeepSeekStore: any = {
+    async summary() {
+      return {
+        dayUsd: 0,
+        monthUsd: 0,
+        modelDayUsd: {},
+        modelDayRequests: {
+          'opencode-zen/deepseek-v4.1-flash-free': 100,
+        },
+      };
+    },
+    async record() {},
+  };
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'exhausted limit test' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env: prodEnv, fetch: mockFetch, threadStore: store, killReader });
+  const messageId = (await sendRes.json()).data.message_id;
+
+  const streamReq = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: messageId }),
+  });
+
+  const streamRes = await messagesStreamHandler(streamReq, {
+    env: prodEnv,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    gateway: mockGateway,
+    usageStore: exhaustedDeepSeekStore,
+  });
+
+  assert.equal(streamRes.status, 200);
+  const streamText = await streamRes.text();
+  assert.equal(calls.length, 1);
+  // Next free no-training model in chain is beam-free (rank 2, trains_on_inputs: false)
+  assert.equal(calls[0].provider, 'opencode-zen');
+  assert.equal(calls[0].model, 'beam-free', 'router must skip exhausted DeepSeek and select next free no-training model');
+  assert.ok(streamText.includes('Fallback slot response'));
+});
+
 
 
 

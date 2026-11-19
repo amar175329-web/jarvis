@@ -220,3 +220,28 @@ test('runChain: sends tier on each call, omits fallback_from on first slot (stri
   assert.equal(calls3[2].tier, 'paid_big');
   assert.equal(calls3[2].fallback_from, 'slot-2/almost-zero');
 });
+
+test('P18 Requirement 4: normal chat with opencode-zen selects DeepSeek as first model, followed by no-training free models, and training models last', () => {
+  const r = routeModel(input({
+    hasKey: (p) => p === 'opencode-zen',
+    task: 'chat',
+    depth: 'NORMAL',
+  }));
+  assert.equal(r.status, 'routed');
+  if (r.status !== 'routed') return;
+
+  // First model must be Amit's DeepSeek free model
+  assert.equal(r.chain[0].id, 'opencode-zen/deepseek-v4.1-flash-free');
+  assert.equal(r.chain[0].provider, 'opencode-zen');
+  assert.equal(r.chain[0].model, 'deepseek-v4.1-flash-free');
+  assert.equal(r.chain[0].tier, 'free');
+
+  // Verify full ordering: no-training models before training models
+  const modelEntries = r.chain.map((s) => reg.models.find((m) => m.id === s.id)!);
+  const freeModels = modelEntries.filter((m) => m.tier === 'free');
+
+  const firstTrainingIdx = freeModels.findIndex((m) => m.data_use?.trains_on_inputs === true);
+  const lastNoTrainingIdx = freeModels.findLastIndex((m) => m.data_use?.trains_on_inputs === false);
+
+  assert.ok(firstTrainingIdx > lastNoTrainingIdx, 'all trains_on_inputs=false free models must come before trains_on_inputs=true free models');
+});

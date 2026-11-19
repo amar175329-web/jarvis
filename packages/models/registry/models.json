@@ -493,62 +493,6 @@
       "notes": "REMOVED from the private route: makes up times and tasks (4/35 correct on strict test). Kept only as a record."
     },
     {
-      "id": "opencode-zen/big-pickle",
-      "provider": "opencode-zen",
-      "adapter": "openai",
-      "model": "big-pickle",
-      "tier": "free",
-      "size": "big",
-      "privacy": "cloud",
-      "enabled": true,
-      "free": true,
-      "limits": {
-        "rpd": 100,
-        "rpm": 10,
-        "reset_tz": "UTC",
-        "status": "third_party_unverified",
-        "source_url": "https://opencode.ai/docs/console/models"
-      },
-      "data_use": {
-        "trains_on_inputs": true,
-        "source_url": "https://opencode.ai/docs/console/models",
-        "note": "Official docs: During free period, collected data may be used to improve the model. Non-private text only."
-      },
-      "source": {
-        "url": "https://opencode.ai/docs/console/models",
-        "checked_on": "2026-11-18"
-      },
-      "status": "verified"
-    },
-    {
-      "id": "opencode-zen/mimo-v2.6-flash-free",
-      "provider": "opencode-zen",
-      "adapter": "openai",
-      "model": "mimo-v2.6-flash-free",
-      "tier": "free",
-      "size": "small",
-      "privacy": "cloud",
-      "enabled": true,
-      "free": true,
-      "limits": {
-        "rpd": 100,
-        "rpm": 10,
-        "reset_tz": "UTC",
-        "status": "third_party_unverified",
-        "source_url": "https://opencode.ai/docs/console/models"
-      },
-      "data_use": {
-        "trains_on_inputs": true,
-        "source_url": "https://opencode.ai/docs/console/models",
-        "note": "Official docs: Free period used to collect feedback and improve model. Non-private text only."
-      },
-      "source": {
-        "url": "https://opencode.ai/docs/console/models",
-        "checked_on": "2026-11-18"
-      },
-      "status": "verified"
-    },
-    {
       "id": "opencode-zen/deepseek-v4.1-flash-free",
       "provider": "opencode-zen",
       "adapter": "openai",
@@ -574,91 +518,8 @@
         "url": "https://opencode.ai/docs/console/models",
         "checked_on": "2026-11-18"
       },
-      "status": "verified"
-    },
-    {
-      "id": "opencode-zen/longcat-2.5-free",
-      "provider": "opencode-zen",
-      "adapter": "openai",
-      "model": "longcat-2.5-free",
-      "tier": "free",
-      "size": "big",
-      "privacy": "cloud",
-      "enabled": true,
-      "free": true,
-      "limits": {
-        "rpd": 100,
-        "rpm": 10,
-        "reset_tz": "UTC",
-        "status": "official",
-        "source_url": "https://opencode.ai/docs/console/models"
-      },
-      "data_use": {
-        "trains_on_inputs": false,
-        "source_url": "https://opencode.ai/docs/console/models",
-        "note": "Official docs: Zero-retention policy and does not use data for training. Hosted in China."
-      },
-      "source": {
-        "url": "https://opencode.ai/docs/console/models",
-        "checked_on": "2026-11-18"
-      },
-      "status": "verified"
-    },
-    {
-      "id": "opencode-zen/iceman-free",
-      "provider": "opencode-zen",
-      "adapter": "openai",
-      "model": "iceman-free",
-      "tier": "free",
-      "size": "big",
-      "privacy": "cloud",
-      "enabled": true,
-      "free": true,
-      "limits": {
-        "rpd": 100,
-        "rpm": 10,
-        "reset_tz": "UTC",
-        "status": "third_party_unverified",
-        "source_url": "https://opencode.ai/docs/console/models"
-      },
-      "data_use": {
-        "trains_on_inputs": true,
-        "source_url": "https://opencode.ai/docs/console/models",
-        "note": "Official docs: Retained and used to improve model."
-      },
-      "source": {
-        "url": "https://opencode.ai/docs/console/models",
-        "checked_on": "2026-11-18"
-      },
-      "status": "verified"
-    },
-    {
-      "id": "opencode-zen/inkling-2-small-free",
-      "provider": "opencode-zen",
-      "adapter": "openai",
-      "model": "inkling-2-small-free",
-      "tier": "free",
-      "size": "small",
-      "privacy": "cloud",
-      "enabled": true,
-      "free": true,
-      "limits": {
-        "rpd": 100,
-        "rpm": 10,
-        "reset_tz": "UTC",
-        "status": "third_party_unverified",
-        "source_url": "https://opencode.ai/docs/console/models"
-      },
-      "data_use": {
-        "trains_on_inputs": true,
-        "source_url": "https://opencode.ai/docs/console/models",
-        "note": "Official docs: Retained and may be used for model training."
-      },
-      "source": {
-        "url": "https://opencode.ai/docs/console/models",
-        "checked_on": "2026-11-18"
-      },
-      "status": "verified"
+      "status": "verified",
+      "rank": 1
     },
     {
       "id": "opencode-zen/beam-free",
@@ -686,41 +547,14 @@
         "url": "https://opencode.ai/docs/console/models",
         "checked_on": "2026-11-18"
       },
-      "status": "verified"
+      "status": "verified",
+      "rank": 2
     },
     {
-      "id": "opencode-zen/flint-40b-free",
+      "id": "opencode-zen/longcat-2.5-free",
       "provider": "opencode-zen",
       "adapter": "openai",
-      "model": "flint-40b-free",
-      "tier": "free",
-      "size": "small",
-      "privacy": "cloud",
-      "enabled": true,
-      "free": true,
-      "limits": {
-        "rpd": 100,
-        "rpm": 10,
-        "reset_tz": "UTC",
-        "status": "third_party_unverified",
-        "source_url": "https://opencode.ai/docs/console/models"
-      },
-      "data_use": {
-        "trains_on_inputs": true,
-        "source_url": "https://opencode.ai/docs/console/models",
-        "note": "Official docs: Collected data may be used to improve model. Retained 30 days."
-      },
-      "source": {
-        "url": "https://opencode.ai/docs/console/models",
-        "checked_on": "2026-11-18"
-      },
-      "status": "verified"
-    },
-    {
-      "id": "opencode-zen/nemotron-3.5-super-vl-free",
-      "provider": "opencode-zen",
-      "adapter": "openai",
-      "model": "nemotron-3.5-super-vl-free",
+      "model": "longcat-2.5-free",
       "tier": "free",
       "size": "big",
       "privacy": "cloud",
@@ -730,47 +564,20 @@
         "rpd": 100,
         "rpm": 10,
         "reset_tz": "UTC",
-        "status": "third_party_unverified",
+        "status": "official",
         "source_url": "https://opencode.ai/docs/console/models"
       },
       "data_use": {
-        "trains_on_inputs": true,
+        "trains_on_inputs": false,
         "source_url": "https://opencode.ai/docs/console/models",
-        "note": "Official docs: Logged to improve NVIDIA products. Do not submit personal data."
+        "note": "Official docs: Zero-retention policy and does not use data for training. Hosted in China."
       },
       "source": {
         "url": "https://opencode.ai/docs/console/models",
         "checked_on": "2026-11-18"
       },
-      "status": "verified"
-    },
-    {
-      "id": "opencode-zen/nemotron-3.5-lightning-free",
-      "provider": "opencode-zen",
-      "adapter": "openai",
-      "model": "nemotron-3.5-lightning-free",
-      "tier": "free",
-      "size": "small",
-      "privacy": "cloud",
-      "enabled": true,
-      "free": true,
-      "limits": {
-        "rpd": 100,
-        "rpm": 10,
-        "reset_tz": "UTC",
-        "status": "third_party_unverified",
-        "source_url": "https://opencode.ai/docs/console/models"
-      },
-      "data_use": {
-        "trains_on_inputs": true,
-        "source_url": "https://opencode.ai/docs/console/models",
-        "note": "Official docs: Logged to improve NVIDIA products. Do not submit personal data."
-      },
-      "source": {
-        "url": "https://opencode.ai/docs/console/models",
-        "checked_on": "2026-11-18"
-      },
-      "status": "verified"
+      "status": "verified",
+      "rank": 3
     },
     {
       "id": "opencode-zen/hy4-flash-free",
@@ -798,7 +605,211 @@
         "url": "https://opencode.ai/docs/console/models",
         "checked_on": "2026-11-18"
       },
-      "status": "verified"
+      "status": "verified",
+      "rank": 4
+    },
+    {
+      "id": "opencode-zen/big-pickle",
+      "provider": "opencode-zen",
+      "adapter": "openai",
+      "model": "big-pickle",
+      "tier": "free",
+      "size": "big",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": true,
+      "limits": {
+        "rpd": 100,
+        "rpm": 10,
+        "reset_tz": "UTC",
+        "status": "third_party_unverified",
+        "source_url": "https://opencode.ai/docs/console/models"
+      },
+      "data_use": {
+        "trains_on_inputs": true,
+        "source_url": "https://opencode.ai/docs/console/models",
+        "note": "Official docs: During free period, collected data may be used to improve the model. Non-private text only."
+      },
+      "source": {
+        "url": "https://opencode.ai/docs/console/models",
+        "checked_on": "2026-11-18"
+      },
+      "status": "verified",
+      "rank": 10
+    },
+    {
+      "id": "opencode-zen/mimo-v2.6-flash-free",
+      "provider": "opencode-zen",
+      "adapter": "openai",
+      "model": "mimo-v2.6-flash-free",
+      "tier": "free",
+      "size": "small",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": true,
+      "limits": {
+        "rpd": 100,
+        "rpm": 10,
+        "reset_tz": "UTC",
+        "status": "third_party_unverified",
+        "source_url": "https://opencode.ai/docs/console/models"
+      },
+      "data_use": {
+        "trains_on_inputs": true,
+        "source_url": "https://opencode.ai/docs/console/models",
+        "note": "Official docs: Free period used to collect feedback and improve model. Non-private text only."
+      },
+      "source": {
+        "url": "https://opencode.ai/docs/console/models",
+        "checked_on": "2026-11-18"
+      },
+      "status": "verified",
+      "rank": 11
+    },
+    {
+      "id": "opencode-zen/iceman-free",
+      "provider": "opencode-zen",
+      "adapter": "openai",
+      "model": "iceman-free",
+      "tier": "free",
+      "size": "big",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": true,
+      "limits": {
+        "rpd": 100,
+        "rpm": 10,
+        "reset_tz": "UTC",
+        "status": "third_party_unverified",
+        "source_url": "https://opencode.ai/docs/console/models"
+      },
+      "data_use": {
+        "trains_on_inputs": true,
+        "source_url": "https://opencode.ai/docs/console/models",
+        "note": "Official docs: Retained and used to improve model."
+      },
+      "source": {
+        "url": "https://opencode.ai/docs/console/models",
+        "checked_on": "2026-11-18"
+      },
+      "status": "verified",
+      "rank": 12
+    },
+    {
+      "id": "opencode-zen/inkling-2-small-free",
+      "provider": "opencode-zen",
+      "adapter": "openai",
+      "model": "inkling-2-small-free",
+      "tier": "free",
+      "size": "small",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": true,
+      "limits": {
+        "rpd": 100,
+        "rpm": 10,
+        "reset_tz": "UTC",
+        "status": "third_party_unverified",
+        "source_url": "https://opencode.ai/docs/console/models"
+      },
+      "data_use": {
+        "trains_on_inputs": true,
+        "source_url": "https://opencode.ai/docs/console/models",
+        "note": "Official docs: Retained and may be used for model training."
+      },
+      "source": {
+        "url": "https://opencode.ai/docs/console/models",
+        "checked_on": "2026-11-18"
+      },
+      "status": "verified",
+      "rank": 13
+    },
+    {
+      "id": "opencode-zen/flint-40b-free",
+      "provider": "opencode-zen",
+      "adapter": "openai",
+      "model": "flint-40b-free",
+      "tier": "free",
+      "size": "small",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": true,
+      "limits": {
+        "rpd": 100,
+        "rpm": 10,
+        "reset_tz": "UTC",
+        "status": "third_party_unverified",
+        "source_url": "https://opencode.ai/docs/console/models"
+      },
+      "data_use": {
+        "trains_on_inputs": true,
+        "source_url": "https://opencode.ai/docs/console/models",
+        "note": "Official docs: Collected data may be used to improve model. Retained 30 days."
+      },
+      "source": {
+        "url": "https://opencode.ai/docs/console/models",
+        "checked_on": "2026-11-18"
+      },
+      "status": "verified",
+      "rank": 14
+    },
+    {
+      "id": "opencode-zen/nemotron-3.5-super-vl-free",
+      "provider": "opencode-zen",
+      "adapter": "openai",
+      "model": "nemotron-3.5-super-vl-free",
+      "tier": "free",
+      "size": "big",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": true,
+      "limits": {
+        "rpd": 100,
+        "rpm": 10,
+        "reset_tz": "UTC",
+        "status": "third_party_unverified",
+        "source_url": "https://opencode.ai/docs/console/models"
+      },
+      "data_use": {
+        "trains_on_inputs": true,
+        "source_url": "https://opencode.ai/docs/console/models",
+        "note": "Official docs: Logged to improve NVIDIA products. Do not submit personal data."
+      },
+      "source": {
+        "url": "https://opencode.ai/docs/console/models",
+        "checked_on": "2026-11-18"
+      },
+      "status": "verified",
+      "rank": 15
+    },
+    {
+      "id": "opencode-zen/nemotron-3.5-lightning-free",
+      "provider": "opencode-zen",
+      "adapter": "openai",
+      "model": "nemotron-3.5-lightning-free",
+      "tier": "free",
+      "size": "small",
+      "privacy": "cloud",
+      "enabled": true,
+      "free": true,
+      "limits": {
+        "rpd": 100,
+        "rpm": 10,
+        "reset_tz": "UTC",
+        "status": "third_party_unverified",
+        "source_url": "https://opencode.ai/docs/console/models"
+      },
+      "data_use": {
+        "trains_on_inputs": true,
+        "source_url": "https://opencode.ai/docs/console/models",
+        "note": "Official docs: Logged to improve NVIDIA products. Do not submit personal data."
+      },
+      "source": {
+        "url": "https://opencode.ai/docs/console/models",
+        "checked_on": "2026-11-18"
+      },
+      "status": "verified",
+      "rank": 16
     },
     {
       "id": "opencode-zen/claude-haiku-5-5",

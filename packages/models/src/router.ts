@@ -18,9 +18,9 @@ type Step = [Tier, SizeClass | 'any'];
 const HEAVY: Task[] = ['reasoning', 'code', 'creative'];
 export function ladder(depth: Depth, task: Task, paidBig: boolean): Step[] {
   const heavy = HEAVY.includes(task);
-  if (depth === 'FAST') return [['free', 'small'], ['free', 'big'], ['almost_zero', 'small']];
-  if (depth === 'NORMAL') return heavy ? [['free', 'big'], ['almost_zero', 'any'], ['free', 'small']] : [['free', 'small'], ['free', 'big'], ['almost_zero', 'any']];
-  const deep: Step[] = heavy ? [['free', 'big'], ['almost_zero', 'any']] : [['free', 'big'], ['almost_zero', 'any'], ['free', 'small']];
+  if (depth === 'FAST') return [['free', 'any'], ['almost_zero', 'small']];
+  if (depth === 'NORMAL') return [['free', 'any'], ['almost_zero', 'any']];
+  const deep: Step[] = [['free', 'any'], ['almost_zero', 'any']];
   return heavy && paidBig ? [['paid_big', 'any'], ...deep] : deep; // paid_big only for heavy + DEEP and only when Amit enabled it
 }
 
@@ -47,13 +47,35 @@ export function routeModel(i: RouteInput): Route {
   }
   const chain: Slot[] = []; const seen = new Set<string>();
   for (const [tier, size] of ladder(i.depth, i.task, i.settings.paidBigEnabled)) {
-    for (const e of i.registry) {
-      if (e.privacy !== 'cloud' || e.tier !== tier || (size !== 'any' && e.size !== size) || seen.has(e.id)) continue;
-      if (tier === 'paid_big' && !i.settings.paidBigEnabled) continue;
-      if (usable(e, i)) { chain.push(slot(e)); seen.add(e.id); }
+    const candidates = i.registry.filter((e) => {
+      if (e.privacy !== 'cloud' || e.tier !== tier || (size !== 'any' && e.size !== size) || seen.has(e.id)) return false;
+      if (tier === 'paid_big' && !i.settings.paidBigEnabled) return false;
+      return usable(e, i);
+    });
+    // Order candidates respecting explicit rank, then trains_on_inputs === false before trains_on_inputs === true
+    candidates.sort((a, b) => {
+      if (a.provider === b.provider) {
+        if (a.rank !== undefined && b.rank !== undefined) return a.rank - b.rank;
+        const aTrain = a.data_use?.trains_on_inputs === false ? 0 : 1;
+        const bTrain = b.data_use?.trains_on_inputs === false ? 0 : 1;
+        return aTrain - bTrain;
+      }
+      if (a.rank !== undefined && b.rank !== undefined) return a.rank - b.rank;
+      return 0;
+    });
+    for (const e of candidates) {
+      chain.push(slot(e));
+      seen.add(e.id);
     }
   }
-  if (!chain.length) return { status: 'refused', code: 'no_candidate', message: 'Abhi koi allowed model available nahi hai (limit khatam, key nahi, ya budget). Settings dekho.' };
+  if (!chain.length) {
+    const hasZenKey = i.hasKey('opencode-zen');
+    const hasAnyCloudKey = i.registry.some((e) => e.privacy === 'cloud' && i.hasKey(e.provider));
+    if (!hasAnyCloudKey || !hasZenKey) {
+      return { status: 'refused', code: 'no_candidate', message: 'OPENCODE_API_KEY set karo: Model slot set nahi hai (model configured nahi hai).' };
+    }
+    return { status: 'refused', code: 'no_candidate', message: 'Abhi koi allowed model available nahi hai (limit khatam, key nahi, ya budget). Settings dekho.' };
+  }
   const notices: string[] = [];
   if (chain[0].tier === 'almost_zero') notices.push('Is baar almost-zero (paid, cents) model use hoga.');
   else if (chain.some((s) => s.tier === 'almost_zero')) notices.push('Free limit khatam hone par almost-zero (paid, cents) model par jaunga.');

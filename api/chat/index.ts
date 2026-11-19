@@ -19,6 +19,8 @@ import { emitEvent, supabaseEventStore } from '../../packages/events/src/index.t
 import { createLogger } from '../../packages/logging/src/index.ts';
 import { detectCareSignal } from '../../packages/chat/src/care.ts';
 import type { KillSwitchReader, KillState } from '../../shared/src/index.ts';
+import { startOfDayIST, startOfMonthIST } from '../../packages/locale/src/index.ts';
+import { startOfDayInTz } from '../../packages/model-gateway/src/budget.ts';
 import {
   toModelSpecs,
   loadDefaultRegistry,
@@ -496,6 +498,8 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
   const inrPerUsdVal = env.INR_PER_USD;
   const inrPerUsd = (inrPerUsdVal !== undefined && inrPerUsdVal.trim() !== '') ? Number(inrPerUsdVal) : NaN;
 
+  const usageStore: UsageStore | undefined = options.usageStore ?? (c?.url && c?.serviceKey ? supabaseUsageStore({ url: c.url, serviceKey: c.serviceKey, ownerId: owner.user.id, fetch: c.fetcher }) : undefined);
+
   let gateway: ChatGateway;
   if (options.gateway) {
     gateway = options.gateway;
@@ -519,7 +523,7 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
         return { ok: false, code: 'budget_exceeded', message: 'INR_PER_USD rate missing: cannot calculate INR budget' };
       },
     };
-  } else if (!options.usageStore && !c?.serviceKey) {
+  } else if (!usageStore) {
     // Requirement 2: SERVICE KEY NA HO + budget set: DO NOT fall back to memoryUsageStore! Fail-closed.
     gateway = {
       async callStream() {
@@ -532,8 +536,6 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
   } else {
     const perDayUsd = Number(dayLimitInrStr) / inrPerUsd;
     const perMonthUsd = Number(monthLimitInrStr) / inrPerUsd;
-
-    const usageStore = options.usageStore ?? supabaseUsageStore({ url: c!.url, serviceKey: c!.serviceKey!, ownerId: owner.user.id, fetch: c?.fetcher });
 
     const loadedRegistry = options.registry
       ? { schema: 1, checked_on: new Date().toISOString(), note: '', models: options.registry }
@@ -569,7 +571,7 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
     gateway = rawGateway;
   }
 
-  const modelConfig = options.modelConfig ?? EMPTY_MODEL_ROUTER_CONFIG;
+  const modelConfig = options.modelConfig;
 
   const chatInput: ChatInput = {
     threadId: parsed.data.thread_id,
@@ -615,20 +617,65 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
           ? { schema: 1, checked_on: new Date().toISOString(), note: '', models: options.registry }
           : loadDefaultRegistry();
 
+        const activeModels = options.registry ?? loadedRegistryForHandle.models;
+        const now = new Date();
+
+        let currentUsage: Usage;
+        if (options.usage) {
+          currentUsage = options.usage;
+        } else if (!isCare && usageStore) {
+          try {
+            const modelDayStarts: Record<string, Date> = {};
+            for (const m of activeModels) {
+              const tz = m.limits?.reset_tz ?? 'Asia/Kolkata';
+              modelDayStarts[m.id] = startOfDayInTz(now, tz);
+            }
+            const summary = await usageStore.summary(startOfDayIST(now), startOfMonthIST(now), modelDayStarts);
+            currentUsage = {
+              dayRequests: summary.modelDayRequests ?? {},
+              dayUsd: summary.dayUsd ?? 0,
+              monthUsd: summary.monthUsd ?? 0,
+            };
+          } catch {
+            // Requirement 3: Usage padhi na jaye -> model call refuse (fail-closed, spec shart 6)
+            if (claimRow.id && threadStore.deleteMessage) {
+              try {
+                await threadStore.deleteMessage({
+                  ownerId: owner.user.id,
+                  threadId: parsed.data.thread_id,
+                  messageId: claimRow.id,
+                });
+              } catch { /* clean ignore */ }
+            }
+            if (!streamStarted) {
+              await emit({ type: 'chat.message.started' });
+            }
+            await emit({
+              type: 'chat.message.delta',
+              index: 0,
+              text: 'Model usage store unreadable (fail-closed); spending is blocked.',
+            });
+            await emit({ type: 'chat.message.completed' });
+            return;
+          }
+        } else {
+          currentUsage = { dayRequests: {}, dayUsd: 0, monthUsd: 0 };
+        }
+
         const result = await handleMessage(chatInput, {
           killSwitch: killReader,
           threads: threadStore,
           ownerId: owner.user.id,
           gateway,
-          modelConfig: options.modelConfig ?? EMPTY_MODEL_ROUTER_CONFIG,
-          registry: options.registry,
+          modelConfig: options.modelConfig,
+          registry: activeModels,
           settings: options.settings ?? {
             paidBigEnabled: false,
             localHealthy: false,
           },
-          usage: options.usage ?? { dayRequests: {}, dayUsd: 0, monthUsd: 0 },
+          usage: currentUsage,
           budget: budgetConfigured ? { perDayUsd: Number(dayLimitInrStr) / inrPerUsd, perMonthUsd: Number(monthLimitInrStr) / inrPerUsd } : undefined,
-          now: new Date(),
+          now,
           hasKey: (provider) => {
             if (provider === 'anthropic') return Boolean(env.ANTHROPIC_API_KEY);
             if (provider === 'openai') return Boolean(env.OPENAI_API_KEY);
