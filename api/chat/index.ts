@@ -750,9 +750,50 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
   return new Response(stream, { status: 200, headers });
 }
 
-// Default export routing all chat endpoints when consolidated on Vercel
-export default async function handler(request: Request, options: ChatOptions = {}): Promise<Response> {
-  const url = new URL(request.url);
+async function toWebRequest(req: any): Promise<Request> {
+  if (req instanceof Request) return req;
+  if (req && typeof req.headers?.get === 'function') return req as Request;
+
+  const host = req.headers?.['x-forwarded-host'] || req.headers?.host || 'localhost';
+  const proto = req.headers?.['x-forwarded-proto'] || 'https';
+  const url = new URL(req.url || '/', `${proto}://${host}`);
+
+  const headers = new Headers();
+  for (const [key, val] of Object.entries(req.headers || {})) {
+    if (val !== undefined) {
+      if (Array.isArray(val)) {
+        for (const v of val) headers.append(key, v);
+      } else {
+        headers.set(key, String(val));
+      }
+    }
+  }
+
+  const method = req.method || 'GET';
+  let body: any = undefined;
+  if (method !== 'GET' && method !== 'HEAD') {
+    if (req.body) {
+      body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    } else if (typeof req[Symbol.asyncIterator] === 'function') {
+      const chunks: Buffer[] = [];
+      for await (const chunk of req) {
+        chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
+      }
+      if (chunks.length > 0) {
+        body = Buffer.concat(chunks).toString('utf8');
+      }
+    }
+  }
+
+  return new Request(url, {
+    method,
+    headers,
+    body,
+  });
+}
+
+async function handleChatRequest(request: Request, options: ChatOptions = {}): Promise<Response> {
+  const url = new URL(request.url, 'http://localhost');
   const pathname = request.headers.get('x-matched-path') || url.pathname;
   if (pathname.endsWith('/threads.list')) return threadsListHandler(request, options);
   if (pathname.endsWith('/threads.create')) return threadsCreateHandler(request, options);
@@ -760,4 +801,56 @@ export default async function handler(request: Request, options: ChatOptions = {
   if (pathname.endsWith('/messages.send')) return messagesSendHandler(request, options);
   if (pathname.endsWith('/messages.stream')) return messagesStreamHandler(request, options);
   return Response.json({ ok: false, error: { code: 'not_found', message: `chat route not found for ${pathname}` } }, { status: 404 });
+}
+
+export async function POST(request: Request, options: ChatOptions = {}): Promise<Response> {
+  return handleChatRequest(request, options);
+}
+
+export async function GET(request: Request, options: ChatOptions = {}): Promise<Response> {
+  return handleChatRequest(request, options);
+}
+
+// Default export supporting both Web standard Request and Node.js (req, res)
+export default async function handler(req: any, resOrOptions: any = {}): Promise<Response | void> {
+  const isNodeRes = resOrOptions && typeof resOrOptions.setHeader === 'function';
+  const options: ChatOptions = isNodeRes ? {} : (resOrOptions ?? {});
+
+  try {
+    const webRequest = await toWebRequest(req);
+    const response = await handleChatRequest(webRequest, options);
+
+    if (isNodeRes) {
+      resOrOptions.statusCode = response.status;
+      for (const [key, val] of response.headers.entries()) {
+        resOrOptions.setHeader(key, val);
+      }
+      if (response.headers.get('content-type')?.includes('text/event-stream') && response.body) {
+        const reader = response.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          resOrOptions.write(Buffer.from(value));
+        }
+        resOrOptions.end();
+      } else {
+        const arrayBuffer = await response.arrayBuffer();
+        resOrOptions.end(Buffer.from(arrayBuffer));
+      }
+      return;
+    }
+
+    return response;
+  } catch (err: any) {
+    console.error('CHAT HANDLER FATAL:', err);
+    if (isNodeRes) {
+      if (!resOrOptions.headersSent) {
+        resOrOptions.statusCode = 500;
+        resOrOptions.setHeader('content-type', 'application/json');
+        resOrOptions.end(JSON.stringify({ ok: false, error: { code: 'internal_error', message: String(err?.message || err) } }));
+      }
+      return;
+    }
+    return Response.json({ ok: false, error: { code: 'internal_error', message: String(err?.message || err) } }, { status: 500 });
+  }
 }

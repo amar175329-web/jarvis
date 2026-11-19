@@ -3,5 +3,10 @@
   "headers": [{ "source": "/(.*)", "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }] }],
   "rewrites": [
     { "source": "/api/chat/:action", "destination": "/api/chat" }
-  ]
+  ],
+  "functions": {
+    "api/**/*.ts": {
+      "includeFiles": "{packages/**/src/**,packages/models/local/**,packages/models/registry/**,api/**/index.ts}"
+    }
+  }
 }
