@@ -1,4 +1,5 @@
 import type { Page } from '../types';
+import { AVATAR_SRC } from '../avatar';
 
 export function Sidebar({ page, onNav }: { page: Page; onNav: (p: Page) => void }) {
   return (
@@ -10,7 +11,7 @@ export function Sidebar({ page, onNav }: { page: Page; onNav: (p: Page) => void 
   <button className={"nav-item" + (page === "more" ? " active" : "") + " available t-rose"} onClick={() => onNav("more")}><span className="ico"><svg className="i " aria-hidden="true"><use href="#i-nmore" /></svg></span><span>More Features</span></button>
  </nav>
  <div className="side-spacer" /><div className="device-pill"><div className="device-icon t-cyan"><svg className="i " aria-hidden="true"><use href="#i-phone" /></svg></div><div><b><span style={{ color: "#18bd87" }}>&#9679;</span> Phone Connected</b><small>Android device</small></div></div>
- <div className="profile-mini"><img className="avatar" src="data:image/png;base64,PHOTO_REMOVED" alt="Profile portrait" /><div><b>Amit</b><small>Personal workspace</small></div></div>
+ <div className="profile-mini"><img className="avatar" src={AVATAR_SRC} alt="Profile portrait" /><div><b>Amit</b><small>Personal workspace</small></div></div>
  <div className="sidebar-tools" aria-label="Sidebar utilities">
   <button className="sidebar-tool t-cyan" type="button" disabled={true} aria-label="Connect devices" title="Connect devices"><span className="tool-icon"><svg className="i " aria-hidden="true"><use href="#i-link" /></svg></span><span className="tool-label">Connect</span></button>
   <button className="sidebar-tool t-violet" type="button" disabled={true} aria-label="Settings" title="Settings"><span className="tool-icon"><svg className="i " aria-hidden="true"><use href="#i-gear" /></svg></span><span className="tool-label">Settings</span></button>
