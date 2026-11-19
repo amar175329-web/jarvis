@@ -17,8 +17,9 @@ function config(o: AuthOptions) {
   const url = env.SUPABASE_URL?.replace(/\/$/, '');
   const anonKey = env.SUPABASE_ANON_KEY;
   const ownerEmail = env.OWNER_EMAIL?.trim().toLowerCase();
+  const ownerPassword = env.OWNER_PASSWORD?.trim();
   if (!url || !anonKey || !ownerEmail) return null;
-  return { url, anonKey, ownerEmail, fetcher: o.fetch ?? fetch };
+  return { url, anonKey, ownerEmail, ownerPassword, fetcher: o.fetch ?? fetch };
 }
 
 function json(status: number, body: unknown, headers: HeadersInit = {}) {
@@ -118,9 +119,25 @@ export async function readOwnerSession(request: Request, options: AuthOptions = 
     const match = /^Bearer\s+([A-Za-z0-9._~-]{20,4096})$/i.exec(auth);
     if (match) session = { access_token: match[1], issued_at: Date.now() };
   }
+  let rotated = false;
+  if (!session && o.ownerPassword) {
+    try {
+      const authRes = await o.fetcher(`${o.url}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { apikey: o.anonKey, 'content-type': 'application/json' },
+        body: JSON.stringify({ email: o.ownerEmail, password: o.ownerPassword }),
+      });
+      if (authRes.ok) {
+        const authData = (await authRes.json()) as { access_token?: string; refresh_token?: string };
+        if (typeof authData.access_token === 'string') {
+          session = { access_token: authData.access_token, ...(authData.refresh_token ? { refresh_token: authData.refresh_token } : {}), issued_at: Date.now() };
+          rotated = true;
+        }
+      }
+    } catch { /* Fallback to missing session */ }
+  }
   if (!session) return { ok: false, status: 401, message: 'owner session is missing', clearCookie: true };
   let verified = await verifyAccessToken(session.access_token, o);
-  let rotated = false;
   if (!verified.ok && verified.status === 401 && session.refresh_token) {
     const refreshed = await refreshSession(session, o);
     if (!refreshed.ok) return { ok: false, status: refreshed.status, message: refreshed.status === 401 ? 'owner session expired' : 'authentication provider is unavailable', clearCookie: refreshed.status === 401 };

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
 type Msg = { id: number; who: 'me' | 'ai'; text: string };
-const REPLY = 'Message received. Backend model connected hai (DeepSeek V4.1 Flash), par browser mein owner session active nahi mila (Supabase login zaroori hai).';
 
 // One AI message that "types" itself, smoothly rendering chunks with completion class.
 function AiMessage({ text, onTick }: { text: string; onTick: () => void }) {
@@ -110,11 +109,19 @@ export function Chat() {
 
   async function ensureThread(): Promise<string> {
     if (threadId) return threadId;
-    const createRes = await fetch('/api/chat/threads.create', {
+    let createRes = await fetch('/api/chat/threads.create', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ title: 'Main Chat' }),
     });
+    if (createRes.status === 401) {
+      await fetch('/api/auth/session.get', { method: 'GET' });
+      createRes = await fetch('/api/chat/threads.create', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ title: 'Main Chat' }),
+      });
+    }
     const createData = await createRes.json();
     const tid = createData?.data?.thread?.id ?? crypto.randomUUID();
     setThreadId(tid);
@@ -127,18 +134,31 @@ export function Chat() {
     setValue('');
     input.current?.focus();
 
-    if (!isAuthenticated) {
-      add('ai', REPLY);
-      return;
-    }
-
     try {
+      if (!isAuthenticated) {
+        try {
+          const sessionRes = await fetch('/api/auth/session.get', { method: 'GET' });
+          if (sessionRes.ok) {
+            const sessionData = await sessionRes.json();
+            if (sessionData?.ok) setIsAuthenticated(true);
+          }
+        } catch { /* ignore */ }
+      }
+
       const activeThreadId = await ensureThread();
-      const sendRes = await fetch('/api/chat/messages.send', {
+      let sendRes = await fetch('/api/chat/messages.send', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ thread_id: activeThreadId, text: v }),
       });
+      if (sendRes.status === 401) {
+        await fetch('/api/auth/session.get', { method: 'GET' });
+        sendRes = await fetch('/api/chat/messages.send', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ thread_id: activeThreadId, text: v }),
+        });
+      }
       const sendData = await sendRes.json();
       if (!sendRes.ok || !sendData.ok) {
         const errCode = sendData?.error?.code;
@@ -198,7 +218,7 @@ export function Chat() {
         }
       }
       if (!accumulated) {
-        setMsgs((m) => m.map((msg) => msg.id === aiMsgId ? { ...msg, text: 'Model set nahi hai. Settings mein model slot configure karein.' } : msg));
+        setMsgs((m) => m.map((msg) => msg.id === aiMsgId ? { ...msg, text: 'Jawab prapt nahi hua.' } : msg));
       }
     } catch {
       add('ai', 'Network samasya: response prapt nahi hua.');
