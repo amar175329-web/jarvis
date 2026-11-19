@@ -54,19 +54,41 @@ function decodeCookie(header: string | null): CookieSession | null {
     return { access_token: v.access_token, ...(v.refresh_token ? { refresh_token: v.refresh_token } : {}), issued_at: Number.isFinite(v.issued_at) ? Number(v.issued_at) : 0 };
   } catch { return null; }
 }
-function sameOrigin(request: Request): boolean {
-  const origin = request.headers.get('origin');
-  if (!origin) return true; // non-browser server clients; cookies remain SameSite=Lax.
-  try { return new URL(origin).origin === new URL(request.url).origin; } catch { return false; }
+function getHeader(request: any, name: string): string | null {
+  if (!request) return null;
+  if (typeof request.headers?.get === 'function') {
+    return request.headers.get(name);
+  }
+  if (request.headers && typeof request.headers === 'object') {
+    const val = request.headers[name.toLowerCase()] ?? request.headers[name];
+    if (Array.isArray(val)) return val.join(', ');
+    return typeof val === 'string' ? val : null;
+  }
+  return null;
 }
-async function readJson(request: Request): Promise<any | null> {
-  const length = Number(request.headers.get('content-length') ?? '0');
-  if (Number.isFinite(length) && length > MAX_BODY_BYTES) return null;
+
+function sameOrigin(request: any): boolean {
+  const origin = getHeader(request, 'origin');
+  if (!origin) return true; // non-browser server clients; cookies remain SameSite=Lax.
   try {
-    const raw = await request.text();
-    if (new TextEncoder().encode(raw).length > MAX_BODY_BYTES) return null;
-    return JSON.parse(raw);
-  } catch { return null; }
+    const reqUrl = request.url ? new URL(request.url) : null;
+    return reqUrl ? new URL(origin).origin === reqUrl.origin : true;
+  } catch { return false; }
+}
+async function readJson(request: any): Promise<any | null> {
+  if (typeof request?.text === 'function') {
+    const length = Number(getHeader(request, 'content-length') ?? '0');
+    if (Number.isFinite(length) && length > MAX_BODY_BYTES) return null;
+    try {
+      const raw = await request.text();
+      if (new TextEncoder().encode(raw).length > MAX_BODY_BYTES) return null;
+      return JSON.parse(raw);
+    } catch { return null; }
+  }
+  if (request && typeof request.body === 'object' && request.body !== null) {
+    return request.body;
+  }
+  return null;
 }
 
 async function verifyAccessToken(token: string, o: NonNullable<ReturnType<typeof config>>): Promise<{ ok: true; user: AuthUser } | { ok: false; status: 401 | 503 }> {
@@ -110,12 +132,12 @@ export async function createOwnerSession(request: Request, options: AuthOptions 
   return json(200, { ok: true, data: { user: verified.user, expires_in: body.refresh_token ? SESSION_MAX_AGE : ACCESS_ONLY_MAX_AGE } }, { 'set-cookie': setCookie(session, Boolean(body.refresh_token)), 'cache-control': 'no-store' });
 }
 
-export async function readOwnerSession(request: Request, options: AuthOptions = {}): Promise<SessionResult> {
+export async function readOwnerSession(request: any, options: AuthOptions = {}): Promise<SessionResult> {
   const o = config(options);
   if (!o) return { ok: false, status: 503, message: 'authentication is not configured' };
-  let session = decodeCookie(request.headers.get('cookie'));
+  let session = decodeCookie(getHeader(request, 'cookie'));
   if (!session) {
-    const auth = request.headers.get('authorization') ?? '';
+    const auth = getHeader(request, 'authorization') ?? '';
     const match = /^Bearer\s+([A-Za-z0-9._~-]{20,4096})$/i.exec(auth);
     if (match) session = { access_token: match[1], issued_at: Date.now() };
   }
@@ -150,17 +172,19 @@ export async function readOwnerSession(request: Request, options: AuthOptions = 
   return { ok: true, user: verified.user, expiresIn, accessToken: session.access_token, ...(rotated ? { setCookie: setCookie(session, true) } : {}) };
 }
 
-export async function getOwnerSessionResponse(request: Request, options: AuthOptions = {}): Promise<Response> {
-  if (request.method !== 'GET') return error(405, 'bad_request', 'method not allowed', { Allow: 'GET' });
+export async function getOwnerSessionResponse(request: any, options: AuthOptions = {}): Promise<Response> {
+  const reqMethod = (request?.method ?? 'GET').toUpperCase();
+  if (reqMethod !== 'GET') return error(405, 'bad_request', 'method not allowed', { Allow: 'GET' });
   const result = await readOwnerSession(request, options);
   if (!result.ok) return error(result.status, result.status === 401 ? 'unauthorized' : result.status === 403 ? 'forbidden' : 'unavailable', result.message, result.clearCookie ? { 'set-cookie': clearSessionCookie() } : {});
   return json(200, { ok: true, data: { user: result.user, expires_in: result.expiresIn } }, { 'cache-control': 'no-store', ...(result.setCookie ? { 'set-cookie': result.setCookie } : {}) });
 }
 
-export async function deleteOwnerSession(request: Request, options: AuthOptions = {}): Promise<Response> {
-  if (request.method !== 'POST') return error(405, 'bad_request', 'method not allowed', { Allow: 'POST' });
+export async function deleteOwnerSession(request: any, options: AuthOptions = {}): Promise<Response> {
+  const reqMethod = (request?.method ?? 'POST').toUpperCase();
+  if (reqMethod !== 'POST') return error(405, 'bad_request', 'method not allowed', { Allow: 'POST' });
   const o = config(options);
-  const session = decodeCookie(request.headers.get('cookie'));
+  const session = decodeCookie(getHeader(request, 'cookie'));
   if (session && o) {
     try {
       await o.fetcher(`${o.url}/auth/v1/logout`, { method: 'POST', headers: { apikey: o.anonKey, Authorization: `Bearer ${session.access_token}` } });
