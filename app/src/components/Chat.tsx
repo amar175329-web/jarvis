@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 type Msg = { id: number; who: 'me' | 'ai'; text: string };
-const REPLY = 'Message received. Replies are not connected in this UI preview.';
+const REPLY = 'Message received. Backend model connected hai (DeepSeek V4.1 Flash), par browser mein owner session active nahi mila (Supabase login zaroori hai).';
 
 // One AI message that "types" itself, smoothly rendering chunks with completion class.
 function AiMessage({ text, onTick }: { text: string; onTick: () => void }) {
