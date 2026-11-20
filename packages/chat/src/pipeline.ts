@@ -47,6 +47,7 @@ export type ChatDependencies = {
   budget?: { perDayUsd?: number; perMonthUsd?: number };
   now?: Date;
   hasKey?: (provider: string) => boolean;
+  userMessagePersisted?: boolean;
 };
 export type HandleMessageResult = {
   status: 'ok' | 'care' | 'killed' | 'needs_model' | 'input_needed' | 'failed';
@@ -161,7 +162,8 @@ export async function handleMessage(input: ChatInput, deps: ChatDependencies): P
   const kill = await readKillFailClosed(deps.killSwitch);
 
   if (care) {
-    if (deps.threads && deps.ownerId && input.threadId) {
+    const userAlreadyPersisted = Boolean(deps.userMessagePersisted || input.messageId);
+    if (!userAlreadyPersisted && deps.threads && deps.ownerId && input.threadId) {
       try {
         const existing = await deps.threads.listMessages({ ownerId: deps.ownerId, threadId: input.threadId, limit: 10 });
         const alreadySaved = existing.some((m) => m.id === input.messageId || (m.role === 'user' && m.content === originalText));
@@ -229,7 +231,10 @@ export async function handleMessage(input: ChatInput, deps: ChatDependencies): P
         ? 'Private memory match mili, par typed purpose nahi tha; T2 text recall nahi kiya.'
         : 'Sirf T1/default memory dekhi; T2 ko bina typed purpose ke nahi bulaya.';
   const prompt = buildSystemPrompt({ userText: safeText, framedData: [...framedData, ...historyFrame], memoryBlock: memoryRecall?.block, memoryReason });
-  await persistThreadMessage(deps, input, 'user', originalText);
+  const userAlreadyPersisted = Boolean(deps.userMessagePersisted || input.messageId);
+  if (!userAlreadyPersisted) {
+    await persistThreadMessage(deps, input, 'user', originalText);
+  }
 
   const taskType = input.taskType ?? 'chat';
   const attachmentNote = (input.attachments ?? []).map((attachment) => ({ fileName: attachment.fileName ?? null, mimeType: attachment.mimeType, sizeBytes: attachment.sizeBytes ?? null }));

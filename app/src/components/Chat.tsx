@@ -135,14 +135,22 @@ export function Chat() {
     input.current?.focus();
 
     try {
-      if (!isAuthenticated) {
+      let authed = isAuthenticated;
+      if (!authed) {
         try {
           const sessionRes = await fetch('/api/auth/session.get', { method: 'GET' });
           if (sessionRes.ok) {
             const sessionData = await sessionRes.json();
-            if (sessionData?.ok) setIsAuthenticated(true);
+            if (sessionData?.ok) {
+              setIsAuthenticated(true);
+              authed = true;
+            }
           }
         } catch { /* ignore */ }
+      }
+      if (!authed) {
+        add('ai', 'Pehle login karo: owner session nahi mila.');
+        return;
       }
 
       const activeThreadId = await ensureThread();
@@ -164,7 +172,9 @@ export function Chat() {
         const errCode = sendData?.error?.code;
         const errMsg = errCode === 'kill_switch_on'
           ? 'Kill switch ON hai, main kuch nahi kar raha.'
-          : (sendData?.error?.message || 'Message bhejne mein samasya aayi.');
+          : (errCode === 'unauthorized' || sendRes.status === 401)
+            ? 'Pehle login karo: owner session nahi mila.'
+            : (sendData?.error?.message || 'Message bhejne mein samasya aayi.');
         add('ai', errMsg);
         return;
       }

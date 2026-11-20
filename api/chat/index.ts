@@ -674,6 +674,7 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
           killSwitch: killReader,
           threads: threadStore,
           ownerId: owner.user.id,
+          userMessagePersisted: true,
           gateway,
           modelConfig: options.modelConfig,
           registry: activeModels,

@@ -1328,6 +1328,163 @@ test('P18 Requirement 3 & 4: router uses real usage numbers from usage store to 
   assert.ok(streamText.includes('Fallback slot response'));
 });
 
+test('P19 Requirement 2(a): production flow 1 send + 1 stream leaves exactly 2 rows in DB in order: user then assistant', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+  const threadId = crypto.randomUUID();
+  await store.createThread({ id: threadId, ownerId: OWNER_ID, title: 'P19 Test' });
+
+  const prodEnv = {
+    ...env,
+    OPENCODE_API_KEY: 'test-opencode-zen-key',
+    MODEL_DAY_LIMIT_INR: '100',
+    MODEL_MONTH_LIMIT_INR: '1000',
+    INR_PER_USD: '90',
+  };
+
+  const mockGateway: ChatGateway = {
+    async callStream(req, onChunk) {
+      await onChunk('Mera naam Jarvis hai');
+      return { ok: true, text: 'Mera naam Jarvis hai', usage: { tokensIn: 10, tokensOut: 5, costUsd: 0 } };
+    },
+  };
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: threadId, text: 'tumhara naam kya hai' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env: prodEnv, fetch: mockFetch, threadStore: store, killReader });
+  assert.equal(sendRes.status, 200);
+  const messageId = (await sendRes.json()).data.message_id;
+
+  const streamReq = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: threadId, message_id: messageId }),
+  });
+  const streamRes = await messagesStreamHandler(streamReq, {
+    env: prodEnv,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    gateway: mockGateway,
+  });
+  assert.equal(streamRes.status, 200);
+  await streamRes.text();
+
+  const threadMessages = store.messages.filter((m) => m.threadId === threadId);
+  assert.equal(threadMessages.length, 2, `expected exactly 2 rows in DB, got ${threadMessages.length}: ${JSON.stringify(threadMessages.map((m) => m.role + ':' + m.content))}`);
+  assert.equal(threadMessages[0].role, 'user');
+  assert.equal(threadMessages[0].content, 'tumhara naam kya hai');
+  assert.equal(threadMessages[1].role, 'assistant');
+  assert.equal(threadMessages[1].content, 'Mera naam Jarvis hai');
+});
+
+test('P19 Requirement 2(b): care message (mujhe mar jaana hai) leaves exactly 2 rows in DB: user and care assistant without duplicate user', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+  const threadId = crypto.randomUUID();
+  await store.createThread({ id: threadId, ownerId: OWNER_ID, title: 'P19 Care Test' });
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: threadId, text: 'mujhe mar jaana hai' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env, fetch: mockFetch, threadStore: store, killReader });
+  assert.equal(sendRes.status, 200);
+  const messageId = (await sendRes.json()).data.message_id;
+
+  const streamReq = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: threadId, message_id: messageId }),
+  });
+  const streamRes = await messagesStreamHandler(streamReq, {
+    env,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+  });
+  assert.equal(streamRes.status, 200);
+  await streamRes.text();
+
+  const threadMessages = store.messages.filter((m) => m.threadId === threadId);
+  assert.equal(threadMessages.length, 2, `expected exactly 2 rows in DB for care message, got ${threadMessages.length}: ${JSON.stringify(threadMessages.map((m) => m.role + ':' + m.content))}`);
+  assert.equal(threadMessages[0].role, 'user');
+  assert.equal(threadMessages[0].content, 'mujhe mar jaana hai');
+  assert.equal(threadMessages[1].role, 'assistant');
+});
+
+test('P19 Requirement 2(c): streaming twice (retry) keeps exactly 2 rows in DB', async () => {
+  const cookie = await getOwnerCookie();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const store = createMockThreadStore();
+  const threadId = crypto.randomUUID();
+  await store.createThread({ id: threadId, ownerId: OWNER_ID, title: 'P19 Retry Test' });
+
+  const prodEnv = {
+    ...env,
+    OPENCODE_API_KEY: 'test-opencode-zen-key',
+    MODEL_DAY_LIMIT_INR: '100',
+    MODEL_MONTH_LIMIT_INR: '1000',
+    INR_PER_USD: '90',
+  };
+
+  const mockGateway: ChatGateway = {
+    async callStream(req, onChunk) {
+      await onChunk('First response');
+      return { ok: true, text: 'First response', usage: { tokensIn: 10, tokensOut: 5, costUsd: 0 } };
+    },
+  };
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: threadId, text: 'tumhara naam kya hai' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env: prodEnv, fetch: mockFetch, threadStore: store, killReader });
+  const messageId = (await sendRes.json()).data.message_id;
+
+  const streamReq1 = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: threadId, message_id: messageId }),
+  });
+  const streamRes1 = await messagesStreamHandler(streamReq1, {
+    env: prodEnv,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    gateway: mockGateway,
+  });
+  await streamRes1.text();
+
+  // Retry: stream again for the same message
+  const streamReq2 = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: threadId, message_id: messageId }),
+  });
+  const streamRes2 = await messagesStreamHandler(streamReq2, {
+    env: prodEnv,
+    fetch: mockFetch,
+    threadStore: store,
+    killReader,
+    gateway: mockGateway,
+  });
+  await streamRes2.text();
+
+  const threadMessages = store.messages.filter((m) => m.threadId === threadId);
+  assert.equal(threadMessages.length, 2, `expected exactly 2 rows after retry stream, got ${threadMessages.length}: ${JSON.stringify(threadMessages.map((m) => m.role + ':' + m.content))}`);
+  assert.equal(threadMessages[0].role, 'user');
+  assert.equal(threadMessages[1].role, 'assistant');
+});
+
+
 
 
 
