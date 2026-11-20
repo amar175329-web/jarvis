@@ -10,6 +10,7 @@ object JarvisRoutes {
     const val AUTH_SESSION_CREATE = "/api/auth/session.create"
     const val AUTH_SESSION_GET = "/api/auth/session.get"
     const val AUTH_SESSION_DELETE = "/api/auth/session.delete"
+    const val AUTH_OWNER_ENTER = "/api/auth/owner.enter"
     const val SYSTEM_HEALTH = "/api/system/health"
     const val SYSTEM_KILL_GET = "/api/system/kill.get"
     const val SYSTEM_KILL_SET = "/api/system/kill.set"
@@ -66,6 +67,17 @@ data class AuthDevicesRevokeRequest(
 @Serializable
 data class AuthDevicesRevokeResponse(
     @SerialName("device") val device: Device
+)
+
+@Serializable
+data class AuthOwnerEnterRequest(
+    @SerialName("key") val key: String
+)
+
+@Serializable
+data class AuthOwnerEnterResponse(
+    @SerialName("user") val user: AuthOwnerEnterResponseUser,
+    @SerialName("expires_in") val expiresIn: Int
 )
 
 @Serializable
@@ -392,6 +404,12 @@ data class ApiErrorBodyError(
     @SerialName("message") val message: String,
     @SerialName("request_id") val requestId: String? = null,
     @SerialName("details") val details: JsonElement? = null
+)
+
+@Serializable
+data class AuthOwnerEnterResponseUser(
+    @SerialName("id") val id: String,
+    @SerialName("email") val email: String
 )
 
 @Serializable

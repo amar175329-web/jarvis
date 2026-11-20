@@ -1484,6 +1484,120 @@ test('P19 Requirement 2(c): streaming twice (retry) keeps exactly 2 rows in DB',
   assert.equal(threadMessages[1].role, 'assistant');
 });
 
+// P21 Security Tests
+test('P21 (b): anonymous threads.create/messages.send/messages.stream => 401, gateway calls = 0 even if OWNER_PASSWORD is set', async () => {
+  let gatewayCalls = 0;
+  const mockGateway: ChatGateway = {
+    async callStream() {
+      gatewayCalls++;
+      return { ok: true, stream: new ReadableStream({ start(c) { c.enqueue({ type: 'delta', text: 'hi' }); c.close(); } }) };
+    },
+    async call() {
+      gatewayCalls++;
+      return { ok: true, text: 'hi', usage: { tokensIn: 1, tokensOut: 1, costUsd: 0 } };
+    },
+  };
+  const store = createMockThreadStore();
+  const killReader = { async getKillSwitch() { return { kill: false, epoch: 1 }; } };
+  const envWithPassword = {
+    ...env,
+    OWNER_PASSWORD: 'test-password-12345',
+    MODEL_DAY_LIMIT_INR: '100',
+    MODEL_MONTH_LIMIT_INR: '1000',
+    INR_PER_USD: '84',
+  };
+  const fetchWithPassword: typeof fetch = async (input, init) => {
+    const url = String(input);
+    if (url.includes('/auth/v1/token?grant_type=password')) {
+      return Response.json({ access_token: 'owner-access-token-123456789' });
+    }
+    return mockFetch(input, init);
+  };
+
+  // Anonymous threads.create
+  const createReq = new Request('https://jarvis.example/api/chat/threads.create', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ title: 'Anon Thread' }),
+  });
+  const createRes = await threadsCreateHandler(createReq, { env: envWithPassword, fetch: fetchWithPassword, threadStore: store, killReader, gateway: mockGateway });
+  assert.equal(createRes.status, 401, 'Anonymous threads.create must return 401');
+
+  // Anonymous messages.send
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, text: 'anon text' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env: envWithPassword, fetch: fetchWithPassword, threadStore: store, killReader, gateway: mockGateway });
+  assert.equal(sendRes.status, 401, 'Anonymous messages.send must return 401');
+
+  // Anonymous messages.stream
+  const streamReq = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: THREAD_ID, message_id: MESSAGE_ID }),
+  });
+  const streamRes = await messagesStreamHandler(streamReq, { env: envWithPassword, fetch: fetchWithPassword, threadStore: store, killReader, gateway: mockGateway });
+  assert.equal(streamRes.status, 401, 'Anonymous messages.stream must return 401');
+
+  assert.equal(gatewayCalls, 0, 'Gateway calls must remain 0 for anonymous requests');
+});
+
+test('P21 (f): cookie ke saath chat chalta hai (calls = 1)', async () => {
+  let gatewayCalls = 0;
+  const mockGateway: ChatGateway = {
+    async callStream(req, onChunk) {
+      gatewayCalls++;
+      await onChunk('authorized hello');
+      return { ok: true, text: 'authorized hello', usage: { tokensIn: 5, tokensOut: 5, costUsd: 0 } };
+    },
+    async call() {
+      gatewayCalls++;
+      return { ok: true, text: 'authorized hello', usage: { tokensIn: 5, tokensOut: 5, costUsd: 0 } };
+    },
+  };
+  const store = createMockThreadStore();
+  const killReader = { read: async () => ({ kill: false, epoch: 1 }) };
+  const cookie = await getOwnerCookie();
+  const chatEnv = {
+    ...env,
+    OPENCODE_API_KEY: 'test-key',
+    MODEL_DAY_LIMIT_INR: '100',
+    MODEL_MONTH_LIMIT_INR: '1000',
+    INR_PER_USD: '84',
+  };
+
+  const createReq = new Request('https://jarvis.example/api/chat/threads.create', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ title: 'Authed Thread' }),
+  });
+  const createRes = await threadsCreateHandler(createReq, { env: chatEnv, fetch: mockFetch, threadStore: store, killReader, gateway: mockGateway });
+  assert.equal(createRes.status, 200);
+  const createdThread = (await createRes.json()).data.thread;
+
+  const sendReq = new Request('https://jarvis.example/api/chat/messages.send', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: createdThread.id, text: 'hello bot' }),
+  });
+  const sendRes = await messagesSendHandler(sendReq, { env: chatEnv, fetch: mockFetch, threadStore: store, killReader, gateway: mockGateway });
+  assert.equal(sendRes.status, 200);
+  const messageId = (await sendRes.json()).data.message_id;
+
+  const streamReq = new Request('https://jarvis.example/api/chat/messages.stream', {
+    method: 'POST',
+    headers: { cookie, 'content-type': 'application/json' },
+    body: JSON.stringify({ thread_id: createdThread.id, message_id: messageId }),
+  });
+  const streamRes = await messagesStreamHandler(streamReq, { env: chatEnv, fetch: mockFetch, threadStore: store, killReader, gateway: mockGateway });
+  assert.equal(streamRes.status, 200);
+  const streamText = await streamRes.text();
+  assert.match(streamText, /authorized hello/);
+  assert.equal(gatewayCalls, 1, 'Gateway calls must be exactly 1 with cookie');
+});
+
 
 
 

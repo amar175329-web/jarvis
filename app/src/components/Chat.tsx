@@ -22,6 +22,9 @@ export function Chat() {
   const [rec, setRec] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [ownerKeyInput, setOwnerKeyInput] = useState<string>('');
+  const [ownerKeyStatus, setOwnerKeyStatus] = useState<string>('');
+  const [ownerKeySubmitting, setOwnerKeySubmitting] = useState<boolean>(false);
   const thread = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const file = useRef<HTMLInputElement>(null);
@@ -49,79 +52,122 @@ export function Chat() {
     return () => document.removeEventListener('click', handleSuggestion);
   }, []);
 
+  async function loadUserThreadAndMessages(canceledRef = { current: false }) {
+    try {
+      const listRes = await fetch('/api/chat/threads.list', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ limit: 10 }),
+      });
+      if (!listRes.ok || canceledRef.current) return;
+      const listData = await listRes.json();
+      let activeId: string;
+      if (listData?.ok && Array.isArray(listData.data?.threads) && listData.data.threads.length > 0) {
+        activeId = listData.data.threads[0].id;
+      } else {
+        const createRes = await fetch('/api/chat/threads.create', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ title: 'Main Chat' }),
+        });
+        if (!createRes.ok || canceledRef.current) return;
+        const createData = await createRes.json();
+        activeId = createData?.data?.thread?.id;
+      }
+      if (!activeId || canceledRef.current) return;
+      setThreadId(activeId);
+
+      const msgRes = await fetch('/api/chat/messages.list', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ thread_id: activeId, limit: 50 }),
+      });
+      if (!msgRes.ok || canceledRef.current) return;
+      const msgData = await msgRes.json();
+      if (msgData?.ok && Array.isArray(msgData.data?.messages) && msgData.data.messages.length > 0) {
+        setMsgs(msgData.data.messages.map((m: any) => ({
+          id: nextId.current++,
+          who: m.role === 'user' ? 'me' : 'ai',
+          text: m.content,
+        })));
+      }
+    } catch {
+      // Fallback gracefully
+    }
+  }
+
   // Check authenticated owner session and fetch/create thread
   useEffect(() => {
-    let canceled = false;
+    const canceledRef = { current: false };
     async function initSession() {
       try {
         const sessionRes = await fetch('/api/auth/session.get', { method: 'GET' });
-        if (!sessionRes.ok) return;
+        if (!sessionRes.ok) {
+          setIsAuthenticated(false);
+          return;
+        }
         const sessionData = await sessionRes.json();
-        if (!sessionData?.ok || canceled) return;
+        if (!sessionData?.ok || canceledRef.current) {
+          setIsAuthenticated(false);
+          return;
+        }
         setIsAuthenticated(true);
-
-        const listRes = await fetch('/api/chat/threads.list', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ limit: 10 }),
-        });
-        if (!listRes.ok || canceled) return;
-        const listData = await listRes.json();
-        let activeId: string;
-        if (listData?.ok && Array.isArray(listData.data?.threads) && listData.data.threads.length > 0) {
-          activeId = listData.data.threads[0].id;
-        } else {
-          const createRes = await fetch('/api/chat/threads.create', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ title: 'Main Chat' }),
-          });
-          if (!createRes.ok || canceled) return;
-          const createData = await createRes.json();
-          activeId = createData?.data?.thread?.id;
-        }
-        if (!activeId || canceled) return;
-        setThreadId(activeId);
-
-        const msgRes = await fetch('/api/chat/messages.list', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ thread_id: activeId, limit: 50 }),
-        });
-        if (!msgRes.ok || canceled) return;
-        const msgData = await msgRes.json();
-        if (msgData?.ok && Array.isArray(msgData.data?.messages) && msgData.data.messages.length > 0) {
-          setMsgs(msgData.data.messages.map((m: any) => ({
-            id: nextId.current++,
-            who: m.role === 'user' ? 'me' : 'ai',
-            text: m.content,
-          })));
-        }
+        await loadUserThreadAndMessages(canceledRef);
       } catch {
         // Fallback gracefully to offline/preview mode
       }
     }
     initSession();
-    return () => { canceled = true; };
+    return () => { canceledRef.current = true; };
   }, []);
 
   const add = (who: Msg['who'], text: string) => setMsgs((m) => [...m, { id: nextId.current++, who, text }]);
 
+  const enterOwnerKey = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const k = ownerKeyInput.trim();
+    if (!k || ownerKeySubmitting) return;
+    setOwnerKeySubmitting(true);
+    setOwnerKeyStatus('');
+    try {
+      const res = await fetch('/api/auth/owner.enter', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ key: k }),
+      });
+      if (res.status === 429) {
+        setOwnerKeyStatus('Bahut saari galat koshishein. 10 minute baad koshish karein.');
+        setOwnerKeySubmitting(false);
+        return;
+      }
+      if (!res.ok) {
+        setOwnerKeyStatus('Galat owner key.');
+        setOwnerKeySubmitting(false);
+        return;
+      }
+      const data = await res.json();
+      if (data?.ok) {
+        setOwnerKeyInput('');
+        setOwnerKeyStatus('');
+        setIsAuthenticated(true);
+        await loadUserThreadAndMessages();
+      } else {
+        setOwnerKeyStatus('Galat owner key.');
+      }
+    } catch {
+      setOwnerKeyStatus('Network samasya: koshish karein.');
+    } finally {
+      setOwnerKeySubmitting(false);
+    }
+  };
+
   async function ensureThread(): Promise<string> {
     if (threadId) return threadId;
-    let createRes = await fetch('/api/chat/threads.create', {
+    const createRes = await fetch('/api/chat/threads.create', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ title: 'Main Chat' }),
     });
-    if (createRes.status === 401) {
-      await fetch('/api/auth/session.get', { method: 'GET' });
-      createRes = await fetch('/api/chat/threads.create', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ title: 'Main Chat' }),
-      });
-    }
     const createData = await createRes.json();
     const tid = createData?.data?.thread?.id ?? crypto.randomUUID();
     setThreadId(tid);
@@ -134,46 +180,25 @@ export function Chat() {
     setValue('');
     input.current?.focus();
 
-    try {
-      let authed = isAuthenticated;
-      if (!authed) {
-        try {
-          const sessionRes = await fetch('/api/auth/session.get', { method: 'GET' });
-          if (sessionRes.ok) {
-            const sessionData = await sessionRes.json();
-            if (sessionData?.ok) {
-              setIsAuthenticated(true);
-              authed = true;
-            }
-          }
-        } catch { /* ignore */ }
-      }
-      if (!authed) {
-        add('ai', 'Pehle login karo: owner session nahi mila.');
-        return;
-      }
+    if (!isAuthenticated) {
+      add('ai', 'Pehle owner key daalo.');
+      return;
+    }
 
+    try {
       const activeThreadId = await ensureThread();
-      let sendRes = await fetch('/api/chat/messages.send', {
+      const sendRes = await fetch('/api/chat/messages.send', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ thread_id: activeThreadId, text: v }),
       });
-      if (sendRes.status === 401) {
-        await fetch('/api/auth/session.get', { method: 'GET' });
-        sendRes = await fetch('/api/chat/messages.send', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ thread_id: activeThreadId, text: v }),
-        });
-      }
       const sendData = await sendRes.json();
       if (!sendRes.ok || !sendData.ok) {
         const errCode = sendData?.error?.code;
         const errMsg = errCode === 'kill_switch_on'
           ? 'Kill switch ON hai, main kuch nahi kar raha.'
           : (errCode === 'unauthorized' || sendRes.status === 401)
-            ? 'Pehle login karo: owner session nahi mila.'
+            ? 'Pehle owner key daalo.'
             : (sendData?.error?.message || 'Message bhejne mein samasya aayi.');
         add('ai', errMsg);
         return;
@@ -249,16 +274,55 @@ export function Chat() {
       <div className={'chat-thread' + (msgs.length ? ' on' : '')} id="chat-thread" aria-live="polite" ref={thread}>
         {msgs.map((m) => m.who === 'me' ? <div key={m.id} className="msg me">{m.text}</div> : <AiMessage key={m.id} text={m.text} onTick={scrollDown} />)}
       </div>
-      <div className="chat-compose" onClick={(e) => { if (!(e.target as HTMLElement).closest('button')) input.current?.focus(); }}>
-        <span className="spark t-blue"><svg className="i " aria-hidden="true"><use href="#i-spark" /></svg></span>
-        <textarea id="chat-input" rows={1} placeholder="Talk to Jarvis..." aria-label="Message Jarvis" enterKeyHint="send" autoComplete="off" spellCheck={true} ref={input}
-          value={value} onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
-        <button className="compose-tool t-blue" title="Attach" aria-label="Attach file" type="button" onClick={() => file.current?.click()}><svg className="i " aria-hidden="true"><use href="#i-plus" /></svg></button>
-        <button className={'compose-tool t-violet' + (rec ? ' rec' : '')} title="Voice" aria-label="Voice input" type="button" onClick={() => setRec((r) => !r)}><svg className="i " aria-hidden="true"><use href="#i-mic" /></svg></button>
-        <button className={'send' + (value.trim() ? ' ready' : '')} id="send-btn" type="button" aria-label="Send" onClick={send}><svg className="i " aria-hidden="true"><use href="#i-send" /></svg></button>
-        <input type="file" hidden ref={file} onChange={(e) => { const f = e.target.files?.[0]; if (f) { add('me', 'Attached: ' + f.name); e.target.value = ''; } }} />
-      </div>
+      {!isAuthenticated ? (
+        <form
+          className="chat-compose"
+          onSubmit={enterOwnerKey}
+          style={{ gap: '8px' }}
+        >
+          <span className="spark t-blue"><svg className="i " aria-hidden="true"><use href="#i-lock" /></svg></span>
+          <input
+            id="owner-key-input"
+            type="password"
+            placeholder="Owner key daalo..."
+            aria-label="Owner key"
+            autoComplete="off"
+            value={ownerKeyInput}
+            onChange={(e) => setOwnerKeyInput(e.target.value)}
+            disabled={ownerKeySubmitting}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 0,
+              outline: 'none',
+              font: 'inherit',
+              color: 'inherit',
+              padding: '0 8px',
+            }}
+          />
+          <button
+            className={'send' + (ownerKeyInput.trim() ? ' ready' : '')}
+            id="owner-key-btn"
+            type="submit"
+            aria-label="Unlock"
+            disabled={ownerKeySubmitting || !ownerKeyInput.trim()}
+          >
+            <svg className="i " aria-hidden="true"><use href="#i-check" /></svg>
+          </button>
+        </form>
+      ) : (
+        <div className="chat-compose" onClick={(e) => { if (!(e.target as HTMLElement).closest('button')) input.current?.focus(); }}>
+          <span className="spark t-blue"><svg className="i " aria-hidden="true"><use href="#i-spark" /></svg></span>
+          <textarea id="chat-input" rows={1} placeholder="Talk to Jarvis..." aria-label="Message Jarvis" enterKeyHint="send" autoComplete="off" spellCheck={true} ref={input}
+            value={value} onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
+          <button className="compose-tool t-blue" title="Attach" aria-label="Attach file" type="button" onClick={() => file.current?.click()}><svg className="i " aria-hidden="true"><use href="#i-plus" /></svg></button>
+          <button className={'compose-tool t-violet' + (rec ? ' rec' : '')} title="Voice" aria-label="Voice input" type="button" onClick={() => setRec((r) => !r)}><svg className="i " aria-hidden="true"><use href="#i-mic" /></svg></button>
+          <button className={'send' + (value.trim() ? ' ready' : '')} id="send-btn" type="button" aria-label="Send" onClick={send}><svg className="i " aria-hidden="true"><use href="#i-send" /></svg></button>
+          <input type="file" hidden ref={file} onChange={(e) => { const f = e.target.files?.[0]; if (f) { add('me', 'Attached: ' + f.name); e.target.value = ''; } }} />
+        </div>
+      )}
+      {ownerKeyStatus ? <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '6px', textAlign: 'center' }}>{ownerKeyStatus}</div> : null}
     </>
   );
 }

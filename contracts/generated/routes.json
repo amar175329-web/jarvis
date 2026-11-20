@@ -58,6 +58,22 @@
       "response": "AuthSessionDeleteResponse"
     },
     {
+      "name": "auth.owner.enter",
+      "path": "/api/auth/owner.enter",
+      "method": "POST",
+      "auth": "none",
+      "summary": "Verify owner entry key and issue HttpOnly session cookie.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "unauthorized",
+        "rate_limited",
+        "unavailable"
+      ],
+      "request": "AuthOwnerEnterRequest",
+      "response": "AuthOwnerEnterResponse"
+    },
+    {
       "name": "system.health",
       "path": "/api/system/health",
       "method": "GET",
@@ -459,6 +475,51 @@
       },
       "required": [
         "device"
+      ],
+      "additionalProperties": false
+    },
+    "AuthOwnerEnterRequest": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      },
+      "required": [
+        "key"
+      ],
+      "additionalProperties": false
+    },
+    "AuthOwnerEnterResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            }
+          },
+          "required": [
+            "id",
+            "email"
+          ],
+          "additionalProperties": false
+        },
+        "expires_in": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "user",
+        "expires_in"
       ],
       "additionalProperties": false
     },

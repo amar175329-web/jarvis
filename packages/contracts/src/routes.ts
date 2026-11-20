@@ -77,6 +77,12 @@ export const ROUTES = {
     summary: 'Clear the owner session cookie and ask Supabase Auth to sign out.', input: Empty,
     output: z.object({ signed_out: z.literal(true) }).strict(),
   }),
+  'auth.owner.enter': route({
+    path: '/api/auth/owner.enter', method: 'POST', auth: 'none', killSensitive: false, errors: ['bad_request', 'unauthorized', 'rate_limited', 'unavailable'],
+    summary: 'Verify owner entry key and issue HttpOnly session cookie.',
+    input: z.object({ key: z.string().min(1).max(4096) }).strict(),
+    output: z.object({ user: SessionUser, expires_in: z.number().int().positive() }).strict(),
+  }),
   'system.health': route({
     path: '/api/system/health', method: 'GET', auth: 'none', killSensitive: false, errors: ['unavailable'],
     summary: 'Real database query (keeps the free Supabase project awake). Returns nothing private.',

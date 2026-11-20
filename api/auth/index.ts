@@ -1,9 +1,16 @@
 import { Buffer } from 'node:buffer';
+import crypto from 'node:crypto';
 
 export const SESSION_COOKIE = 'jarvis_session';
-const SESSION_MAX_AGE = 7 * 24 * 60 * 60;
+const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days for token exchange
 const ACCESS_ONLY_MAX_AGE = 60 * 60;
 const MAX_BODY_BYTES = 10 * 1024;
+const OWNER_ENTER_MAX_AGE = 30 * 24 * 60 * 60; // 30 days = 2,592,000s
+
+const ipAttempts = new Map<string, number[]>();
+export function resetOwnerEnterRateLimits() {
+  ipAttempts.clear();
+}
 
 type AuthUser = { id: string; email: string };
 type CookieSession = { access_token: string; refresh_token?: string; issued_at: number };
@@ -141,24 +148,8 @@ export async function readOwnerSession(request: any, options: AuthOptions = {}):
     const match = /^Bearer\s+([A-Za-z0-9._~-]{20,4096})$/i.exec(auth);
     if (match) session = { access_token: match[1], issued_at: Date.now() };
   }
-  let rotated = false;
-  if (!session && o.ownerPassword) {
-    try {
-      const authRes = await o.fetcher(`${o.url}/auth/v1/token?grant_type=password`, {
-        method: 'POST',
-        headers: { apikey: o.anonKey, 'content-type': 'application/json' },
-        body: JSON.stringify({ email: o.ownerEmail, password: o.ownerPassword }),
-      });
-      if (authRes.ok) {
-        const authData = (await authRes.json()) as { access_token?: string; refresh_token?: string };
-        if (typeof authData.access_token === 'string') {
-          session = { access_token: authData.access_token, ...(authData.refresh_token ? { refresh_token: authData.refresh_token } : {}), issued_at: Date.now() };
-          rotated = true;
-        }
-      }
-    } catch { /* Fallback to missing session */ }
-  }
   if (!session) return { ok: false, status: 401, message: 'owner session is missing', clearCookie: true };
+  let rotated = false;
   let verified = await verifyAccessToken(session.access_token, o);
   if (!verified.ok && verified.status === 401 && session.refresh_token) {
     const refreshed = await refreshSession(session, o);
@@ -170,6 +161,110 @@ export async function readOwnerSession(request: any, options: AuthOptions = {}):
   if (verified.user.email !== o.ownerEmail) return { ok: false, status: 403, message: 'this account is not the configured JARVIS owner', clearCookie: true };
   const expiresIn = session.refresh_token ? SESSION_MAX_AGE : Math.max(0, ACCESS_ONLY_MAX_AGE - Math.floor((Date.now() - session.issued_at) / 1000));
   return { ok: true, user: verified.user, expiresIn, accessToken: session.access_token, ...(rotated ? { setCookie: setCookie(session, true) } : {}) };
+}
+
+function constantTimeEqual(a: string, b: string): boolean {
+  const hashA = crypto.createHash('sha256').update(a).digest();
+  const hashB = crypto.createHash('sha256').update(b).digest();
+  return crypto.timingSafeEqual(hashA, hashB);
+}
+
+export async function ownerEnter(request: any, options: AuthOptions = {}): Promise<Response> {
+  const reqMethod = (request?.method ?? 'POST').toUpperCase();
+  if (reqMethod !== 'POST') return error(405, 'bad_request', 'method not allowed', { Allow: 'POST' });
+
+  const ip = getHeader(request, 'x-forwarded-for')?.split(',')[0].trim() ||
+             getHeader(request, 'x-real-ip')?.trim() ||
+             request?.socket?.remoteAddress ||
+             request?.ip ||
+             '127.0.0.1';
+
+  const now = Date.now();
+  const windowMs = 10 * 60 * 1000;
+  const history = (ipAttempts.get(ip) ?? []).filter((t) => now - t < windowMs);
+  ipAttempts.set(ip, history);
+  if (history.length >= 5) {
+    return error(429, 'rate_limited', 'too many attempts');
+  }
+
+  const env = options.env ?? process.env;
+  const entryKey = env.OWNER_ENTRY_KEY?.trim();
+  const ownerEmail = env.OWNER_EMAIL?.trim().toLowerCase();
+  const ownerPassword = env.OWNER_PASSWORD?.trim();
+  const url = env.SUPABASE_URL?.replace(/\/$/, '');
+  const anonKey = env.SUPABASE_ANON_KEY;
+
+  const recordFailure = () => {
+    history.push(Date.now());
+    ipAttempts.set(ip, history);
+  };
+
+  const body = await readJson(request);
+  const key = typeof body?.key === 'string' ? body.key.trim() : null;
+
+  if (!entryKey || !ownerEmail || !ownerPassword || !url || !anonKey) {
+    recordFailure();
+    return error(401, 'unauthorized', 'unauthorized');
+  }
+
+  if (!key || !constantTimeEqual(key, entryKey)) {
+    recordFailure();
+    return error(401, 'unauthorized', 'unauthorized');
+  }
+
+  const fetcher = options.fetch ?? fetch;
+  try {
+    const authRes = await fetcher(`${url}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { apikey: anonKey, 'content-type': 'application/json' },
+      body: JSON.stringify({ email: ownerEmail, password: ownerPassword }),
+    });
+    if (!authRes.ok) {
+      recordFailure();
+      return error(401, 'unauthorized', 'unauthorized');
+    }
+    const authData = (await authRes.json()) as { access_token?: unknown; refresh_token?: unknown };
+    if (typeof authData.access_token !== 'string' || authData.access_token.length < 20) {
+      return error(503, 'unavailable', 'authentication provider error');
+    }
+
+    const token = authData.access_token;
+    const refreshToken = typeof authData.refresh_token === 'string' ? authData.refresh_token : undefined;
+
+    const userRes = await fetcher(`${url}/auth/v1/user`, {
+      headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
+    });
+    if (!userRes.ok) {
+      recordFailure();
+      return error(401, 'unauthorized', 'unauthorized');
+    }
+    const u = (await userRes.json()) as { id?: unknown; email?: unknown };
+    if (typeof u.id !== 'string' || typeof u.email !== 'string' || u.email.trim().toLowerCase() !== ownerEmail) {
+      return error(403, 'forbidden', 'forbidden');
+    }
+
+    const session: CookieSession = {
+      access_token: token,
+      ...(refreshToken ? { refresh_token: refreshToken } : {}),
+      issued_at: Date.now(),
+    };
+    const value = Buffer.from(JSON.stringify(session)).toString('base64url');
+    const cookieHeader = `${SESSION_COOKIE}=${value}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${OWNER_ENTER_MAX_AGE}`;
+
+    return json(
+      200,
+      {
+        ok: true,
+        data: {
+          user: { id: u.id, email: u.email.trim().toLowerCase() },
+          expires_in: OWNER_ENTER_MAX_AGE,
+        },
+      },
+      { 'set-cookie': cookieHeader, 'cache-control': 'no-store' }
+    );
+  } catch {
+    return error(503, 'unavailable', 'authentication provider error');
+  }
 }
 
 export async function getOwnerSessionResponse(request: any, options: AuthOptions = {}): Promise<Response> {
