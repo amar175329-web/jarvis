@@ -4,6 +4,7 @@ import {
   createRlsChatThreadStore,
   handleMessage,
   registerChatProviderAdapters,
+  createGeminiProvider,
   EMPTY_MODEL_ROUTER_CONFIG,
   type ChatInput,
   type ChatThreadStore,
@@ -549,12 +550,16 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
           if (provider === 'anthropic') return env.ANTHROPIC_API_KEY;
           if (provider === 'openai') return env.OPENAI_API_KEY;
           if (provider === 'gemini') return env.GEMINI_API_KEY;
+          if (provider === 'gemini-free') return env.GEMINI_FREE_API_KEY || env.GEMINI_API_KEY;
+          if (provider === 'gemini-paid') return env.GEMINI_PAID_API_KEY || env.GEMINI_API_KEY;
           if (provider === 'opencode-zen') return env.OPENCODE_API_KEY;
           if (provider === 'local') return env.LOCAL_MODEL_TOKEN;
           return undefined;
         },
         envName(provider) {
           if (provider === 'opencode-zen') return 'OPENCODE_API_KEY';
+          if (provider === 'gemini-free') return 'GEMINI_FREE_API_KEY';
+          if (provider === 'gemini-paid') return 'GEMINI_PAID_API_KEY';
           if (provider === 'local') return 'LOCAL_MODEL_TOKEN';
           return `${provider.toUpperCase()}_API_KEY`;
         },
@@ -568,6 +573,9 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
       url: env.LOCAL_MODEL_URL,
       token: env.LOCAL_MODEL_TOKEN,
     });
+    const geminiAdapter = createGeminiProvider(c?.fetcher);
+    rawGateway.registerProvider({ ...geminiAdapter, name: 'gemini-free' });
+    rawGateway.registerProvider({ ...geminiAdapter, name: 'gemini-paid' });
     gateway = rawGateway;
   }
 
@@ -680,6 +688,8 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
             if (provider === 'anthropic') return Boolean(env.ANTHROPIC_API_KEY);
             if (provider === 'openai') return Boolean(env.OPENAI_API_KEY);
             if (provider === 'gemini') return Boolean(env.GEMINI_API_KEY);
+            if (provider === 'gemini-free') return Boolean(env.GEMINI_FREE_API_KEY || env.GEMINI_API_KEY);
+            if (provider === 'gemini-paid') return Boolean(env.GEMINI_PAID_API_KEY || env.GEMINI_API_KEY);
             if (provider === 'opencode-zen') return Boolean(env.OPENCODE_API_KEY);
             if (provider === 'local') return Boolean(env.LOCAL_MODEL_TOKEN);
             return false;

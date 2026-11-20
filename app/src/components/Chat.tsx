@@ -188,6 +188,7 @@ export function Chat() {
       let buffer = '';
       let accumulated = '';
 
+      let hasError = false;
       while (true) {
         const { done, value: chunk } = await reader.read();
         if (done) break;
@@ -200,14 +201,22 @@ export function Chat() {
             try {
               const frame = JSON.parse(line.slice(5).trim());
               if (frame.type === 'chat.message.delta' && typeof frame.text === 'string') {
-                accumulated += frame.text;
+                if (hasError) {
+                  accumulated = frame.text;
+                  hasError = false;
+                } else {
+                  accumulated += frame.text;
+                }
                 setMsgs((m) => m.map((msg) => msg.id === aiMsgId ? { ...msg, text: accumulated } : msg));
               } else if (frame.type === 'chat.message.error') {
+                hasError = true;
                 const codeMsg = frame.code === 'kill_switch_on'
                   ? 'Kill switch ON hai, main kuch nahi kar raha.'
                   : (frame.code === 'needs_model' || frame.code === 'unconfigured')
                     ? 'Model set nahi hai. Settings mein model slot configure karein.'
-                    : `Error: ${frame.code}`;
+                    : (frame.code === 'provider_error')
+                      ? 'Model service se jawab nahi mila. Main is error ko safe tareeke se rok raha hoon.'
+                      : `Error: ${frame.code}`;
                 accumulated = codeMsg;
                 setMsgs((m) => m.map((msg) => msg.id === aiMsgId ? { ...msg, text: accumulated } : msg));
               }
