@@ -57,7 +57,7 @@ function decodeCookie(header: string | null): CookieSession | null {
   try {
     const v = JSON.parse(Buffer.from(raw, 'base64url').toString('utf8')) as Partial<CookieSession>;
     if (typeof v.access_token !== 'string' || v.access_token.length < 20 || v.access_token.length > 4096) return null;
-    if (v.refresh_token !== undefined && (typeof v.refresh_token !== 'string' || v.refresh_token.length < 20 || v.refresh_token.length > 4096)) return null;
+    if (v.refresh_token !== undefined && (typeof v.refresh_token !== 'string' || v.refresh_token.length < 5 || v.refresh_token.length > 4096)) return null;
     return { access_token: v.access_token, ...(v.refresh_token ? { refresh_token: v.refresh_token } : {}), issued_at: Number.isFinite(v.issued_at) ? Number(v.issued_at) : 0 };
   } catch { return null; }
 }
@@ -118,7 +118,7 @@ async function refreshSession(session: CookieSession, o: NonNullable<ReturnType<
     if (r.status === 400 || r.status === 401 || r.status === 403) return { ok: false, status: 401 };
     if (!r.ok) return { ok: false, status: 503 };
     const tokens = await r.json() as { access_token?: unknown; refresh_token?: unknown };
-    if (typeof tokens.access_token !== 'string' || tokens.access_token.length < 20 || tokens.access_token.length > 4096 || typeof tokens.refresh_token !== 'string' || tokens.refresh_token.length < 20 || tokens.refresh_token.length > 4096) return { ok: false, status: 503 };
+    if (typeof tokens.access_token !== 'string' || tokens.access_token.length < 20 || tokens.access_token.length > 4096 || typeof tokens.refresh_token !== 'string' || tokens.refresh_token.length < 5 || tokens.refresh_token.length > 4096) return { ok: false, status: 503 };
     return { ok: true, session: { access_token: tokens.access_token, refresh_token: tokens.refresh_token, issued_at: Date.now() } };
   } catch { return { ok: false, status: 503 }; }
 }
@@ -129,7 +129,7 @@ export async function createOwnerSession(request: Request, options: AuthOptions 
   const o = config(options);
   if (!o) return error(503, 'unavailable', 'authentication is not configured');
   const body = await readJson(request);
-  if (!body || typeof body.access_token !== 'string' || body.access_token.length < 20 || body.access_token.length > 4096 || (body.refresh_token !== undefined && (typeof body.refresh_token !== 'string' || body.refresh_token.length < 20 || body.refresh_token.length > 4096)) || Object.keys(body).some((k) => !['access_token', 'refresh_token'].includes(k))) {
+  if (!body || typeof body.access_token !== 'string' || body.access_token.length < 20 || body.access_token.length > 4096 || (body.refresh_token !== undefined && (typeof body.refresh_token !== 'string' || body.refresh_token.length < 5 || body.refresh_token.length > 4096)) || Object.keys(body).some((k) => !['access_token', 'refresh_token'].includes(k))) {
     return error(400, 'bad_request', 'a valid Supabase access_token and optional refresh_token are required');
   }
   const verified = await verifyAccessToken(body.access_token, o);
