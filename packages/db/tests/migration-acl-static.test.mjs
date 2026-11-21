@@ -18,3 +18,15 @@ for (const name of names) {
     assert.doesNotMatch(grants, new RegExp(`grant execute on function[^;]*public\\.${name}[^;]*to (?:public|anon|authenticated)`, 'i'));
   });
 }
+
+const sql0051 = fs.readFileSync(new URL('../migrations/0051_owner_enter_rate_limits.sql', import.meta.url), 'utf8');
+const rpc0051 = ['check_owner_enter_rate_limit', 'record_owner_enter_failure'];
+for (const name of rpc0051) {
+  test(`migration 0051 revokes PUBLIC/anon/authenticated EXECUTE from ${name}`, () => {
+    assert.match(sql0051, new RegExp(`revoke all on function public\\.${name}\\([^)]*\\) from public, anon, authenticated`, 'i'));
+  });
+  test(`migration 0051 grants EXECUTE on ${name} only to service_role`, () => {
+    assert.match(sql0051, new RegExp(`grant execute on function public\\.${name}\\([^)]*\\) to service_role`, 'i'));
+    assert.doesNotMatch(sql0051, new RegExp(`grant execute on function[^;]*public\\.${name}[^;]*to (?:public|anon|authenticated)`, 'i'));
+  });
+}
