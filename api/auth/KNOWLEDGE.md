@@ -19,3 +19,4 @@ KNOWN ISSUES: A browser login UI / Supabase client integration is a later app ta
 CHANGE LOG:
 - (append-only) 2026-11-07 - Folder-First registration before code - 0.0.1.
 - 2026-11-07 - Three owner session routes, cookie refresh/clear and 10 auth tests added - 0.1.0.
+- 2026-11-21 - Replaced in-memory `ipAttempts` Map in `owner.enter` with DB-backed atomic Postgres RPC rate limiting (per-IP 5/10m, global 20/10m, strict `x-forwarded-for` IP extraction, exponential delay capped at 5s, fail-closed 503 on DB error) - 0.2.0.

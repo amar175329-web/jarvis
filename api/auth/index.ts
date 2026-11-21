@@ -6,15 +6,23 @@ const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days for token exchange
 const ACCESS_ONLY_MAX_AGE = 60 * 60;
 const MAX_BODY_BYTES = 10 * 1024;
 const OWNER_ENTER_MAX_AGE = 30 * 24 * 60 * 60; // 30 days = 2,592,000s
+const OWNER_ENTER_WINDOW_SECONDS = 10 * 60; // 10 minutes
+const OWNER_ENTER_IP_LIMIT = 5;
+const OWNER_ENTER_GLOBAL_LIMIT = 20;
+const OWNER_ENTER_MAX_DELAY_MS = 5000;
 
-const ipAttempts = new Map<string, number[]>();
-export function resetOwnerEnterRateLimits() {
-  ipAttempts.clear();
+export function computeOwnerEnterDelayMs(failureCount: number): number {
+  const n = Math.max(1, Math.floor(failureCount));
+  return Math.min(OWNER_ENTER_MAX_DELAY_MS, 200 * Math.pow(2, n - 1));
 }
 
 type AuthUser = { id: string; email: string };
 type CookieSession = { access_token: string; refresh_token?: string; issued_at: number };
-type AuthOptions = { env?: Record<string, string | undefined>; fetch?: typeof fetch };
+type AuthOptions = {
+  env?: Record<string, string | undefined>;
+  fetch?: typeof fetch;
+  sleep?: (ms: number) => Promise<void>;
+};
 export type SessionResult =
   | { ok: true; user: AuthUser; expiresIn: number; setCookie?: string; accessToken: string }
   | { ok: false; status: 401 | 403 | 503; message: string; clearCookie?: boolean };
@@ -169,23 +177,93 @@ function constantTimeEqual(a: string, b: string): boolean {
   return crypto.timingSafeEqual(hashA, hashB);
 }
 
+function extractClientIp(request: any): string {
+  const xff = getHeader(request, 'x-forwarded-for');
+  if (!xff) return 'unknown';
+  const first = xff.split(',')[0]?.trim();
+  return first ? first.slice(0, 128) : 'unknown';
+}
+
+type RateCheckResult =
+  | { ok: true; allowed: boolean; ipCount: number; globalCount: number }
+  | { ok: false };
+
+type RateRecordResult =
+  | { ok: true; ipCount: number; globalCount: number; blocked: boolean }
+  | { ok: false };
+
+async function callRateLimitRpc(
+  fetcher: typeof fetch,
+  url: string,
+  serviceKey: string,
+  rpcName: 'check_owner_enter_rate_limit' | 'record_owner_enter_failure',
+  ip: string,
+): Promise<Record<string, unknown> | null> {
+  try {
+    const res = await fetcher(`${url}/rest/v1/rpc/${rpcName}`, {
+      method: 'POST',
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        p_ip: ip,
+        p_window_seconds: OWNER_ENTER_WINDOW_SECONDS,
+        p_ip_limit: OWNER_ENTER_IP_LIMIT,
+        p_global_limit: OWNER_ENTER_GLOBAL_LIMIT,
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data || typeof data !== 'object') return null;
+    return data as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+async function checkOwnerEnterRateLimit(
+  fetcher: typeof fetch,
+  url: string,
+  serviceKey: string,
+  ip: string,
+): Promise<RateCheckResult> {
+  const data = await callRateLimitRpc(fetcher, url, serviceKey, 'check_owner_enter_rate_limit', ip);
+  if (
+    !data ||
+    typeof data.allowed !== 'boolean' ||
+    typeof data.ip_count !== 'number' ||
+    typeof data.global_count !== 'number'
+  ) {
+    return { ok: false };
+  }
+  return { ok: true, allowed: data.allowed, ipCount: data.ip_count, globalCount: data.global_count };
+}
+
+async function recordOwnerEnterFailure(
+  fetcher: typeof fetch,
+  url: string,
+  serviceKey: string,
+  ip: string,
+): Promise<RateRecordResult> {
+  const data = await callRateLimitRpc(fetcher, url, serviceKey, 'record_owner_enter_failure', ip);
+  if (
+    !data ||
+    typeof data.ip_count !== 'number' ||
+    typeof data.global_count !== 'number' ||
+    typeof data.blocked !== 'boolean'
+  ) {
+    return { ok: false };
+  }
+  return { ok: true, ipCount: data.ip_count, globalCount: data.global_count, blocked: data.blocked };
+}
+
+const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 export async function ownerEnter(request: any, options: AuthOptions = {}): Promise<Response> {
   const reqMethod = (request?.method ?? 'POST').toUpperCase();
   if (reqMethod !== 'POST') return error(405, 'bad_request', 'method not allowed', { Allow: 'POST' });
-
-  const ip = getHeader(request, 'x-forwarded-for')?.split(',')[0].trim() ||
-             getHeader(request, 'x-real-ip')?.trim() ||
-             request?.socket?.remoteAddress ||
-             request?.ip ||
-             '127.0.0.1';
-
-  const now = Date.now();
-  const windowMs = 10 * 60 * 1000;
-  const history = (ipAttempts.get(ip) ?? []).filter((t) => now - t < windowMs);
-  ipAttempts.set(ip, history);
-  if (history.length >= 5) {
-    return error(429, 'rate_limited', 'too many attempts');
-  }
 
   const env = options.env ?? process.env;
   const entryKey = env.OWNER_ENTRY_KEY?.trim();
@@ -193,26 +271,47 @@ export async function ownerEnter(request: any, options: AuthOptions = {}): Promi
   const ownerPassword = env.OWNER_PASSWORD?.trim();
   const url = env.SUPABASE_URL?.replace(/\/$/, '');
   const anonKey = env.SUPABASE_ANON_KEY;
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  const fetcher = options.fetch ?? fetch;
+  const sleep = options.sleep ?? defaultSleep;
 
-  const recordFailure = () => {
-    history.push(Date.now());
-    ipAttempts.set(ip, history);
+  // Fail-closed 503 if DB rate-limit backend is not configured
+  if (!url || !serviceKey) {
+    return error(503, 'unavailable', 'authentication service unavailable');
+  }
+
+  const ip = extractClientIp(request);
+
+  // Check DB rate limit BEFORE validating key so even the correct key returns 429 once limited
+  const rateCheck = await checkOwnerEnterRateLimit(fetcher, url, serviceKey, ip);
+  if (!rateCheck.ok) {
+    return error(503, 'unavailable', 'authentication service unavailable');
+  }
+  if (!rateCheck.allowed) {
+    return error(429, 'rate_limited', 'too many attempts');
+  }
+
+  const failAttempt = async (): Promise<Response> => {
+    const recorded = await recordOwnerEnterFailure(fetcher, url, serviceKey, ip);
+    if (!recorded.ok) {
+      return error(503, 'unavailable', 'authentication service unavailable');
+    }
+    const delayMs = computeOwnerEnterDelayMs(Math.max(recorded.ipCount, recorded.globalCount));
+    await sleep(delayMs);
+    return error(401, 'unauthorized', 'unauthorized');
   };
 
   const body = await readJson(request);
   const key = typeof body?.key === 'string' ? body.key.trim() : null;
 
-  if (!entryKey || !ownerEmail || !ownerPassword || !url || !anonKey) {
-    recordFailure();
-    return error(401, 'unauthorized', 'unauthorized');
+  if (!entryKey || !ownerEmail || !ownerPassword || !anonKey) {
+    return failAttempt();
   }
 
   if (!key || !constantTimeEqual(key, entryKey)) {
-    recordFailure();
-    return error(401, 'unauthorized', 'unauthorized');
+    return failAttempt();
   }
 
-  const fetcher = options.fetch ?? fetch;
   try {
     const authRes = await fetcher(`${url}/auth/v1/token?grant_type=password`, {
       method: 'POST',
@@ -220,8 +319,7 @@ export async function ownerEnter(request: any, options: AuthOptions = {}): Promi
       body: JSON.stringify({ email: ownerEmail, password: ownerPassword }),
     });
     if (!authRes.ok) {
-      recordFailure();
-      return error(401, 'unauthorized', 'unauthorized');
+      return failAttempt();
     }
     const authData = (await authRes.json()) as { access_token?: unknown; refresh_token?: unknown };
     if (typeof authData.access_token !== 'string' || authData.access_token.length < 20) {
@@ -235,8 +333,7 @@ export async function ownerEnter(request: any, options: AuthOptions = {}): Promi
       headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
     });
     if (!userRes.ok) {
-      recordFailure();
-      return error(401, 'unauthorized', 'unauthorized');
+      return failAttempt();
     }
     const u = (await userRes.json()) as { id?: unknown; email?: unknown };
     if (typeof u.id !== 'string' || typeof u.email !== 'string' || u.email.trim().toLowerCase() !== ownerEmail) {

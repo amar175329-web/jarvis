@@ -24,3 +24,4 @@ CHANGE LOG:
 - 2026-11-07 0.1.1: migration 0003 events idempotency; existing LEAD production snapshot later confirmed migrations 0001–0004 applied.
 - 2026-11-07 0.1.2: migration 0004 jobs queue and service_role-only function grants.
 - 2026-11-07 0.1.3: migration 0005 local draft for event rate limit and atomic kill/audit; privilege tests cover all four migration 0004 functions. Not applied to production by this bundle.
+- 2026-11-21 0.1.4: migration 0051 adds `owner_enter_attempts` table and service_role-only atomic RPCs (`check_owner_enter_rate_limit`, `record_owner_enter_failure`) for per-IP (5/10m) and global (20/10m) owner.enter rate limiting; applied and verified on jarvis-test.
