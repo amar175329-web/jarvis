@@ -4,7 +4,8 @@
   "cleanUrls": true,
   "headers": [{ "source": "/(.*)", "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }] }],
   "rewrites": [
-    { "source": "/api/chat/:action", "destination": "/api/chat" }
+    { "source": "/api/chat/:action", "destination": "/api/chat" },
+    { "source": "/((?!api/|assets/).*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/**/*.ts": {
