@@ -39,6 +39,19 @@
     "path": "api/system"
   },
   {
+    "id": "api.tasks",
+    "name": "tasks and reminders API",
+    "kind": "ops-part",
+    "group": "api",
+    "owner_squad": "S08",
+    "phase": 1,
+    "status": "built",
+    "does": "Single owner-authenticated Vercel function for task, reminder, and Today projection routes",
+    "autonomy_default": "L0",
+    "version": "0.1.0",
+    "path": "api/tasks"
+  },
+  {
     "id": "command-center.agents",
     "name": "agents",
     "kind": "ops-part",
@@ -526,10 +539,10 @@
     "group": "core-workspace",
     "owner_squad": "S08",
     "phase": 1,
-    "status": "planned",
+    "status": "built",
     "does": "Reminders",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "features/core-workspace/reminders"
   },
   {
@@ -539,11 +552,24 @@
     "group": "core-workspace",
     "owner_squad": "S08",
     "phase": 1,
-    "status": "planned",
+    "status": "built",
     "does": "Task Manager",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "features/core-workspace/task-manager"
+  },
+  {
+    "id": "features.core-workspace.today",
+    "name": "today",
+    "kind": "feature",
+    "group": "core-workspace",
+    "owner_squad": "S08",
+    "phase": 1,
+    "status": "built",
+    "does": "Owner-scoped Today page and D2-compatible daily focus/schedule read projection",
+    "autonomy_default": "L0",
+    "version": "0.1.0",
+    "path": "features/core-workspace/today"
   },
   {
     "id": "features.customize.automations",
@@ -1764,7 +1790,7 @@
     "status": "built",
     "does": "Zod API request/response contracts, unified errors, Kotlin/JSON Schema generator, owner session, event idempotency and approved S21 voice API contracts",
     "autonomy_default": "L0",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "path": "packages/contracts"
   },
   {
@@ -1777,7 +1803,7 @@
     "status": "built",
     "does": "Supabase schema/migrations, RLS, jobs and service-role-only atomic event rate limit plus kill-switch audit RPC",
     "autonomy_default": "L0",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "path": "packages/db"
   },
   {

@@ -347,6 +347,206 @@
       ],
       "request": "VoiceSpeakRequest",
       "response": "VoiceSpeakResponse"
+    },
+    {
+      "name": "tasks.tasks.list",
+      "path": "/api/tasks/tasks.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "List owner-scoped tasks.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "unavailable"
+      ],
+      "request": "TasksTasksListRequest",
+      "response": "TasksTasksListResponse"
+    },
+    {
+      "name": "tasks.tasks.today",
+      "path": "/api/tasks/tasks.today",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Return owner-local TodayProjection (focus counts, top 3 tasks, generic schedule).",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "unavailable"
+      ],
+      "request": "TasksTasksTodayRequest",
+      "response": "TasksTasksTodayResponse"
+    },
+    {
+      "name": "tasks.tasks.create",
+      "path": "/api/tasks/tasks.create",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Create an owner task.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "payload_too_large",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "TasksTasksCreateRequest",
+      "response": "TasksTasksCreateResponse"
+    },
+    {
+      "name": "tasks.tasks.natural-add",
+      "path": "/api/tasks/tasks.natural-add",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Parse Hindi/Hinglish natural language into a task or reminder; returns 409 conflict on ambiguous time or sensitive content.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "payload_too_large",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "TasksTasksNaturalAddRequest",
+      "response": "TasksTasksNaturalAddResponse"
+    },
+    {
+      "name": "tasks.tasks.update",
+      "path": "/api/tasks/tasks.update",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Update owner task fields.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "payload_too_large",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "TasksTasksUpdateRequest",
+      "response": "TasksTasksUpdateResponse"
+    },
+    {
+      "name": "tasks.tasks.link-project",
+      "path": "/api/tasks/tasks.link-project",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Link a task to an owner project via public.memory_links.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "TasksTasksLinkProjectRequest",
+      "response": "TasksTasksLinkProjectResponse"
+    },
+    {
+      "name": "tasks.tasks.complete",
+      "path": "/api/tasks/tasks.complete",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Idempotently complete an owner task and create exactly one next occurrence if recurring.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "TasksTasksCompleteRequest",
+      "response": "TasksTasksCompleteResponse"
+    },
+    {
+      "name": "tasks.tasks.cancel",
+      "path": "/api/tasks/tasks.cancel",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Cancel an owner task.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "unavailable"
+      ],
+      "request": "TasksTasksCancelRequest",
+      "response": "TasksTasksCancelResponse"
+    },
+    {
+      "name": "reminders.reminders.list",
+      "path": "/api/reminders/reminders.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "List owner-scoped reminders.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "unavailable"
+      ],
+      "request": "RemindersRemindersListRequest",
+      "response": "RemindersRemindersListResponse"
+    },
+    {
+      "name": "reminders.reminders.create",
+      "path": "/api/reminders/reminders.create",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Create a non-sensitive owner reminder and approved worker job; rejects medicine/T2 payloads.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "payload_too_large",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "RemindersRemindersCreateRequest",
+      "response": "RemindersRemindersCreateResponse"
+    },
+    {
+      "name": "reminders.reminders.cancel",
+      "path": "/api/reminders/reminders.cancel",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Cancel a pending owner reminder and its queued job.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "unavailable"
+      ],
+      "request": "RemindersRemindersCancelRequest",
+      "response": "RemindersRemindersCancelResponse"
+    },
+    {
+      "name": "reminders.reminders.consume-memory",
+      "path": "/api/reminders/reminders.consume-memory",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Validate S09 medicine reminder hand-off without echoing private fields; returns 409 conflict until S19 private vault is approved.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "conflict",
+        "unavailable"
+      ],
+      "request": "RemindersRemindersConsumeMemoryRequest",
+      "response": "RemindersRemindersConsumeMemoryResponse"
     }
   ],
   "definitions": {
@@ -1451,6 +1651,297 @@
         "expired"
       ]
     },
+    "RemindersRemindersCancelRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "RemindersRemindersCancelResponse": {
+      "type": "object",
+      "properties": {
+        "cancelled": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "required": [
+        "cancelled"
+      ],
+      "additionalProperties": false
+    },
+    "RemindersRemindersConsumeMemoryRequest": {
+      "type": "object",
+      "properties": {
+        "request": {
+          "type": "object",
+          "properties": {
+            "memory_id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "private": {
+              "type": "boolean",
+              "const": true
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "time_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "display_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "needs_time_confirmation": {
+              "type": "boolean"
+            },
+            "lock_screen_visible": {
+              "type": "boolean",
+              "const": true
+            },
+            "date_text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            },
+            "time_zone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "memory_id",
+            "private",
+            "label",
+            "time_text",
+            "display_text",
+            "needs_time_confirmation",
+            "lock_screen_visible"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "additionalProperties": false
+    },
+    "RemindersRemindersConsumeMemoryResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "RemindersRemindersCreateRequest": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "remind_at": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        },
+        "repeat_rule": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "FREQ=DAILY",
+                "FREQ=WEEKLY",
+                "FREQ=MONTHLY",
+                "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "time_zone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "task_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "text",
+        "remind_at",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "RemindersRemindersCreateResponse": {
+      "type": "object",
+      "properties": {
+        "reminder": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "remind_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "repeat_rule": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "FREQ=DAILY",
+                    "FREQ=WEEKLY",
+                    "FREQ=MONTHLY",
+                    "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "time_zone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "fired",
+                "cancelled"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "text",
+            "remind_at",
+            "repeat_rule",
+            "time_zone",
+            "state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "reminder"
+      ],
+      "additionalProperties": false
+    },
+    "RemindersRemindersListRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "RemindersRemindersListResponse": {
+      "type": "object",
+      "properties": {
+        "reminders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "remind_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              },
+              "repeat_rule": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "FREQ=DAILY",
+                      "FREQ=WEEKLY",
+                      "FREQ=MONTHLY",
+                      "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "time_zone": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "fired",
+                  "cancelled"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "text",
+              "remind_at",
+              "repeat_rule",
+              "time_zone",
+              "state"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "reminders"
+      ],
+      "additionalProperties": false
+    },
     "SystemEventsEmitRequest": {
       "type": "object",
       "properties": {
@@ -1592,6 +2083,966 @@
     },
     "SystemKillSetResponse": {
       "$ref": "#/definitions/KillState"
+    },
+    "TasksTasksCancelRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksCancelResponse": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "due_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "todo",
+                "doing",
+                "done",
+                "cancelled"
+              ]
+            },
+            "priority": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "focus_today": {
+              "type": "boolean"
+            },
+            "repeat_rule": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "FREQ=DAILY",
+                    "FREQ=WEEKLY",
+                    "FREQ=MONTHLY",
+                    "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "time_zone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "due_at",
+            "status",
+            "priority",
+            "focus_today",
+            "repeat_rule",
+            "time_zone"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "task"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksCompleteRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksCompleteResponse": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "due_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "todo",
+                "doing",
+                "done",
+                "cancelled"
+              ]
+            },
+            "priority": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "focus_today": {
+              "type": "boolean"
+            },
+            "repeat_rule": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "FREQ=DAILY",
+                    "FREQ=WEEKLY",
+                    "FREQ=MONTHLY",
+                    "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "time_zone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "due_at",
+            "status",
+            "priority",
+            "focus_today",
+            "repeat_rule",
+            "time_zone"
+          ],
+          "additionalProperties": false
+        },
+        "next_task": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/TasksTasksCompleteResponse/properties/task"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "already_completed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "task",
+        "next_task"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksCreateRequest": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 4000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "due_at": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "focus_today": {
+          "type": "boolean"
+        },
+        "repeat_rule": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "FREQ=DAILY",
+                "FREQ=WEEKLY",
+                "FREQ=MONTHLY",
+                "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "time_zone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "title",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksCreateResponse": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "due_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "todo",
+                "doing",
+                "done",
+                "cancelled"
+              ]
+            },
+            "priority": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "focus_today": {
+              "type": "boolean"
+            },
+            "repeat_rule": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "FREQ=DAILY",
+                    "FREQ=WEEKLY",
+                    "FREQ=MONTHLY",
+                    "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "time_zone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "due_at",
+            "status",
+            "priority",
+            "focus_today",
+            "repeat_rule",
+            "time_zone"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "task"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksLinkProjectRequest": {
+      "type": "object",
+      "properties": {
+        "task_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "project_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "task_id",
+        "project_id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksLinkProjectResponse": {
+      "type": "object",
+      "properties": {
+        "linked": {
+          "type": "boolean",
+          "const": true
+        },
+        "link_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "linked",
+        "link_id"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksListRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "TasksTasksListResponse": {
+      "type": "object",
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "due_at": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Device/properties/paired_at"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "todo",
+                  "doing",
+                  "done",
+                  "cancelled"
+                ]
+              },
+              "priority": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 3
+              },
+              "focus_today": {
+                "type": "boolean"
+              },
+              "repeat_rule": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "FREQ=DAILY",
+                      "FREQ=WEEKLY",
+                      "FREQ=MONTHLY",
+                      "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "time_zone": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "due_at",
+              "status",
+              "priority",
+              "focus_today",
+              "repeat_rule",
+              "time_zone"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "tasks"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksNaturalAddRequest": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "text",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksNaturalAddResponse": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "task",
+            "reminder"
+          ]
+        },
+        "item": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "#/definitions/Device/properties/id"
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "due_at": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Device/properties/paired_at"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "todo",
+                    "doing",
+                    "done",
+                    "cancelled"
+                  ]
+                },
+                "priority": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 3
+                },
+                "focus_today": {
+                  "type": "boolean"
+                },
+                "repeat_rule": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "FREQ=DAILY",
+                        "FREQ=WEEKLY",
+                        "FREQ=MONTHLY",
+                        "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "time_zone": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "due_at",
+                "status",
+                "priority",
+                "focus_today",
+                "repeat_rule",
+                "time_zone"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "#/definitions/Device/properties/id"
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "remind_at": {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                "repeat_rule": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/TasksTasksNaturalAddResponse/properties/item/anyOf/0/properties/repeat_rule/anyOf/0"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "time_zone": {
+                  "$ref": "#/definitions/TasksTasksNaturalAddResponse/properties/item/anyOf/0/properties/time_zone"
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "fired",
+                    "cancelled"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "text",
+                "remind_at",
+                "repeat_rule",
+                "time_zone",
+                "state"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "item"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksTodayRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "TasksTasksTodayResponse": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "time_zone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "focus": {
+          "type": "object",
+          "properties": {
+            "open_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "overdue_count": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "top_tasks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Device/properties/id"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "due_at": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/definitions/Device/properties/paired_at"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "todo",
+                      "doing",
+                      "done",
+                      "cancelled"
+                    ]
+                  },
+                  "priority": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3
+                  },
+                  "focus_today": {
+                    "type": "boolean"
+                  },
+                  "repeat_rule": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "FREQ=DAILY",
+                          "FREQ=WEEKLY",
+                          "FREQ=MONTHLY",
+                          "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "time_zone": {
+                    "$ref": "#/definitions/TasksTasksTodayResponse/properties/time_zone"
+                  }
+                },
+                "required": [
+                  "id",
+                  "title",
+                  "due_at",
+                  "status",
+                  "priority",
+                  "focus_today",
+                  "repeat_rule",
+                  "time_zone"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 3
+            }
+          },
+          "required": [
+            "open_count",
+            "overdue_count",
+            "top_tasks"
+          ],
+          "additionalProperties": false
+        },
+        "schedule": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "task",
+                  "reminder"
+                ]
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              },
+              "status": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "priority": {
+                "$ref": "#/definitions/TasksTasksTodayResponse/properties/focus/properties/top_tasks/items/properties/priority"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "title",
+              "at",
+              "status"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "date",
+        "time_zone",
+        "focus",
+        "schedule"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 4000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "due_at": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "repeat_rule": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "FREQ=DAILY",
+                "FREQ=WEEKLY",
+                "FREQ=MONTHLY",
+                "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "focus_today": {
+          "type": "boolean"
+        },
+        "time_zone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksUpdateResponse": {
+      "type": "object",
+      "properties": {
+        "task": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "due_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "todo",
+                "doing",
+                "done",
+                "cancelled"
+              ]
+            },
+            "priority": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3
+            },
+            "focus_today": {
+              "type": "boolean"
+            },
+            "repeat_rule": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "FREQ=DAILY",
+                    "FREQ=WEEKLY",
+                    "FREQ=MONTHLY",
+                    "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "time_zone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "due_at",
+            "status",
+            "priority",
+            "focus_today",
+            "repeat_rule",
+            "time_zone"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "task"
+      ],
+      "additionalProperties": false
     },
     "VoiceSpeakRequest": {
       "type": "object",

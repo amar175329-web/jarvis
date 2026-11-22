@@ -266,10 +266,10 @@
     "group": "core-workspace",
     "owner_squad": "S08",
     "phase": 1,
-    "status": "planned",
+    "status": "built",
     "does": "Reminders",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "features/core-workspace/reminders"
   },
   {
@@ -279,11 +279,24 @@
     "group": "core-workspace",
     "owner_squad": "S08",
     "phase": 1,
-    "status": "planned",
+    "status": "built",
     "does": "Task Manager",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "features/core-workspace/task-manager"
+  },
+  {
+    "id": "features.core-workspace.today",
+    "name": "today",
+    "kind": "feature",
+    "group": "core-workspace",
+    "owner_squad": "S08",
+    "phase": 1,
+    "status": "built",
+    "does": "Owner-scoped Today page and D2-compatible daily focus/schedule read projection",
+    "autonomy_default": "L0",
+    "version": "0.1.0",
+    "path": "features/core-workspace/today"
   },
   {
     "id": "features.customize.automations",

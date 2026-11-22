@@ -32,3 +32,4 @@ CHANGE LOG:
 - 2026-11-07 - Vite+React+TS app बना; shell + Home + More; visual test 4/4 और behavior test 7/7 पास; status planned -> built - 0.1.0
 - 2026-11-07 - Owner kill-switch component और fail-closed UI policy; six policy tests added; reference UI unchanged - app update.
 - 2026-11-21 - P26 full-app OwnerLock gate (`OwnerLock.tsx`, `OwnerLock.css`, `ownerLockPolicy.ts`): checks `GET /api/auth/session.get` on load, unmounts entire app when locked, unlocks without reload on `owner.enter` 200, relocks on 401/logout, distinct 429/503 Hinglish messages, SPA fallback rewrite in `vercel.json`.
+- 2026-11-21 - P28 S08 shell integration (CR-8): wired Today (`TodayPage.tsx`) and Tasks (`TaskManagerPage.tsx`) into `Sidebar`, `Topbar`, and `App.tsx`; HomePage D2 cards untouched.

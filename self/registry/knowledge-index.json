@@ -17,6 +17,12 @@
     "can_do": "- `GET /api/system/kill.get` returns the current state to the owner or a paired device. Missing/unreadable/malformed state returns 503 with all actions treated as blocked.\n- `POST /api/system/kill.set` writes state and an activity audit atomically via `set_system_kill`; a device can only set `kill=true`, owner alone can set false.\n- Auth accepts the owner HttpOnly session or a paired device Bearer token; device token is pepper-hashed and looked up server-side. Service-role credentials never go to app/phone.\n- `POST /api/system/events.emit` validates registered event schemas, requires `idempotency_key`, forces device source on server, checks a database-backed 60/minute owner limit, and persists duplicates idempotently.\n- `POST /api/system/events.list` is owner-only and returns bounded, filtered event history.",
     "limits": "- It does not execute phone commands or turn the kill switch OFF from a device.\n- Migration `0005_event_rate_limits.sql` is a new local migration draft and must be applied by Antigravity to the real project before event intake/rate limiting and atomic kill audit work in production.\n- The events table remains outside Realtime publication; `realtime=true` is only metadata for event classification. Realtime stays on `phone_commands`, `system_state`, `tasks`, `reminders`.\n- Android secure token storage and native kill UI remain the Android squad's client-side responsibility."
   },
+  "api.tasks": {
+    "status": "built",
+    "what_it_is": "One owner-authenticated Vercel function intended to dispatch both `/api/tasks/*` and `/api/reminders/*` actions for S08.",
+    "can_do": "- Reuse `readOwnerSession` from `api/auth` and the signed-in owner's bearer token with the Supabase anon key so row-level security remains active.\n- Read and mutate existing `public.tasks` and `public.reminders`, and enqueue reminder-fire jobs in the existing owner-scoped `public.jobs` table.\n- Return the Today projection consumed by S08 and D2.\n- Route every write through `packages/harness` `executePower`, fail-closed kill-switch checks, and a pre-written metadata-only decision intent.",
+    "limits": "- This becomes function 12 of 12 on the supplied Vercel Hobby deployment baseline (11 already used + this one). No squad may add another `api/` function file; all future API routes/features must reuse this function or an already-existing function. Both public route groups need LEAD/S00 rewrites to this handler.\n- Does not use a service-role key, edit `packages/contracts`, bypass RLS, or invent/register powers.\n- Mutations are expected to stay blocked until S00 accepts the contract and rewrites, S22 registers powers, and Antigravity applies the 0060 migration.\n- Medicine/T2 content cannot be persisted without S19 private-vault encryption; accepted S09 hand-offs currently return a safe conflict response."
+  },
   "command-center.agents": {
     "status": "planned",
     "what_it_is": "हर agent की अपनी फ़ाइलें (नीचे देखो)",
@@ -240,16 +246,22 @@
     "limits": "- Abhi kuch bana nahi hai.\n- Tasks ka asli data S08 ka (task-manager); yahan sirf link.\n- Gantt/board nahi (boards S10)."
   },
   "features.core-workspace.reminders": {
-    "status": "planned",
-    "what_it_is": "Reminders",
-    "can_do": "- (planned) Reminders",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "S08 owner-scoped reminder CRUD, recurrence scheduling, and the worker-side reminder-fire handler.",
+    "can_do": "- Create, list, and cancel public/non-sensitive reminders from manual form fields or deterministic Hindi/Hinglish quick-add.\n- Queue each reminder in the existing `public.jobs` table with `kind=reminders.fire`, only `{reminder_id}` in the payload, a stable per-occurrence idempotency key, and a link to the pre-written owner `decisions` approval row.\n- Advance daily, weekly, weekdays, or monthly reminders in the reminder time zone; late worker runs skip missed periods.\n- Validate and consume the S09 `MedicineReminderRequest` shape without treating the hand-off as an already-created reminder.",
+    "limits": "- Does not store T2 medicine labels/display text in plaintext. S19 private vault encryption/decryption is not present, so valid medicine hand-offs are intentionally blocked from persistence.\n- Does not itself send device notifications. S00 must register the handler in `worker/jobs`; S16A must provide the allow-listed `notification.show` capability and notification client.\n- Mutations remain blocked until LEAD contracts, S22 powers, the 0060 migration and the worker integration are accepted/applied."
   },
   "features.core-workspace.task-manager": {
-    "status": "planned",
-    "what_it_is": "Task Manager",
-    "can_do": "- (planned) Task Manager",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "S08 owner-scoped task management with deterministic Hindi/Hinglish quick-add and an editable Task Manager page.",
+    "can_do": "- Create, list, edit, complete, and cancel tasks through the shared S08 API function.\n- Parse common Hindi/Hinglish/Devanagari dates, weekday names, times, repeat rules, and priority cues without an LLM call.\n- Use one shared `src/sensitivity.mjs` classifier from both the parser and API; health, medicine, credential, bank/account, and uncertain private-context text is blocked before public-table writes.\n- Store due timestamps with an explicit IANA time zone; default is Asia/Kolkata.\n- Create the next recurring task only after a task is completed; late completions skip missed repeat periods.\n- Link a task to a project using the existing `memory_links` relation (`src_type=task`, `rel=part_of`, `dst_type=project`).",
+    "limits": "- Does not persist health/medicine/credential/financial or uncertain private-context text as normal task/reminder content; the API asks `yeh private hai? abhi sirf normal reminders save hote hain` and blocks the write until an approved private path exists.\n- Does not call a model; parsing is deterministic and deliberately asks for AM/PM when a time is ambiguous.\n- Mutations remain blocked until LEAD accepts the API contract, S22 registers/raises the required powers, and Antigravity applies the 0060 migration.\n- App shell/navigation integration is owned by S00; this feature does not edit `app/src` or the approved UI reference."
+  },
+  "features.core-workspace.today": {
+    "status": "built",
+    "what_it_is": "S08 Today page: an owner-scoped daily view over tasks and reminders. It is a data consumer for D2 Today’s Focus and Today’s Schedule, not a replacement for those Home cards.",
+    "can_do": "- Show today's task timeline, open task counts, overdue counts, and priority-ranked tasks.\n- Expose the stable owner-scoped `focus` and `schedule` projection from `POST /api/tasks/tasks.today` for S01/S02.\n- Keep medicine details out of generic schedule labels; reminders are projected with a generic title only.\n- Link into S08 task-manager and reminders pages once the shell route is accepted.",
+    "limits": "- Cannot edit the app shell, approved reference HTML, or D2 Home cards; S00/S01/S02 own those surfaces.\n- Does not infer or disclose T2 medicine details in generic summaries, events, or logs.\n- It is not wired into app navigation until LEAD accepts the integration CR."
   },
   "features.customize.automations": {
     "status": "planned",

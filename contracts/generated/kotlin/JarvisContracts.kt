@@ -31,6 +31,18 @@ object JarvisRoutes {
     const val CHAT_MESSAGES_STREAM = "/api/chat/messages.stream"
     const val VOICE_TRANSCRIBE = "/api/voice/transcribe"
     const val VOICE_SPEAK = "/api/voice/speak"
+    const val TASKS_TASKS_LIST = "/api/tasks/tasks.list"
+    const val TASKS_TASKS_TODAY = "/api/tasks/tasks.today"
+    const val TASKS_TASKS_CREATE = "/api/tasks/tasks.create"
+    const val TASKS_TASKS_NATURAL_ADD = "/api/tasks/tasks.natural-add"
+    const val TASKS_TASKS_UPDATE = "/api/tasks/tasks.update"
+    const val TASKS_TASKS_LINK_PROJECT = "/api/tasks/tasks.link-project"
+    const val TASKS_TASKS_COMPLETE = "/api/tasks/tasks.complete"
+    const val TASKS_TASKS_CANCEL = "/api/tasks/tasks.cancel"
+    const val REMINDERS_REMINDERS_LIST = "/api/reminders/reminders.list"
+    const val REMINDERS_REMINDERS_CREATE = "/api/reminders/reminders.create"
+    const val REMINDERS_REMINDERS_CANCEL = "/api/reminders/reminders.cancel"
+    const val REMINDERS_REMINDERS_CONSUME_MEMORY = "/api/reminders/reminders.consume-memory"
 }
 
 @Serializable
@@ -301,6 +313,51 @@ enum class PhoneCommandState {
 }
 
 @Serializable
+data class RemindersRemindersCancelRequest(
+    @SerialName("id") val id: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class RemindersRemindersCancelResponse(
+    @SerialName("cancelled") val cancelled: Boolean
+)
+
+@Serializable
+data class RemindersRemindersConsumeMemoryRequest(
+    @SerialName("request") val request: RemindersRemindersConsumeMemoryRequestRequest
+)
+
+@Serializable
+data class RemindersRemindersConsumeMemoryResponse(
+    @SerialName("status") val status: String,
+    @SerialName("reason") val reason: String? = null
+)
+
+@Serializable
+data class RemindersRemindersCreateRequest(
+    @SerialName("text") val text: String,
+    @SerialName("remind_at") val remindAt: String,
+    @SerialName("repeat_rule") val repeatRule: RemindersRemindersCreateRequestRepeatRule? = null,
+    @SerialName("time_zone") val timeZone: String? = null,
+    @SerialName("task_id") val taskId: String? = null,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class RemindersRemindersCreateResponse(
+    @SerialName("reminder") val reminder: RemindersRemindersCreateResponseReminder
+)
+
+@Serializable
+class RemindersRemindersListRequest
+
+@Serializable
+data class RemindersRemindersListResponse(
+    @SerialName("reminders") val reminders: List<RemindersRemindersListResponseRemindersItem>
+)
+
+@Serializable
 data class SystemEventsEmitRequest(
     @SerialName("id") val id: String,
     @SerialName("type") val type: String,
@@ -352,6 +409,109 @@ data class SystemKillSetRequest(
 )
 
 typealias SystemKillSetResponse = KillState
+
+@Serializable
+data class TasksTasksCancelRequest(
+    @SerialName("id") val id: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class TasksTasksCancelResponse(
+    @SerialName("task") val task: TasksTasksCancelResponseTask
+)
+
+@Serializable
+data class TasksTasksCompleteRequest(
+    @SerialName("id") val id: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class TasksTasksCompleteResponse(
+    @SerialName("task") val task: TasksTasksCompleteResponseTask,
+    @SerialName("next_task") val nextTask: TasksTasksCompleteResponseNextTask?,
+    @SerialName("already_completed") val alreadyCompleted: Boolean? = null
+)
+
+@Serializable
+data class TasksTasksCreateRequest(
+    @SerialName("title") val title: String,
+    @SerialName("notes") val notes: String? = null,
+    @SerialName("due_at") val dueAt: String? = null,
+    @SerialName("priority") val priority: Int? = null,
+    @SerialName("focus_today") val focusToday: Boolean? = null,
+    @SerialName("repeat_rule") val repeatRule: TasksTasksCreateRequestRepeatRule? = null,
+    @SerialName("time_zone") val timeZone: String? = null,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class TasksTasksCreateResponse(
+    @SerialName("task") val task: TasksTasksCreateResponseTask
+)
+
+@Serializable
+data class TasksTasksLinkProjectRequest(
+    @SerialName("task_id") val taskId: String,
+    @SerialName("project_id") val projectId: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class TasksTasksLinkProjectResponse(
+    @SerialName("linked") val linked: Boolean,
+    @SerialName("link_id") val linkId: String?
+)
+
+@Serializable
+class TasksTasksListRequest
+
+@Serializable
+data class TasksTasksListResponse(
+    @SerialName("tasks") val tasks: List<TasksTasksListResponseTasksItem>
+)
+
+@Serializable
+data class TasksTasksNaturalAddRequest(
+    @SerialName("text") val text: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class TasksTasksNaturalAddResponse(
+    @SerialName("kind") val kind: TasksTasksNaturalAddResponseKind,
+    @SerialName("item") val item: JsonElement
+)
+
+@Serializable
+class TasksTasksTodayRequest
+
+@Serializable
+data class TasksTasksTodayResponse(
+    @SerialName("date") val date: String,
+    @SerialName("time_zone") val timeZone: String,
+    @SerialName("focus") val focus: TasksTasksTodayResponseFocus,
+    @SerialName("schedule") val schedule: List<TasksTasksTodayResponseScheduleItem>
+)
+
+@Serializable
+data class TasksTasksUpdateRequest(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String? = null,
+    @SerialName("notes") val notes: String? = null,
+    @SerialName("due_at") val dueAt: String? = null,
+    @SerialName("priority") val priority: Int? = null,
+    @SerialName("repeat_rule") val repeatRule: TasksTasksUpdateRequestRepeatRule? = null,
+    @SerialName("focus_today") val focusToday: Boolean? = null,
+    @SerialName("time_zone") val timeZone: String? = null,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class TasksTasksUpdateResponse(
+    @SerialName("task") val task: TasksTasksUpdateResponseTask
+)
 
 @Serializable
 data class VoiceSpeakRequest(
@@ -502,6 +662,318 @@ enum class PhoneCommandsAckRequestState {
     @SerialName("done") DONE,
     @SerialName("failed") FAILED
 }
+
+@Serializable
+data class RemindersRemindersConsumeMemoryRequestRequest(
+    @SerialName("memory_id") val memoryId: String,
+    @SerialName("private") val private: Boolean,
+    @SerialName("label") val label: String,
+    @SerialName("time_text") val timeText: String,
+    @SerialName("display_text") val displayText: String,
+    @SerialName("needs_time_confirmation") val needsTimeConfirmation: Boolean,
+    @SerialName("lock_screen_visible") val lockScreenVisible: Boolean,
+    @SerialName("date_text") val dateText: String? = null,
+    @SerialName("time_zone") val timeZone: String? = null
+)
+
+@Serializable
+enum class RemindersRemindersCreateRequestRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+enum class RemindersRemindersCreateResponseReminderRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+enum class RemindersRemindersCreateResponseReminderState {
+    @SerialName("pending") PENDING,
+    @SerialName("fired") FIRED,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+data class RemindersRemindersCreateResponseReminder(
+    @SerialName("id") val id: String,
+    @SerialName("text") val text: String,
+    @SerialName("remind_at") val remindAt: String,
+    @SerialName("repeat_rule") val repeatRule: RemindersRemindersCreateResponseReminderRepeatRule?,
+    @SerialName("time_zone") val timeZone: String,
+    @SerialName("state") val state: RemindersRemindersCreateResponseReminderState
+)
+
+@Serializable
+enum class RemindersRemindersListResponseRemindersItemRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+enum class RemindersRemindersListResponseRemindersItemState {
+    @SerialName("pending") PENDING,
+    @SerialName("fired") FIRED,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+data class RemindersRemindersListResponseRemindersItem(
+    @SerialName("id") val id: String,
+    @SerialName("text") val text: String,
+    @SerialName("remind_at") val remindAt: String,
+    @SerialName("repeat_rule") val repeatRule: RemindersRemindersListResponseRemindersItemRepeatRule?,
+    @SerialName("time_zone") val timeZone: String,
+    @SerialName("state") val state: RemindersRemindersListResponseRemindersItemState
+)
+
+@Serializable
+enum class TasksTasksCancelResponseTaskStatus {
+    @SerialName("todo") TODO,
+    @SerialName("doing") DOING,
+    @SerialName("done") DONE,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+enum class TasksTasksCancelResponseTaskRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+data class TasksTasksCancelResponseTask(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String,
+    @SerialName("due_at") val dueAt: String?,
+    @SerialName("status") val status: TasksTasksCancelResponseTaskStatus,
+    @SerialName("priority") val priority: Int,
+    @SerialName("focus_today") val focusToday: Boolean,
+    @SerialName("repeat_rule") val repeatRule: TasksTasksCancelResponseTaskRepeatRule?,
+    @SerialName("time_zone") val timeZone: String
+)
+
+@Serializable
+enum class TasksTasksCompleteResponseTaskStatus {
+    @SerialName("todo") TODO,
+    @SerialName("doing") DOING,
+    @SerialName("done") DONE,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+enum class TasksTasksCompleteResponseTaskRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+data class TasksTasksCompleteResponseTask(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String,
+    @SerialName("due_at") val dueAt: String?,
+    @SerialName("status") val status: TasksTasksCompleteResponseTaskStatus,
+    @SerialName("priority") val priority: Int,
+    @SerialName("focus_today") val focusToday: Boolean,
+    @SerialName("repeat_rule") val repeatRule: TasksTasksCompleteResponseTaskRepeatRule?,
+    @SerialName("time_zone") val timeZone: String
+)
+
+@Serializable
+enum class TasksTasksCompleteResponseNextTaskStatus {
+    @SerialName("todo") TODO,
+    @SerialName("doing") DOING,
+    @SerialName("done") DONE,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+enum class TasksTasksCompleteResponseNextTaskRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+data class TasksTasksCompleteResponseNextTask(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String,
+    @SerialName("due_at") val dueAt: String?,
+    @SerialName("status") val status: TasksTasksCompleteResponseNextTaskStatus,
+    @SerialName("priority") val priority: Int,
+    @SerialName("focus_today") val focusToday: Boolean,
+    @SerialName("repeat_rule") val repeatRule: TasksTasksCompleteResponseNextTaskRepeatRule?,
+    @SerialName("time_zone") val timeZone: String
+)
+
+@Serializable
+enum class TasksTasksCreateRequestRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+enum class TasksTasksCreateResponseTaskStatus {
+    @SerialName("todo") TODO,
+    @SerialName("doing") DOING,
+    @SerialName("done") DONE,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+enum class TasksTasksCreateResponseTaskRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+data class TasksTasksCreateResponseTask(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String,
+    @SerialName("due_at") val dueAt: String?,
+    @SerialName("status") val status: TasksTasksCreateResponseTaskStatus,
+    @SerialName("priority") val priority: Int,
+    @SerialName("focus_today") val focusToday: Boolean,
+    @SerialName("repeat_rule") val repeatRule: TasksTasksCreateResponseTaskRepeatRule?,
+    @SerialName("time_zone") val timeZone: String
+)
+
+@Serializable
+enum class TasksTasksListResponseTasksItemStatus {
+    @SerialName("todo") TODO,
+    @SerialName("doing") DOING,
+    @SerialName("done") DONE,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+enum class TasksTasksListResponseTasksItemRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+data class TasksTasksListResponseTasksItem(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String,
+    @SerialName("due_at") val dueAt: String?,
+    @SerialName("status") val status: TasksTasksListResponseTasksItemStatus,
+    @SerialName("priority") val priority: Int,
+    @SerialName("focus_today") val focusToday: Boolean,
+    @SerialName("repeat_rule") val repeatRule: TasksTasksListResponseTasksItemRepeatRule?,
+    @SerialName("time_zone") val timeZone: String
+)
+
+@Serializable
+enum class TasksTasksNaturalAddResponseKind {
+    @SerialName("task") TASK,
+    @SerialName("reminder") REMINDER
+}
+
+@Serializable
+enum class TasksTasksTodayResponseFocusTopTasksItemStatus {
+    @SerialName("todo") TODO,
+    @SerialName("doing") DOING,
+    @SerialName("done") DONE,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+enum class TasksTasksTodayResponseFocusTopTasksItemRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+data class TasksTasksTodayResponseFocusTopTasksItem(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String,
+    @SerialName("due_at") val dueAt: String?,
+    @SerialName("status") val status: TasksTasksTodayResponseFocusTopTasksItemStatus,
+    @SerialName("priority") val priority: Int,
+    @SerialName("focus_today") val focusToday: Boolean,
+    @SerialName("repeat_rule") val repeatRule: TasksTasksTodayResponseFocusTopTasksItemRepeatRule?,
+    @SerialName("time_zone") val timeZone: String
+)
+
+@Serializable
+data class TasksTasksTodayResponseFocus(
+    @SerialName("open_count") val openCount: Int,
+    @SerialName("overdue_count") val overdueCount: Int,
+    @SerialName("top_tasks") val topTasks: List<TasksTasksTodayResponseFocusTopTasksItem>
+)
+
+@Serializable
+enum class TasksTasksTodayResponseScheduleItemKind {
+    @SerialName("task") TASK,
+    @SerialName("reminder") REMINDER
+}
+
+@Serializable
+data class TasksTasksTodayResponseScheduleItem(
+    @SerialName("id") val id: String,
+    @SerialName("kind") val kind: TasksTasksTodayResponseScheduleItemKind,
+    @SerialName("title") val title: String,
+    @SerialName("at") val at: String,
+    @SerialName("status") val status: String,
+    @SerialName("priority") val priority: Int? = null
+)
+
+@Serializable
+enum class TasksTasksUpdateRequestRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+enum class TasksTasksUpdateResponseTaskStatus {
+    @SerialName("todo") TODO,
+    @SerialName("doing") DOING,
+    @SerialName("done") DONE,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+enum class TasksTasksUpdateResponseTaskRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+data class TasksTasksUpdateResponseTask(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String,
+    @SerialName("due_at") val dueAt: String?,
+    @SerialName("status") val status: TasksTasksUpdateResponseTaskStatus,
+    @SerialName("priority") val priority: Int,
+    @SerialName("focus_today") val focusToday: Boolean,
+    @SerialName("repeat_rule") val repeatRule: TasksTasksUpdateResponseTaskRepeatRule?,
+    @SerialName("time_zone") val timeZone: String
+)
 
 @Serializable
 enum class VoiceTranscribeRequestMimeType {

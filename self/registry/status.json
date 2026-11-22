@@ -11,6 +11,10 @@
     "status": "built",
     "evidence": null
   },
+  "api.tasks": {
+    "status": "built",
+    "evidence": null
+  },
   "command-center.agents": {
     "status": "planned",
     "evidence": null
@@ -160,11 +164,15 @@
     "evidence": null
   },
   "features.core-workspace.reminders": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.core-workspace.task-manager": {
-    "status": "planned",
+    "status": "built",
+    "evidence": null
+  },
+  "features.core-workspace.today": {
+    "status": "built",
     "evidence": null
   },
   "features.customize.automations": {

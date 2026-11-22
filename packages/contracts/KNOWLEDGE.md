@@ -20,3 +20,4 @@ CHANGE LOG:
 - (append-only) folder-first: created as planned, version 0.0.1. Owner: S00.
 - 2026-11-07 - 13 core routes, unified errors, Kotlin + JSON Schema generator - 0.1.0.
 - 2026-11-07 - Owner session, idempotency-required event intake and approved S21 voice route contracts; JSON Schema and Kotlin artifacts updated for this contract surface; generator runtime could not be executed in this offline build environment - 0.2.0.
+- 2026-11-21 - CR-1 S08 tasks and reminders routes + Task/Reminder/TodayProjection/MedicineReminderRequest schemas added and generated artifacts regenerated - 0.3.0.

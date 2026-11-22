@@ -5,10 +5,12 @@
   "group": "core-workspace",
   "owner_squad": "S08",
   "phase": 1,
-  "status": "planned",
+  "status": "built",
   "does": "Task Manager",
-  "uses": [],
+  "uses": [
+    "api.tasks"
+  ],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.1.0"
 }

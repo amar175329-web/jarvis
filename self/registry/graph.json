@@ -4,7 +4,8 @@
     "knows": [],
     "used_by": [
       "api.chat",
-      "api.system"
+      "api.system",
+      "api.tasks"
     ]
   },
   "api.chat": {
@@ -28,6 +29,23 @@
     ],
     "knows": [],
     "used_by": []
+  },
+  "api.tasks": {
+    "uses": [
+      "api.auth",
+      "packages.harness",
+      "packages.brain",
+      "packages.safety",
+      "packages.memory",
+      "features.core-workspace.task-manager",
+      "features.core-workspace.reminders"
+    ],
+    "knows": [],
+    "used_by": [
+      "features.core-workspace.reminders",
+      "features.core-workspace.task-manager",
+      "features.core-workspace.today"
+    ]
   },
   "command-center.agents": {
     "uses": [],
@@ -253,12 +271,35 @@
     "used_by": []
   },
   "features.core-workspace.reminders": {
-    "uses": [],
+    "uses": [
+      "api.tasks",
+      "packages.memory",
+      "worker.jobs",
+      "packages.harness",
+      "packages.safety"
+    ],
     "knows": [],
-    "used_by": []
+    "used_by": [
+      "api.tasks",
+      "features.core-workspace.today"
+    ]
   },
   "features.core-workspace.task-manager": {
-    "uses": [],
+    "uses": [
+      "api.tasks"
+    ],
+    "knows": [],
+    "used_by": [
+      "api.tasks",
+      "features.core-workspace.today"
+    ]
+  },
+  "features.core-workspace.today": {
+    "uses": [
+      "features.core-workspace.task-manager",
+      "features.core-workspace.reminders",
+      "api.tasks"
+    ],
     "knows": [],
     "used_by": []
   },
@@ -818,6 +859,7 @@
       "packages.events"
     ],
     "used_by": [
+      "api.tasks",
       "memory.engine",
       "memory.rules",
       "packages.chat",
@@ -896,6 +938,8 @@
     ],
     "knows": [],
     "used_by": [
+      "api.tasks",
+      "features.core-workspace.reminders",
       "packages.chat"
     ]
   },
@@ -940,10 +984,12 @@
       "memory.engine"
     ],
     "used_by": [
+      "api.tasks",
       "features.core-workspace.knowledge-base",
       "features.core-workspace.memory",
       "features.core-workspace.notes-files",
       "features.core-workspace.projects",
+      "features.core-workspace.reminders",
       "memory.engine",
       "memory.episodes",
       "memory.facts",
@@ -999,6 +1045,8 @@
     "used_by": [
       "api.chat",
       "api.system",
+      "api.tasks",
+      "features.core-workspace.reminders",
       "memory.engine",
       "packages.brain",
       "packages.harness",
@@ -1120,7 +1168,9 @@
       "packages.db"
     ],
     "knows": [],
-    "used_by": []
+    "used_by": [
+      "features.core-workspace.reminders"
+    ]
   },
   "worker.machine-agent": {
     "uses": [],

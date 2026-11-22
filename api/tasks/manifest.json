@@ -1,0 +1,22 @@
+{
+  "id": "api.tasks",
+  "name": "tasks and reminders API",
+  "kind": "ops-part",
+  "group": "api",
+  "owner_squad": "S08",
+  "phase": 1,
+  "status": "built",
+  "does": "Single owner-authenticated Vercel function for task, reminder, and Today projection routes",
+  "uses": [
+    "api.auth",
+    "packages.harness",
+    "packages.brain",
+    "packages.safety",
+    "packages.memory",
+    "features.core-workspace.task-manager",
+    "features.core-workspace.reminders"
+  ],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}

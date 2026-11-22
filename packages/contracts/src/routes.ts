@@ -60,6 +60,59 @@ const ChatStreamFrame = z.discriminatedUnion('type', [
   z.object({ type: z.literal('chat.message.error'), thread_id: Uuid, message_id: Uuid, code: z.string().min(1).max(80) }).strict(),
 ]);
 
+const RepeatRule = z.enum(['FREQ=DAILY', 'FREQ=WEEKLY', 'FREQ=MONTHLY', 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR']);
+const TimeZone = z.string().min(1).max(64).refine((value) => {
+  try { new Intl.DateTimeFormat('en', { timeZone: value }).format(new Date()); return true; } catch { return false; }
+}, 'invalid IANA time zone');
+const TaskPriority = z.number().int().min(1).max(3);
+const Task = z.object({
+  id: Uuid,
+  title: z.string().min(1).max(500),
+  due_at: UtcTime.nullable(),
+  status: z.enum(['todo', 'doing', 'done', 'cancelled']),
+  priority: TaskPriority,
+  focus_today: z.boolean(),
+  repeat_rule: RepeatRule.nullable(),
+  time_zone: TimeZone,
+}).strict();
+const Reminder = z.object({
+  id: Uuid,
+  text: z.string().min(1).max(500),
+  remind_at: UtcTime,
+  repeat_rule: RepeatRule.nullable(),
+  time_zone: TimeZone,
+  state: z.enum(['pending', 'fired', 'cancelled']),
+}).strict();
+const TodayScheduleItem = z.object({
+  id: Uuid,
+  kind: z.enum(['task', 'reminder']),
+  title: z.string().min(1).max(500),
+  at: UtcTime,
+  status: z.string().min(1).max(40),
+  priority: TaskPriority.optional(),
+}).strict();
+const TodayProjection = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  time_zone: TimeZone,
+  focus: z.object({
+    open_count: z.number().int().nonnegative(),
+    overdue_count: z.number().int().nonnegative(),
+    top_tasks: z.array(Task).max(3),
+  }).strict(),
+  schedule: z.array(TodayScheduleItem),
+}).strict();
+const MedicineReminderRequest = z.object({
+  memory_id: Uuid,
+  private: z.literal(true),
+  label: z.string().min(1).max(100),
+  time_text: z.string().min(1).max(100),
+  display_text: z.string().min(1).max(200),
+  needs_time_confirmation: z.boolean(),
+  lock_screen_visible: z.literal(true),
+  date_text: z.string().min(1).max(100).optional(),
+  time_zone: TimeZone.optional(),
+}).strict();
+
 export const ROUTES = {
   'auth.session.create': route({
     path: '/api/auth/session.create', method: 'POST', auth: 'none', killSensitive: false, errors: ['bad_request', 'unauthorized', 'forbidden', 'unavailable'],
@@ -197,6 +250,105 @@ export const ROUTES = {
     summary: 'Synthesize speech and return an audio reference. Audio provider adapter is supplied later by S13/S07.',
     input: VoiceSpeakInput,
     output: z.object({ audio_ref: z.string().min(1).max(500), mime_type: z.string().max(100), duration_ms: z.number().int().nonnegative().optional() }).strict(),
+  }),
+  // S08 Today, Tasks & Reminders (CR-1). All endpoints are POST, owner-authenticated, no-store.
+  'tasks.tasks.list': route({
+    path: '/api/tasks/tasks.list', method: 'POST', auth: 'owner', killSensitive: false, errors: ['bad_request', 'unavailable'],
+    summary: 'List owner-scoped tasks.',
+    input: Empty,
+    output: z.object({ tasks: z.array(Task) }).strict(),
+  }),
+  'tasks.tasks.today': route({
+    path: '/api/tasks/tasks.today', method: 'POST', auth: 'owner', killSensitive: false, errors: ['bad_request', 'unavailable'],
+    summary: 'Return owner-local TodayProjection (focus counts, top 3 tasks, generic schedule).',
+    input: Empty,
+    output: TodayProjection,
+  }),
+  'tasks.tasks.create': route({
+    path: '/api/tasks/tasks.create', method: 'POST', auth: 'owner', killSensitive: true, errors: ['bad_request', 'forbidden', 'conflict', 'payload_too_large', 'kill_switch_on', 'unavailable'],
+    summary: 'Create an owner task.',
+    input: z.object({
+      title: z.string().min(1).max(500),
+      notes: z.string().max(4000).nullable().optional(),
+      due_at: UtcTime.nullable().optional(),
+      priority: TaskPriority.optional(),
+      focus_today: z.boolean().optional(),
+      repeat_rule: RepeatRule.nullable().optional(),
+      time_zone: TimeZone.optional(),
+      confirmed: z.boolean(),
+    }).strict(),
+    output: z.object({ task: Task }).strict(),
+  }),
+  'tasks.tasks.natural-add': route({
+    path: '/api/tasks/tasks.natural-add', method: 'POST', auth: 'owner', killSensitive: true, errors: ['bad_request', 'forbidden', 'conflict', 'payload_too_large', 'kill_switch_on', 'unavailable'],
+    summary: 'Parse Hindi/Hinglish natural language into a task or reminder; returns 409 conflict on ambiguous time or sensitive content.',
+    input: z.object({ text: z.string().min(1).max(1000), confirmed: z.boolean() }).strict(),
+    output: z.object({ kind: z.enum(['task', 'reminder']), item: z.union([Task, Reminder]) }).strict(),
+  }),
+  'tasks.tasks.update': route({
+    path: '/api/tasks/tasks.update', method: 'POST', auth: 'owner', killSensitive: true, errors: ['bad_request', 'forbidden', 'not_found', 'conflict', 'payload_too_large', 'kill_switch_on', 'unavailable'],
+    summary: 'Update owner task fields.',
+    input: z.object({
+      id: Uuid,
+      title: z.string().min(1).max(500).optional(),
+      notes: z.string().max(4000).nullable().optional(),
+      due_at: UtcTime.nullable().optional(),
+      priority: TaskPriority.optional(),
+      repeat_rule: RepeatRule.nullable().optional(),
+      focus_today: z.boolean().optional(),
+      time_zone: TimeZone.optional(),
+      confirmed: z.boolean(),
+    }).strict(),
+    output: z.object({ task: Task }).strict(),
+  }),
+  'tasks.tasks.link-project': route({
+    path: '/api/tasks/tasks.link-project', method: 'POST', auth: 'owner', killSensitive: true, errors: ['bad_request', 'forbidden', 'not_found', 'conflict', 'kill_switch_on', 'unavailable'],
+    summary: 'Link a task to an owner project via public.memory_links.',
+    input: z.object({ task_id: Uuid, project_id: Uuid, confirmed: z.boolean() }).strict(),
+    output: z.object({ linked: z.literal(true), link_id: Uuid.nullable() }).strict(),
+  }),
+  'tasks.tasks.complete': route({
+    path: '/api/tasks/tasks.complete', method: 'POST', auth: 'owner', killSensitive: true, errors: ['bad_request', 'forbidden', 'not_found', 'conflict', 'kill_switch_on', 'unavailable'],
+    summary: 'Idempotently complete an owner task and create exactly one next occurrence if recurring.',
+    input: z.object({ id: Uuid, confirmed: z.boolean() }).strict(),
+    output: z.object({ task: Task, next_task: Task.nullable(), already_completed: z.boolean().optional() }).strict(),
+  }),
+  'tasks.tasks.cancel': route({
+    path: '/api/tasks/tasks.cancel', method: 'POST', auth: 'owner', killSensitive: false, errors: ['bad_request', 'forbidden', 'not_found', 'conflict', 'unavailable'],
+    summary: 'Cancel an owner task.',
+    input: z.object({ id: Uuid, confirmed: z.boolean() }).strict(),
+    output: z.object({ task: Task }).strict(),
+  }),
+  'reminders.reminders.list': route({
+    path: '/api/reminders/reminders.list', method: 'POST', auth: 'owner', killSensitive: false, errors: ['bad_request', 'unavailable'],
+    summary: 'List owner-scoped reminders.',
+    input: Empty,
+    output: z.object({ reminders: z.array(Reminder) }).strict(),
+  }),
+  'reminders.reminders.create': route({
+    path: '/api/reminders/reminders.create', method: 'POST', auth: 'owner', killSensitive: true, errors: ['bad_request', 'forbidden', 'conflict', 'payload_too_large', 'kill_switch_on', 'unavailable'],
+    summary: 'Create a non-sensitive owner reminder and approved worker job; rejects medicine/T2 payloads.',
+    input: z.object({
+      text: z.string().min(1).max(500),
+      remind_at: UtcTime,
+      repeat_rule: RepeatRule.nullable().optional(),
+      time_zone: TimeZone.optional(),
+      task_id: Uuid.optional(),
+      confirmed: z.boolean(),
+    }).strict(),
+    output: z.object({ reminder: Reminder }).strict(),
+  }),
+  'reminders.reminders.cancel': route({
+    path: '/api/reminders/reminders.cancel', method: 'POST', auth: 'owner', killSensitive: false, errors: ['bad_request', 'forbidden', 'not_found', 'conflict', 'unavailable'],
+    summary: 'Cancel a pending owner reminder and its queued job.',
+    input: z.object({ id: Uuid, confirmed: z.boolean() }).strict(),
+    output: z.object({ cancelled: z.literal(true) }).strict(),
+  }),
+  'reminders.reminders.consume-memory': route({
+    path: '/api/reminders/reminders.consume-memory', method: 'POST', auth: 'owner', killSensitive: true, errors: ['bad_request', 'conflict', 'unavailable'],
+    summary: 'Validate S09 medicine reminder hand-off without echoing private fields; returns 409 conflict until S19 private vault is approved.',
+    input: z.object({ request: MedicineReminderRequest }).strict(),
+    output: z.object({ status: z.string().min(1).max(80), reason: z.string().min(1).max(120).optional() }).strict(),
   }),
 } as const satisfies Record<string, Route>;
 

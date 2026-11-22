@@ -5,11 +5,13 @@
   "headers": [{ "source": "/(.*)", "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }] }],
   "rewrites": [
     { "source": "/api/chat/:action", "destination": "/api/chat" },
+    { "source": "/api/tasks/:action", "destination": "/api/tasks?action=:action" },
+    { "source": "/api/reminders/:action", "destination": "/api/tasks?action=:action" },
     { "source": "/((?!api/|assets/).*)", "destination": "/index.html" }
   ],
   "functions": {
     "api/**/*.ts": {
-      "includeFiles": "{packages/**/src/**,packages/models/local/**,packages/models/registry/**,api/**/index.ts}"
+      "includeFiles": "{packages/**/src/**,packages/models/local/**,packages/models/registry/**,features/core-workspace/**/src/**,api/**/index.ts}"
     }
   }
 }

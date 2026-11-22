@@ -1,0 +1,7 @@
+export type TaskStatus = 'todo' | 'doing' | 'done' | 'cancelled';
+export type Task = { id: string; title: string; notes: string | null; due_at: string | null; status: TaskStatus; priority: 1 | 2 | 3; focus_today: boolean; repeat_rule?: string | null };
+export type Reminder = { id: string; text: string; remind_at: string; repeat_rule: string | null; state: 'pending' | 'fired' | 'cancelled' };
+export type TodayProjection = { date: string; time_zone: string; focus: { open_count: number; overdue_count: number; top_tasks: Task[] }; schedule: Array<{ id: string; kind: 'task' | 'reminder'; title: string; at: string; status: string; priority?: number }> };
+export function jarvisPost<T>(path: string, body?: Record<string, unknown>): Promise<T>;
+export const taskApi: { list(): Promise<{tasks: Task[]}>; today(): Promise<TodayProjection>; naturalAdd(text: string, confirmed?: boolean): Promise<{kind:'task'|'reminder';item:Task|Reminder}>; complete(id:string,confirmed?:boolean):Promise<{task:Task;next_task?:Task|null}>; update(id:string,fields:Record<string,unknown>,confirmed?:boolean):Promise<{task:Task}>; createTask(data:Record<string,unknown>,confirmed?:boolean):Promise<{task:Task}> };
+export const reminderApi: { list(): Promise<{reminders:Reminder[]}>; create(data:Record<string,unknown>,confirmed?:boolean):Promise<{reminder:Reminder}>; cancel(id:string,confirmed?:boolean):Promise<{cancelled:true}>; consumeMemory(request:Record<string,unknown>):Promise<{status:string}> };

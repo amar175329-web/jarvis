@@ -6,6 +6,8 @@ import { HomePage } from './components/HomePage';
 import { MorePage } from './components/MorePage';
 import { Boot } from './components/Boot';
 import { OwnerLock } from './components/OwnerLock';
+import { TodayPage } from '../../features/core-workspace/today/ui/TodayPage';
+import { TaskManagerPage } from '../../features/core-workspace/task-manager/ui/TaskManagerPage';
 import { nextAuthStateFromSession, type AuthGateState } from './ownerLockPolicy';
 import type { Page } from './types';
 
@@ -90,6 +92,8 @@ export function App() {
         <main className="main">
           <Topbar page={page} query={query} onQuery={setQuery} />
           <HomePage active={page === 'home'} onUnauthorized={handleLock} />
+          {page === 'today' && <TodayPage onOpenTasks={() => go('tasks')} />}
+          {page === 'tasks' && <TaskManagerPage />}
           <MorePage active={page === 'more'} query={query} />
         </main>
       </div>

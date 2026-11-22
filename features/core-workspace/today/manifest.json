@@ -1,0 +1,18 @@
+{
+  "id": "features.core-workspace.today",
+  "name": "today",
+  "kind": "feature",
+  "group": "core-workspace",
+  "owner_squad": "S08",
+  "phase": 1,
+  "status": "built",
+  "does": "Owner-scoped Today page and D2-compatible daily focus/schedule read projection",
+  "uses": [
+    "features.core-workspace.task-manager",
+    "features.core-workspace.reminders",
+    "api.tasks"
+  ],
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.1.0"
+}
