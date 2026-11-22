@@ -1,8 +1,15 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { reminderApi, taskApi, type Reminder, type Task } from '../src/api-client';
+import { parseNaturalLanguage } from '../src/natural-language.mjs';
+import { classifySensitivity } from '../src/sensitivity.mjs';
 import './task-manager.css';
 
 type Tab = 'tasks' | 'reminders';
+type PendingConfirm =
+  | { kind: 'natural'; text: string; promptText: string }
+  | { kind: 'task'; payload: { title: string; due_at: string | null; priority: number; repeat_rule: string | null; time_zone: string }; promptText: string }
+  | { kind: 'reminder'; payload: { text: string; remind_at: string; repeat_rule: string | null; time_zone: string }; promptText: string };
+
 const TIME_ZONE = 'Asia/Kolkata';
 const REPEAT_OPTIONS = [
   { value: '', label: 'Does not repeat' },
@@ -28,6 +35,11 @@ function isoToIstDateTime(value: string | null): string {
 function displayDate(value: string | null) {
   return value ? new Date(value).toLocaleString('en-IN', { timeZone: TIME_ZONE }) : 'No due date';
 }
+function cleanNeedsConfirmationQuestion(reason?: unknown, fallback?: string): string {
+  if (reason === 'title_missing') return 'Sawal: Kya yaad dilana hai? Task ya reminder ka naam likho.';
+  if (reason === 'am_pm_ambiguous' || reason === 'time_ambiguous') return 'Sawal: Yeh subah (AM) hai ya shaam (PM)? Exact time confirm karo (jaise "subah 7 baje" ya "shaam 7 baje").';
+  return fallback ? `Sawal: ${fallback}` : 'Sawal: Time ambiguous hai. Subah (AM) ya shaam (PM) confirm karo.';
+}
 
 export function TaskManagerPage() {
   const [tab, setTab] = useState<Tab>('tasks');
@@ -43,6 +55,8 @@ export function TaskManagerPage() {
   const [repeat, setRepeat] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [clarifyQuestion, setClarifyQuestion] = useState('');
+  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
   const [busy, setBusy] = useState(false);
   const [cancelId, setCancelId] = useState('');
   const [cancelTaskId, setCancelTaskId] = useState('');
@@ -59,22 +73,106 @@ export function TaskManagerPage() {
   useEffect(() => { refresh().catch((e) => setError(e instanceof Error ? e.message : 'Data load nahi hua.')); }, []);
 
   const addNatural = async (event: FormEvent) => {
-    event.preventDefault(); setBusy(true); setError(''); setMessage('');
-    try {
-      const result = await taskApi.naturalAdd(natural, true);
-      setNatural(''); await refresh(); setMessage(result.kind === 'reminder' ? 'Reminder save ho gaya.' : 'Task add ho gaya.');
-    } catch (e) { setError(e instanceof Error ? e.message : 'Add nahi hua.'); }
-    finally { setBusy(false); }
+    event.preventDefault();
+    setError(''); setMessage(''); setClarifyQuestion(''); setPendingConfirm(null);
+    const raw = natural.trim();
+    if (!raw) return;
+    if (classifySensitivity(raw).sensitive) {
+      setError('Yeh private hai? Abhi sirf normal tasks/reminders save hote hain.');
+      return;
+    }
+    const parsed = parseNaturalLanguage(raw, { timeZone: TIME_ZONE }) as any;
+    if (!parsed?.ok) {
+      setError('Date/time clear nahi hua; details dobara likho.');
+      return;
+    }
+    if (parsed.status !== 'ready') {
+      setClarifyQuestion(cleanNeedsConfirmationQuestion(parsed.reason));
+      return;
+    }
+    if (parsed.sensitive) {
+      setError('Yeh private hai? Abhi sirf normal tasks/reminders save hote hain.');
+      return;
+    }
+    const timeStr = displayDate(parsed.due_at ?? null);
+    setPendingConfirm({
+      kind: 'natural',
+      text: raw,
+      promptText: `Main ye task banaun? ${parsed.title}, ${timeStr}`,
+    });
   };
   const addTask = async (event: FormEvent) => {
-    event.preventDefault(); setBusy(true); setError(''); setMessage('');
+    event.preventDefault();
+    setError(''); setMessage(''); setClarifyQuestion(''); setPendingConfirm(null);
+    const dueAt = istDateTimeToIso(newDue);
+    if (newDue && !dueAt) {
+      setError('Due date/time valid nahi hai.');
+      return;
+    }
+    const title = newTitle.trim();
+    if (!title) return;
+    if (classifySensitivity(title).sensitive) {
+      setError('Yeh private hai? Abhi sirf normal tasks/reminders save hote hain.');
+      return;
+    }
+    setPendingConfirm({
+      kind: 'task',
+      payload: { title, due_at: dueAt, priority: Number(newPriority), repeat_rule: newRepeat || null, time_zone: TIME_ZONE },
+      promptText: `Main ye task banaun? ${title}, ${displayDate(dueAt)}`,
+    });
+  };
+  const addReminder = async (event: FormEvent) => {
+    event.preventDefault();
+    setError(''); setMessage(''); setClarifyQuestion(''); setPendingConfirm(null);
+    const dueAt = istDateTimeToIso(remindAt);
+    if (!dueAt) {
+      setError('Reminder date/time valid nahi hai.');
+      return;
+    }
+    const text = reminderText.trim();
+    if (!text) return;
+    if (classifySensitivity(text).sensitive) {
+      setError('Yeh private hai? Abhi sirf normal tasks/reminders save hote hain.');
+      return;
+    }
+    setPendingConfirm({
+      kind: 'reminder',
+      payload: { text, remind_at: dueAt, repeat_rule: repeat || null, time_zone: TIME_ZONE },
+      promptText: `Main ye task banaun? ${text}, ${displayDate(dueAt)}`,
+    });
+  };
+  const confirmPendingYes = async () => {
+    if (!pendingConfirm) return;
+    const current = pendingConfirm;
+    setBusy(true); setError(''); setMessage(''); setClarifyQuestion('');
     try {
-      const dueAt = istDateTimeToIso(newDue);
-      if (newDue && !dueAt) throw new Error('Due date/time valid nahi hai.');
-      await taskApi.createTask({ title: newTitle, due_at: dueAt, priority: Number(newPriority), repeat_rule: newRepeat || null, time_zone: TIME_ZONE }, true);
-      setNewTitle(''); setNewDue(''); setNewPriority('2'); setNewRepeat(''); await refresh(); setMessage('Task add ho gaya.');
-    } catch (e) { setError(e instanceof Error ? e.message : 'Task add nahi hua.'); }
-    finally { setBusy(false); }
+      if (current.kind === 'natural') {
+        const result = await taskApi.naturalAdd(current.text, true);
+        setNatural(''); setPendingConfirm(null); await refresh();
+        setMessage(result.kind === 'reminder' ? 'Reminder save ho gaya.' : 'Task add ho gaya.');
+      } else if (current.kind === 'task') {
+        await taskApi.createTask(current.payload, true);
+        setNewTitle(''); setNewDue(''); setNewPriority('2'); setNewRepeat(''); setPendingConfirm(null); await refresh();
+        setMessage('Task add ho gaya.');
+      } else {
+        await reminderApi.create(current.payload, true);
+        setReminderText(''); setRemindAt(''); setRepeat(''); setPendingConfirm(null); await refresh();
+        setMessage('Reminder save ho gaya.');
+      }
+    } catch (e: any) {
+      setPendingConfirm(null);
+      if (e?.code === 'confirmation_required' || e?.details?.status === 'needs_confirmation') {
+        setClarifyQuestion(cleanNeedsConfirmationQuestion(e?.details?.reason, e?.rawMessage));
+      } else {
+        setError(e instanceof Error ? e.message : 'Add nahi hua.');
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+  const confirmPendingNo = () => {
+    setPendingConfirm(null);
+    setMessage('Action cancel kar diya.');
   };
   const completeTask = async (id: string) => {
     setBusy(true); setError('');
@@ -104,16 +202,6 @@ export function TaskManagerPage() {
     catch (e) { setError(e instanceof Error ? e.message : 'Task cancel nahi hua.'); }
     finally { setBusy(false); }
   };
-  const addReminder = async (event: FormEvent) => {
-    event.preventDefault(); setBusy(true); setError(''); setMessage('');
-    try {
-      const dueAt = istDateTimeToIso(remindAt);
-      if (!dueAt) throw new Error('Reminder date/time valid nahi hai.');
-      await reminderApi.create({ text: reminderText, remind_at: dueAt, repeat_rule: repeat || null, time_zone: TIME_ZONE }, true);
-      setReminderText(''); setRemindAt(''); setRepeat(''); await refresh(); setMessage('Reminder save ho gaya.');
-    } catch (e) { setError(e instanceof Error ? e.message : 'Reminder save nahi hua.'); }
-    finally { setBusy(false); }
-  };
   const cancelReminder = async (id: string) => {
     if (cancelId !== id) { setCancelId(id); return; }
     setBusy(true); setError('');
@@ -129,6 +217,16 @@ export function TaskManagerPage() {
       <div className="s08-input-row"><input id="s08-natural" value={natural} onChange={(e) => setNatural(e.target.value)} placeholder="Kal subah 7 baje meeting yaad dilana" maxLength={1000} /><button type="submit" disabled={busy || !natural.trim()}>{busy ? 'Saving…' : 'Add'}</button></div>
       <small>Aaj/kal/parson, din, time, repeat aur priority supported. “Kal 7 baje” ambiguous ho to AM/PM confirm karna padega.</small>
     </form>
+    {pendingConfirm && (
+      <section className="card s08-confirm-card" role="region" aria-label="Confirmation required" id="s08-confirm-box">
+        <p id="s08-confirm-prompt">{pendingConfirm.promptText}</p>
+        <div className="s08-confirm-actions">
+          <button id="s08-confirm-yes" className="s08-confirm-yes" type="button" disabled={busy} onClick={confirmPendingYes}>Haan</button>
+          <button id="s08-confirm-no" className="s08-inline-action" type="button" disabled={busy} onClick={confirmPendingNo}>Nahi</button>
+        </div>
+      </section>
+    )}
+    {clarifyQuestion && <div className="s08-alert" role="alert" id="s08-clarify-box">{clarifyQuestion}</div>}
     {error && <div className="s08-alert" role="alert">{error}</div>}{message && <div className="s08-success" role="status">{message}</div>}
     <div className="s08-tabs" role="tablist" aria-label="Tasks and reminders"><button role="tab" aria-selected={tab === 'tasks'} className={tab === 'tasks' ? 'active' : ''} onClick={() => setTab('tasks')}>Tasks ({tasks.length})</button><button role="tab" aria-selected={tab === 'reminders'} className={tab === 'reminders' ? 'active' : ''} onClick={() => setTab('reminders')}>Reminders ({reminders.length})</button></div>
     {tab === 'tasks' ? <>

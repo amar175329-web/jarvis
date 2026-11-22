@@ -137,6 +137,9 @@ async function runMutation<T>(args: {
     },
   });
   if (!outcome.executed) {
+    if (outcome.gate.mode === 'ask_confirm' && !confirmed) {
+      return { ok: false, status: 409, code: 'confirmation_required', message: 'L2 power requires explicit confirmation: pehle confirm karo (confirmed: true).' };
+    }
     if (outcome.error) return { ok: false, status: 503, code: 'unavailable', message: 'Action complete nahi hui; safe retry se pehle status refresh karo.' };
     const reason = outcome.gate.reason;
     return { ok: false, status: 403, code: 'forbidden', message: `JARVIS safety gate ne action roka: ${reason}` };

@@ -22,7 +22,12 @@ export async function jarvisPost<T>(path: string, body: Record<string, unknown> 
   if (!response.ok || payload?.ok !== true) {
     const code = payload?.error?.code ?? 'request_failed';
     const message = payload?.error?.message ?? 'Request complete nahi hui.';
-    throw new Error(`${message} (${code})`);
+    const err = new Error(`${message} (${code})`) as Error & { code?: string; rawMessage?: string; status?: number; details?: Record<string, unknown> };
+    err.code = code;
+    err.rawMessage = message;
+    err.status = response.status;
+    err.details = payload?.error?.details;
+    throw err;
   }
   return payload.data as T;
 }

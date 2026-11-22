@@ -48,7 +48,7 @@
     "status": "built",
     "does": "Single owner-authenticated Vercel function for task, reminder, and Today projection routes",
     "autonomy_default": "L0",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "path": "api/tasks"
   },
   {
@@ -555,7 +555,7 @@
     "status": "built",
     "does": "Task Manager",
     "autonomy_default": "L0",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "path": "features/core-workspace/task-manager"
   },
   {

@@ -23,3 +23,4 @@ KNOWN ISSUES: Routes and schemas await S00 contract acceptance. Vercel rewrite, 
 CHANGE LOG:
 - 2026-11-21 - Folder-First plan created by S08 before code; version 0.0.1.
 - 2026-11-21 - Added consolidated owner-auth API implementation for task/reminder/Today actions; version 0.1.0.
+- 2026-11-21 - P29: return explicit `409 confirmation_required` when an L2 power (`mode === 'ask_confirm'`) is called with `confirmed: false` or missing instead of generic `503 unavailable`; version 0.2.0.

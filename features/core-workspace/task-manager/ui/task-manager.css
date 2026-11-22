@@ -27,3 +27,8 @@
 .s08-edit-form{grid-column:1/-1;display:grid;gap:10px;padding:12px;background:var(--panel,#f7f9fd);border:1px solid var(--line,#e4ebfa);border-radius:12px;min-width:0}
 .s08-edit-form>label{display:grid;gap:6px}
 @media(max-width:650px){.s08-fields-grid{grid-template-columns:minmax(0,1fr)}.s08-task-form{padding:15px}.s08-task-row{grid-template-columns:8px minmax(0,1fr)!important}.s08-task-row>.s08-actions{grid-column:2;justify-content:flex-start}.s08-edit-form{grid-column:1/-1}.s08-actions .s08-inline-action{padding:7px 8px}}
+.s08-confirm-card{padding:15px 18px;margin-bottom:15px;display:grid;gap:10px;min-width:0;border:1px solid var(--line,#e4ebfa)}
+.s08-confirm-card p{margin:0;font-size:13px;font-weight:700;color:var(--ink,#101d43);overflow-wrap:anywhere}
+.s08-confirm-actions{display:flex;gap:8px;flex-wrap:wrap}
+.s08-confirm-yes{border:0;border-radius:10px;background:linear-gradient(135deg,#2383ff,#1358e5);color:#fff;font-size:12px;font-weight:800;padding:8px 14px;cursor:pointer}
+
