@@ -8,14 +8,25 @@ export function KillSwitch() {
 
   useEffect(() => {
     const controller = new AbortController();
+    let unmounted = false;
+    const timer = window.setTimeout(() => controller.abort(), 8000);
     fetch('/api/system/kill.get', { credentials: 'same-origin', cache: 'no-store', signal: controller.signal })
       .then(async (response) => {
+        window.clearTimeout(timer);
+        if (unmounted) return;
         const body = response.status >= 200 && response.status < 300 ? await response.json() : null;
         const next = parseKillRead(response.status, body);
         if (next) setView(next);
       })
-      .catch(() => { if (!controller.signal.aborted) setView({ visible: true, kill: true, unavailable: true, saving: false, epoch: -1 }); });
-    return () => controller.abort();
+      .catch(() => {
+        window.clearTimeout(timer);
+        if (!unmounted) setView({ visible: true, kill: true, unavailable: true, saving: false, epoch: -1 });
+      });
+    return () => {
+      unmounted = true;
+      window.clearTimeout(timer);
+      controller.abort();
+    };
   }, []);
 
   async function toggle() {
