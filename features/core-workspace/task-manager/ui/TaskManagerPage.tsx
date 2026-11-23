@@ -36,6 +36,8 @@ function displayDate(value: string | null) {
   return value ? new Date(value).toLocaleString('en-IN', { timeZone: TIME_ZONE }) : 'No due date';
 }
 function cleanNeedsConfirmationQuestion(reason?: unknown, fallback?: string): string {
+  if (reason === 'midnight_date') return 'raat 12 baje aaj ya kal ki?';
+  if (reason === 'night_after_midnight') return 'Sawal: Raat ke baad (AM) ka time hai — aaj ya kal ki date confirm karo.';
   if (reason === 'title_missing') return 'Sawal: Kya yaad dilana hai? Task ya reminder ka naam likho.';
   if (reason === 'am_pm_ambiguous' || reason === 'time_ambiguous') return 'Sawal: Yeh subah (AM) hai ya shaam (PM)? Exact time confirm karo (jaise "subah 7 baje" ya "shaam 7 baje").';
   return fallback ? `Sawal: ${fallback}` : 'Sawal: Time ambiguous hai. Subah (AM) ya shaam (PM) confirm karo.';
@@ -83,11 +85,11 @@ export function TaskManagerPage() {
     }
     const parsed = parseNaturalLanguage(raw, { timeZone: TIME_ZONE }) as any;
     if (!parsed?.ok) {
-      setError('Date/time clear nahi hua; details dobara likho.');
+      setError(parsed?.message || 'Date/time clear nahi hua; details dobara likho.');
       return;
     }
     if (parsed.status !== 'ready') {
-      setClarifyQuestion(cleanNeedsConfirmationQuestion(parsed.reason));
+      setClarifyQuestion(cleanNeedsConfirmationQuestion(parsed.reason, parsed.message));
       return;
     }
     if (parsed.sensitive) {
@@ -95,10 +97,11 @@ export function TaskManagerPage() {
       return;
     }
     const timeStr = displayDate(parsed.due_at ?? null);
+    const kindLabel = parsed.kind === 'reminder' ? 'reminder' : 'task';
     setPendingConfirm({
       kind: 'natural',
       text: raw,
-      promptText: `Main ye task banaun? ${parsed.title}, ${timeStr}`,
+      promptText: `Main ye ${kindLabel} banaun? ${parsed.title}, ${timeStr}`,
     });
   };
   const addTask = async (event: FormEvent) => {
@@ -138,7 +141,7 @@ export function TaskManagerPage() {
     setPendingConfirm({
       kind: 'reminder',
       payload: { text, remind_at: dueAt, repeat_rule: repeat || null, time_zone: TIME_ZONE },
-      promptText: `Main ye task banaun? ${text}, ${displayDate(dueAt)}`,
+      promptText: `Main ye reminder banaun? ${text}, ${displayDate(dueAt)}`,
     });
   };
   const confirmPendingYes = async () => {

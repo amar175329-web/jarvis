@@ -99,3 +99,103 @@ test('exact LEAD privacy probes are classified sensitive by the parser', () => {
     assert.equal(result.sensitive, true, phrase);
   }
 });
+
+// P31 Time-Parse Rules Tests
+const now1858 = new Date('2026-11-22T18:58:00+05:30');
+const INVALID_MSG = "Time samajh nahi aaya. 'aaj 10 pm' ya '22:00' likho.";
+
+test('P31: kal raat 9 baje => tomorrow 21:00 IST (not 09:00 AM)', () => {
+  const r = parseNaturalLanguage('kal raat 9 baje call karna', { now: now1858 });
+  assert.equal(r.ok, true);
+  assert.equal(r.status, 'ready');
+  assert.equal(r.due_at, new Date('2026-11-23T21:00:00+05:30').toISOString());
+});
+
+test('P31: aaj raat 10 baje at 18:58 IST => today 22:00 IST ready (not time_already_passed_today)', () => {
+  const r = parseNaturalLanguage('aaj raat 10 baje doodh lana', { now: now1858 });
+  assert.equal(r.ok, true);
+  assert.equal(r.status, 'ready');
+  assert.equal(r.title, 'doodh lana');
+  assert.equal(r.due_at, new Date('2026-11-22T22:00:00+05:30').toISOString());
+});
+
+test('P31: aaj shaam 8 baje => today 20:00 IST', () => {
+  const r = parseNaturalLanguage('aaj shaam 8 baje walk', { now: now1858 });
+  assert.equal(r.ok, true);
+  assert.equal(r.status, 'ready');
+  assert.equal(r.due_at, new Date('2026-11-22T20:00:00+05:30').toISOString());
+});
+
+test('P31: dopahar 12 baje => 12:00 IST & dopahar 5 baje => 17:00 IST', () => {
+  const r12 = parseNaturalLanguage('kal dopahar 12 baje lunch', { now: now1858 });
+  assert.equal(r12.ok, true);
+  assert.equal(r12.status, 'ready');
+  assert.equal(r12.due_at, new Date('2026-11-23T12:00:00+05:30').toISOString());
+
+  const r5 = parseNaturalLanguage('kal dopahar 5 baje chai', { now: now1858 });
+  assert.equal(r5.ok, true);
+  assert.equal(r5.status, 'ready');
+  assert.equal(r5.due_at, new Date('2026-11-23T17:00:00+05:30').toISOString());
+});
+
+test('P31: raat 12 baje => needs_confirmation midnight_date', () => {
+  const r = parseNaturalLanguage('aaj raat 12 baje backup chalana', { now: now1858 });
+  assert.equal(r.ok, true);
+  assert.equal(r.status, 'needs_confirmation');
+  assert.equal(r.reason, 'midnight_date');
+  assert.equal(r.message, 'raat 12 baje aaj ya kal ki?');
+});
+
+test('P31: raat 2 baje => needs_confirmation night_after_midnight', () => {
+  const r = parseNaturalLanguage('raat 2 baje server check', { now: now1858 });
+  assert.equal(r.ok, true);
+  assert.equal(r.status, 'needs_confirmation');
+  assert.equal(r.reason, 'night_after_midnight');
+});
+
+test('P31: invalid daypart-hour combos return ok:false with clear Hinglish message', () => {
+  for (const phrase of [
+    'aaj shaam 11 baje meeting',
+    'aaj shaam 2 baje meeting',
+    'kal subah 12 baje walk',
+    'aaj raat 6 baje dinner',
+  ]) {
+    const r = parseNaturalLanguage(phrase, { now: now1858 });
+    assert.equal(r.ok, false, phrase);
+    assert.equal(r.code, 'invalid_time', phrase);
+    assert.equal(r.message, INVALID_MSG, phrase);
+  }
+});
+
+test('P31: subah 9 baje => 09:00 IST', () => {
+  const r = parseNaturalLanguage('kal subah 9 baje standup', { now: now1858 });
+  assert.equal(r.ok, true);
+  assert.equal(r.status, 'ready');
+  assert.equal(r.due_at, new Date('2026-11-23T09:00:00+05:30').toISOString());
+});
+
+test('P31: explicit aaj 10 pm and aaj 22:00 work as before', () => {
+  const rPm = parseNaturalLanguage('aaj 10 pm review', { now: now1858 });
+  assert.equal(rPm.ok, true);
+  assert.equal(rPm.status, 'ready');
+  assert.equal(rPm.due_at, new Date('2026-11-22T22:00:00+05:30').toISOString());
+
+  const r24 = parseNaturalLanguage('aaj 22:00 review', { now: now1858 });
+  assert.equal(r24.ok, true);
+  assert.equal(r24.status, 'ready');
+  assert.equal(r24.due_at, new Date('2026-11-22T22:00:00+05:30').toISOString());
+});
+
+test('P31: Devanagari "आज रात 10 बजे दूध लाना" and trailing daypart "aaj 10 baje raat doodh lana"', () => {
+  const rDeva = parseNaturalLanguage('आज रात 10 बजे दूध लाना', { now: now1858 });
+  assert.equal(rDeva.ok, true);
+  assert.equal(rDeva.status, 'ready');
+  assert.equal(rDeva.title, 'दूध लाना');
+  assert.equal(rDeva.due_at, new Date('2026-11-22T22:00:00+05:30').toISOString());
+
+  const rTrailing = parseNaturalLanguage('aaj 10 baje raat doodh lana', { now: now1858 });
+  assert.equal(rTrailing.ok, true);
+  assert.equal(rTrailing.status, 'ready');
+  assert.equal(rTrailing.title, 'doodh lana');
+  assert.equal(rTrailing.due_at, new Date('2026-11-22T22:00:00+05:30').toISOString());
+});

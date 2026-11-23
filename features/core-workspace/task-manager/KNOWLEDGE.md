@@ -26,3 +26,4 @@ CHANGE LOG:
 - 2026-11-21 - Folder-First plan created by S08 before code; version 0.0.1.
 - 2026-11-21 - Added deterministic parser, task API client, responsive Task Manager UI, repeat scheduling logic, tests and S08 API unit; version 0.1.0.
 - 2026-11-21 - P28/P29: expanded health sensitivity classifier terms (`physio`, `physiotherapy`, `dentist`, `periods`, `saans`, `pump`, `inhaler` in Roman + Devanagari) and added explicit L2 Hinglish confirmation step (`"Main ye task banaun? <title>, <time>"` with `[Haan]` / `[Nahi]`) plus clear `needs_confirmation` question handling in `TaskManagerPage.tsx`; version 0.2.0.
+- 2026-11-22 - P31: fixed `resolveHour` daypart rules (`raat` 8..11 => PM, 12 => `midnight_date`, 1..4 => `night_after_midnight`; `shaam` 4..9 => PM; `dopahar` 12 + 1..5 => PM; `subah` 5..11 => AM), clear Hinglish `invalid_time` message, Devanagari & trailing daypart support, and `"Main ye reminder banaun?"` prompt for reminders; version 0.2.1.

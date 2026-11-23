@@ -111,6 +111,8 @@ function detectTime(text) {
   return null;
 }
 
+const INVALID_TIME_MSG = "Time samajh nahi aaya. 'aaj 10 pm' ya '22:00' likho.";
+
 function resolveHour(time, daypart) {
   if (!time) return null;
   let hour = time.hour;
@@ -121,11 +123,24 @@ function resolveHour(time, daypart) {
   } else if (hour >= 13) {
     // 24-hour values are unambiguous.
   } else if (daypart) {
-    if (daypart.name === 'morning' && hour >= 1 && hour <= 11) { /* AM */ }
-    else if (daypart.name === 'afternoon' && hour >= 1 && hour <= 4) hour += 12;
-    else if (daypart.name === 'evening' && hour >= 1 && hour <= 7) hour += 12;
-    else if (daypart.name === 'night' && hour >= 1 && hour <= 11) hour = hour % 12;
-    else return { invalid: true };
+    if (daypart.name === 'morning') {
+      if (hour >= 5 && hour <= 11) { /* AM */ }
+      else return { invalid: true };
+    } else if (daypart.name === 'afternoon') {
+      if (hour === 12) hour = 12;
+      else if (hour >= 1 && hour <= 5) hour += 12;
+      else return { invalid: true };
+    } else if (daypart.name === 'evening') {
+      if (hour >= 4 && hour <= 9) hour += 12;
+      else return { invalid: true };
+    } else if (daypart.name === 'night') {
+      if (hour >= 8 && hour <= 11) hour += 12;
+      else if (hour === 12) return { needsConfirmation: 'midnight_date', message: 'raat 12 baje aaj ya kal ki?' };
+      else if (hour >= 1 && hour <= 4) return { needsConfirmation: 'night_after_midnight', message: 'Raat ke baad (AM) ka time hai — aaj ya kal ki date confirm karo.' };
+      else return { invalid: true };
+    } else {
+      return { invalid: true };
+    }
   } else if (hour >= 1 && hour <= 12) {
     return { ambiguous: true };
   }
@@ -197,7 +212,8 @@ export function parseNaturalLanguage(input, options = {}) {
 
   if (!title) return { ok: true, status: 'needs_confirmation', reason: 'title_missing', title: '', kind, sensitive, priority: priorityValue, repeat_rule: repeatRule, date_text: date?.token ?? null };
 
-  if (time && resolved?.invalid) return { ok: false, code: 'invalid_time', title, kind, sensitive };
+  if (time && resolved?.invalid) return { ok: false, code: 'invalid_time', message: INVALID_TIME_MSG, title, kind, sensitive };
+  if (time && resolved?.needsConfirmation) return { ok: true, status: 'needs_confirmation', reason: resolved.needsConfirmation, message: resolved.message, title, kind, sensitive, priority: priorityValue, repeat_rule: repeatRule, date_text: date?.token ?? null, time_text: `${time.hour}:${String(time.minute).padStart(2, '0')}` };
   if (time && resolved?.ambiguous) return { ok: true, status: 'needs_confirmation', reason: 'am_pm_ambiguous', title, kind, sensitive, priority: priorityValue, repeat_rule: repeatRule, date_text: date?.token ?? null, time_text: `${time.hour}:${String(time.minute).padStart(2, '0')}` };
   if (daypart && !time) return { ok: true, status: 'needs_confirmation', reason: 'exact_time_required', title, kind, sensitive, priority: priorityValue, repeat_rule: repeatRule, date_text: date?.token ?? null };
   if (!date && !time && !daypart && !repeatRule) return { ok: false, code: 'no_schedule_detected', title, kind, sensitive, priority: priorityValue };

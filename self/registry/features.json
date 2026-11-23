@@ -282,7 +282,7 @@
     "status": "built",
     "does": "Task Manager",
     "autonomy_default": "L0",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "path": "features/core-workspace/task-manager"
   },
   {

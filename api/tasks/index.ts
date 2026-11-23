@@ -243,10 +243,11 @@ async function dispatch(request: Request, options: Options = {}) {
         if (body.private === true || body.privacy_tier === 'T2' || body.privacy_tier === 'T3') return privacyConfirmation(owner.setCookie);
         if (typeof body.text !== 'string' || body.text.length > 1000) return withCookie(fail(400, 'bad_request', 'Natural-language text invalid hai.'), owner.setCookie);
         if (classifySensitivity(body.text).sensitive) return privacyConfirmation(owner.setCookie);
-        const parsed = parseNaturalLanguage(body.text, { timeZone: TIME_ZONE });
-        if (!parsed.ok) return withCookie(fail(400, 'bad_request', 'Date/time clear nahi hua; details dobara likho.'), owner.setCookie);
+        const parsed = parseNaturalLanguage(body.text, { timeZone: TIME_ZONE }) as any;
+        if (!parsed.ok) return withCookie(fail(400, 'bad_request', parsed.message || 'Date/time clear nahi hua; details dobara likho.'), owner.setCookie);
         if (parsed.status !== 'ready') {
-          const message = parsed.reason === 'title_missing' ? 'Kya yaad dilana hai?' : 'Time ambiguous hai. AM/PM ya exact time confirm karo.';
+          const message = parsed.message
+            || (parsed.reason === 'title_missing' ? 'Kya yaad dilana hai?' : 'Time ambiguous hai. AM/PM ya exact time confirm karo.');
           return withCookie(response(409, { ok: false, error: { code: 'confirmation_required', message, details: { status: parsed.status, reason: parsed.reason, kind: parsed.kind } } }), owner.setCookie);
         }
         if (parsed.sensitive) return privacyConfirmation(owner.setCookie);
