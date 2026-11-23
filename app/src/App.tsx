@@ -1,15 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Sprite } from './components/Sprite';
-import { Sidebar } from './components/Sidebar';
-import { Topbar } from './components/Topbar';
-import { HomePage } from './components/HomePage';
-import { MorePage } from './components/MorePage';
-import { Boot } from './components/Boot';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { OwnerLock } from './components/OwnerLock';
-import { TodayPage } from '../../features/core-workspace/today/ui/TodayPage';
-import { TaskManagerPage } from '../../features/core-workspace/task-manager/ui/TaskManagerPage';
 import { nextAuthStateFromSession, type AuthGateState } from './ownerLockPolicy';
 import type { Page } from './types';
+
+const Sprite = lazy(() => import('./components/Sprite').then((m) => ({ default: m.Sprite })));
+const Sidebar = lazy(() => import('./components/Sidebar').then((m) => ({ default: m.Sidebar })));
+const Topbar = lazy(() => import('./components/Topbar').then((m) => ({ default: m.Topbar })));
+const HomePage = lazy(() => import('./components/HomePage').then((m) => ({ default: m.HomePage })));
+const MorePage = lazy(() => import('./components/MorePage').then((m) => ({ default: m.MorePage })));
+const Boot = lazy(() => import('./components/Boot').then((m) => ({ default: m.Boot })));
+const TodayPage = lazy(() => import('../../features/core-workspace/today/ui/TodayPage').then((m) => ({ default: m.TodayPage })));
+const TaskManagerPage = lazy(() => import('../../features/core-workspace/task-manager/ui/TaskManagerPage').then((m) => ({ default: m.TaskManagerPage })));
 
 export function App() {
   const [authState, setAuthState] = useState<AuthGateState>('loading');
@@ -85,7 +86,7 @@ export function App() {
   const go = (p: Page) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   return (
-    <>
+    <Suspense fallback={<main className="owner-lock-shell" role="status" aria-live="polite"><div className="owner-lock-loading">Loading...</div></main>}>
       <Sprite />
       <div className="app">
         <Sidebar page={page} onNav={go} />
@@ -98,6 +99,6 @@ export function App() {
         </main>
       </div>
       <Boot />
-    </>
+    </Suspense>
   );
 }

@@ -112,6 +112,12 @@ async function runMutation<T>(args: {
   c: Config; owner: Owner; powerId: string; why: string; confirmed: boolean; run: (context: { decisionId: string }) => Promise<T>;
 }): Promise<{ ok: true; result: T } | { ok: false; status: number; code: string; message: string }> {
   const { c, owner, powerId, why, confirmed, run } = args;
+  // Per-request parallel read: powers + live system_state (never cached across requests).
+  const baseKillStore = killStore(c, owner);
+  const liveKillPromise = baseKillStore.read(owner.user.id).then(
+    (value) => ({ ok: true as const, value }),
+    (err) => ({ ok: false as const, err }),
+  );
   let registry;
   try { registry = await loadPowers(c, owner); }
   catch { return { ok: false, status: 503, code: 'unavailable', message: 'Power registry read nahi ho paayi; action block hai.' }; }
@@ -127,8 +133,17 @@ async function runMutation<T>(args: {
   } catch {
     return { ok: false, status: 503, code: 'unavailable', message: 'Action log save nahi hua; action block hai.' };
   }
+  const perRequestKillStore: KillSwitchStore = {
+    async read(ownerId: string) {
+      if (ownerId !== owner.user.id) return baseKillStore.read(ownerId);
+      const res = await liveKillPromise;
+      if (!res.ok) throw res.err;
+      return res.value;
+    },
+    write: baseKillStore.write,
+  };
   const outcome = await executePower<T>({
-    reg: registry, powerId, store: killStore(c, owner), ownerId: owner.user.id, confirmed, run: () => run({ decisionId: auditId }),
+    reg: registry, powerId, store: perRequestKillStore, ownerId: owner.user.id, confirmed, run: () => run({ decisionId: auditId }),
     onDecisionLog: async (entry) => {
       await db(c, owner, 'decisions', { id: `eq.${auditId}` }, { method: 'PATCH', body: {
         result: entry.executed ? 'executed' : 'blocked',
@@ -212,8 +227,10 @@ async function dispatch(request: Request, options: Options = {}) {
       }
       case 'tasks.today': {
         const today = todayString();
-        const tasks = await db(c, owner, 'tasks', { select: TASK_SELECT, order: 'due_at.asc.nullslast,created_at.desc', limit: '300' });
-        const reminders = await db(c, owner, 'reminders', { select: REMINDER_SELECT, state: 'eq.pending', order: 'remind_at.asc', limit: '300' });
+        const [tasks, reminders] = await Promise.all([
+          db(c, owner, 'tasks', { select: TASK_SELECT, order: 'due_at.asc.nullslast,created_at.desc', limit: '300' }),
+          db(c, owner, 'reminders', { select: REMINDER_SELECT, state: 'eq.pending', order: 'remind_at.asc', limit: '300' }),
+        ]);
         const open = tasks.filter((t) => ['todo', 'doing'].includes(t.status));
         const overdue = open.filter((t) => t.due_at && localDate(t.due_at) < today);
         const todaysTasks = open.filter((t) => t.due_at && localDate(t.due_at) === today);

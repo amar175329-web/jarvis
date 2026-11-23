@@ -365,29 +365,52 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
   if (!killReader) {
     return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch reader is unavailable (fail-closed)'), owner.setCookie);
   }
-  let killState: KillState;
-  try {
-    killState = await killReader.read(owner.user.id);
-  } catch {
-    return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch unreadable'), owner.setCookie);
-  }
+
+  // Start live kill switch read immediately in parallel with body parse & message lookups.
+  const killStatePromise = killReader.read(owner.user.id).then(
+    (value) => ({ ok: true as const, value }),
+    () => ({ ok: false as const }),
+  );
 
   const body = await bodyJson(request);
   const parsed = ROUTES['chat.messages.stream'].input.safeParse(body);
-  if (!parsed.success) return preserveRotatedCookie(fail(400, 'bad_request', 'invalid stream request payload'), owner.setCookie);
+  if (!parsed.success) {
+    const ks = await killStatePromise;
+    if (!ks.ok) return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch unreadable'), owner.setCookie);
+    return preserveRotatedCookie(fail(400, 'bad_request', 'invalid stream request payload'), owner.setCookie);
+  }
 
   const threadStore = options.threadStore ?? (c ? createRlsChatThreadStore({ supabaseUrl: c.url, anonKey: c.anonKey, accessToken: owner.accessToken, fetcher: c.fetcher }) : null);
   if (!threadStore) {
+    const ks = await killStatePromise;
+    if (!ks.ok) return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch unreadable'), owner.setCookie);
     return preserveRotatedCookie(fail(503, 'unavailable', 'chat thread store is not configured'), owner.setCookie);
   }
 
-  let userMessage: ChatMessage | null = null;
-  if (threadStore.getMessage) {
-    userMessage = await threadStore.getMessage({ ownerId: owner.user.id, threadId: parsed.data.thread_id, messageId: parsed.data.message_id });
-  } else {
-    const rows = await threadStore.listMessages({ ownerId: owner.user.id, threadId: parsed.data.thread_id, limit: 100 });
-    userMessage = rows.find((m) => m.id === parsed.data.message_id) ?? null;
+  const userMessagePromise: Promise<ChatMessage | null> = threadStore.getMessage
+    ? threadStore.getMessage({ ownerId: owner.user.id, threadId: parsed.data.thread_id, messageId: parsed.data.message_id })
+    : threadStore.listMessages({ ownerId: owner.user.id, threadId: parsed.data.thread_id, limit: 100 })
+      .then((rows) => rows.find((m) => m.id === parsed.data.message_id) ?? null);
+
+  const existingReplyPromise: Promise<ChatMessage | null> = threadStore.getReplyMessage
+    ? threadStore.getReplyMessage({
+      ownerId: owner.user.id,
+      threadId: parsed.data.thread_id,
+      replyToMessageId: parsed.data.message_id,
+    })
+    : threadStore.listMessages({ ownerId: owner.user.id, threadId: parsed.data.thread_id, limit: 50, status: 'all' })
+      .then((history) => history.find((m) => m.role === 'assistant' && m.replyToMessageId === parsed.data.message_id) ?? null);
+
+  const [killRes, userMessage, fetchedExistingReply] = await Promise.all([
+    killStatePromise,
+    userMessagePromise,
+    existingReplyPromise,
+  ]);
+  if (!killRes.ok) {
+    return preserveRotatedCookie(fail(503, 'unavailable', 'kill switch unreadable'), owner.setCookie);
   }
+  const killState: KillState = killRes.value;
+
   if (!userMessage) {
     return preserveRotatedCookie(fail(404, 'not_found', 'message stream not found or expired'), owner.setCookie);
   }
@@ -406,17 +429,7 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
   if (owner.setCookie) headers['set-cookie'] = owner.setCookie;
 
   // 1. Check if an assistant reply already exists in DB for this message
-  let existingReply: ChatMessage | null = null;
-  if (threadStore.getReplyMessage) {
-    existingReply = await threadStore.getReplyMessage({
-      ownerId: owner.user.id,
-      threadId: parsed.data.thread_id,
-      replyToMessageId: userMessage.id,
-    });
-  } else {
-    const history = await threadStore.listMessages({ ownerId: owner.user.id, threadId: parsed.data.thread_id, limit: 50, status: 'all' });
-    existingReply = history.find((m) => m.role === 'assistant' && m.replyToMessageId === userMessage!.id) ?? null;
-  }
+  let existingReply: ChatMessage | null = fetchedExistingReply;
 
   if (existingReply) {
     if (existingReply.status === 'done') {
