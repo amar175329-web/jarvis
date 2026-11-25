@@ -5,10 +5,10 @@
   "group": "shell",
   "owner_squad": "S00",
   "phase": 1,
-  "status": "planned",
-  "does": "Search anything / Search features",
+  "status": "built",
+  "does": "Search approved navigation destinations and feature metadata locally; never search private records in this shell widget.",
   "uses": [],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.2.0"
 }

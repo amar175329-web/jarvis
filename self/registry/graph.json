@@ -5,7 +5,9 @@
     "used_by": [
       "api.chat",
       "api.system",
-      "api.tasks"
+      "api.tasks",
+      "features.core-workspace.activity-logs",
+      "features.core-workspace.history"
     ]
   },
   "api.chat": {
@@ -42,9 +44,16 @@
     ],
     "knows": [],
     "used_by": [
+      "features.core-workspace.boards",
+      "features.core-workspace.insights",
       "features.core-workspace.reminders",
       "features.core-workspace.task-manager",
-      "features.core-workspace.today"
+      "features.core-workspace.today",
+      "features.home.jarvis-insight",
+      "features.home.live-activity",
+      "features.home.news",
+      "features.home.quick-access",
+      "features.home.recent-activity"
     ]
   },
   "command-center.agents": {
@@ -211,22 +220,48 @@
     "used_by": []
   },
   "features.core-workspace.activity-logs": {
-    "uses": [],
+    "uses": [
+      "api.auth",
+      "packages.brain",
+      "packages.memory",
+      "features.core-workspace.task-manager"
+    ],
     "knows": [],
-    "used_by": []
+    "used_by": [
+      "features.core-workspace.boards",
+      "features.core-workspace.history",
+      "features.core-workspace.insights"
+    ]
   },
   "features.core-workspace.boards": {
-    "uses": [],
+    "uses": [
+      "api.tasks",
+      "features.core-workspace.task-manager",
+      "features.core-workspace.activity-logs",
+      "packages.brain",
+      "packages.harness",
+      "packages.safety"
+    ],
     "knows": [],
     "used_by": []
   },
   "features.core-workspace.history": {
-    "uses": [],
+    "uses": [
+      "api.auth",
+      "packages.brain",
+      "packages.memory",
+      "features.core-workspace.activity-logs"
+    ],
     "knows": [],
     "used_by": []
   },
   "features.core-workspace.insights": {
-    "uses": [],
+    "uses": [
+      "api.tasks",
+      "features.core-workspace.task-manager",
+      "features.core-workspace.activity-logs",
+      "packages.brain"
+    ],
     "knows": [],
     "used_by": []
   },
@@ -242,18 +277,22 @@
   },
   "features.core-workspace.memory": {
     "uses": [
-      "packages.memory"
+      "packages.memory",
+      "features.core-workspace.task-manager"
     ],
     "knows": [
       "memory.rules",
       "memory.engine"
     ],
-    "used_by": []
+    "used_by": [
+      "features.core-workspace.notes-files",
+      "features.core-workspace.projects"
+    ]
   },
   "features.core-workspace.notes-files": {
     "uses": [
       "packages.memory",
-      "memory.knowledge"
+      "features.core-workspace.memory"
     ],
     "knows": [
       "memory.graph"
@@ -263,7 +302,7 @@
   "features.core-workspace.projects": {
     "uses": [
       "packages.memory",
-      "memory.projects"
+      "features.core-workspace.memory"
     ],
     "knows": [
       "memory.graph"
@@ -291,7 +330,15 @@
     "knows": [],
     "used_by": [
       "api.tasks",
-      "features.core-workspace.today"
+      "features.core-workspace.activity-logs",
+      "features.core-workspace.boards",
+      "features.core-workspace.insights",
+      "features.core-workspace.memory",
+      "features.core-workspace.today",
+      "features.home.jarvis-insight",
+      "features.home.recent-activity",
+      "features.home.today-focus",
+      "features.home.todays-schedule"
     ]
   },
   "features.core-workspace.today": {
@@ -301,7 +348,10 @@
       "api.tasks"
     ],
     "knows": [],
-    "used_by": []
+    "used_by": [
+      "features.home.today-focus",
+      "features.home.todays-schedule"
+    ]
   },
   "features.customize.automations": {
     "uses": [],
@@ -384,37 +434,57 @@
     "used_by": []
   },
   "features.home.jarvis-insight": {
-    "uses": [],
+    "uses": [
+      "api.tasks",
+      "features.core-workspace.task-manager"
+    ],
     "knows": [],
     "used_by": []
   },
   "features.home.live-activity": {
-    "uses": [],
+    "uses": [
+      "api.tasks"
+    ],
     "knows": [],
     "used_by": []
   },
   "features.home.news": {
-    "uses": [],
+    "uses": [
+      "api.tasks",
+      "packages.model-gateway",
+      "packages.models"
+    ],
     "knows": [],
     "used_by": []
   },
   "features.home.quick-access": {
-    "uses": [],
+    "uses": [
+      "api.tasks"
+    ],
     "knows": [],
     "used_by": []
   },
   "features.home.recent-activity": {
-    "uses": [],
+    "uses": [
+      "features.core-workspace.task-manager",
+      "api.tasks"
+    ],
     "knows": [],
     "used_by": []
   },
   "features.home.today-focus": {
-    "uses": [],
+    "uses": [
+      "features.core-workspace.today",
+      "features.core-workspace.task-manager"
+    ],
     "knows": [],
     "used_by": []
   },
   "features.home.todays-schedule": {
-    "uses": [],
+    "uses": [
+      "features.core-workspace.today",
+      "features.core-workspace.task-manager"
+    ],
     "knows": [],
     "used_by": []
   },
@@ -426,7 +496,9 @@
   "features.shell.connect": {
     "uses": [],
     "knows": [],
-    "used_by": []
+    "used_by": [
+      "features.shell.profile-status"
+    ]
   },
   "features.shell.global-search": {
     "uses": [],
@@ -444,7 +516,9 @@
     "used_by": []
   },
   "features.shell.profile-status": {
-    "uses": [],
+    "uses": [
+      "features.shell.connect"
+    ],
     "knows": [],
     "used_by": []
   },
@@ -776,8 +850,7 @@
       "memory.rules"
     ],
     "used_by": [
-      "features.core-workspace.knowledge-base",
-      "features.core-workspace.notes-files"
+      "features.core-workspace.knowledge-base"
     ]
   },
   "memory.people": {
@@ -814,9 +887,7 @@
     "knows": [
       "memory.rules"
     ],
-    "used_by": [
-      "features.core-workspace.projects"
-    ]
+    "used_by": []
   },
   "memory.routines": {
     "uses": [
@@ -860,6 +931,10 @@
     ],
     "used_by": [
       "api.tasks",
+      "features.core-workspace.activity-logs",
+      "features.core-workspace.boards",
+      "features.core-workspace.history",
+      "features.core-workspace.insights",
       "memory.engine",
       "memory.rules",
       "packages.chat",
@@ -939,6 +1014,7 @@
     "knows": [],
     "used_by": [
       "api.tasks",
+      "features.core-workspace.boards",
       "features.core-workspace.reminders",
       "packages.chat"
     ]
@@ -985,6 +1061,8 @@
     ],
     "used_by": [
       "api.tasks",
+      "features.core-workspace.activity-logs",
+      "features.core-workspace.history",
       "features.core-workspace.knowledge-base",
       "features.core-workspace.memory",
       "features.core-workspace.notes-files",
@@ -1013,6 +1091,7 @@
     "knows": [],
     "used_by": [
       "api.chat",
+      "features.home.news",
       "memory.engine",
       "packages.chat",
       "packages.memory",
@@ -1022,7 +1101,9 @@
   "packages.models": {
     "uses": [],
     "knows": [],
-    "used_by": []
+    "used_by": [
+      "features.home.news"
+    ]
   },
   "packages.presence": {
     "uses": [],
@@ -1046,6 +1127,7 @@
       "api.chat",
       "api.system",
       "api.tasks",
+      "features.core-workspace.boards",
       "features.core-workspace.reminders",
       "memory.engine",
       "packages.brain",

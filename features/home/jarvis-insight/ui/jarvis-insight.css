@@ -1,0 +1,10 @@
+.d2-insight-card,.d2-insight-card *{box-sizing:border-box}
+.d2-insight-card{min-width:0;max-width:100%}
+.d2-insight-body{min-width:0;align-items:center}
+.d2-insight-copy{min-width:0;flex:1}
+.d2-insight-copy>b,.d2-insight-copy>p{display:block;overflow-wrap:anywhere}
+.d2-insight-bars{flex:0 0 auto;gap:3px;min-width:52px;justify-content:flex-end}
+.d2-insight-bars i{width:6px;min-height:4px}
+.d2-insight-meta{display:flex;gap:12px;flex-wrap:wrap;margin:11px 0 0 52px;color:#8491a8;font-size:9px}
+.d2-insight-state{margin:0;color:#7b89a5;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:390px){.d2-insight-body{gap:8px}.d2-insight-bulb{width:36px;height:36px;flex:0 0 36px}.d2-insight-bars{min-width:44px}.d2-insight-meta{margin-left:44px}}

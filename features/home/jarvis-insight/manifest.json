@@ -5,10 +5,13 @@
   "group": "home",
   "owner_squad": "S04",
   "phase": 2,
-  "status": "planned",
-  "does": "आदतों से सुझाव",
-  "uses": [],
+  "status": "built",
+  "does": "Deterministic daily/weekly activity and safe-task aggregates with short Hindi/Hinglish suggestions and mini-bars.",
+  "uses": [
+    "api.tasks",
+    "features.core-workspace.task-manager"
+  ],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.1.0"
 }

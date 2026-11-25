@@ -199,3 +199,58 @@ test('P31: Devanagari "आज रात 10 बजे दूध लाना" and
   assert.equal(rTrailing.title, 'doodh lana');
   assert.equal(rTrailing.due_at, new Date('2026-11-22T22:00:00+05:30').toISOString());
 });
+
+test('time ranges: "kal 3 se 4 baje" asks existing AM/PM confirmation', () => {
+  const result = parseNaturalLanguage('kal 3 se 4 baje meeting', { now });
+  assert.equal(result.ok, true);
+  assert.equal(result.status, 'needs_confirmation');
+  assert.equal(result.reason, 'am_pm_ambiguous');
+  assert.equal(result.title, 'meeting');
+});
+
+test('time ranges: "kal shaam 3 se 4 baje meeting" creates a 15:00-16:00 interval', () => {
+  const result = parseNaturalLanguage('kal shaam 3 se 4 baje meeting', { now });
+  assert.equal(result.status, 'ready');
+  assert.equal(result.title, 'meeting');
+  assert.equal(result.due_at, '2026-11-22T09:30:00.000Z');
+  assert.equal(result.ends_at, '2026-11-22T10:30:00.000Z');
+});
+
+test('time ranges: explicit PM suffix is inherited across both endpoints', () => {
+  const result = parseNaturalLanguage('kal 3 se 4 pm meeting', { now });
+  assert.equal(result.status, 'ready');
+  assert.equal(result.title, 'meeting');
+  assert.equal(result.due_at, '2026-11-22T09:30:00.000Z');
+  assert.equal(result.ends_at, '2026-11-22T10:30:00.000Z');
+});
+
+test('time ranges: end must be later than start', () => {
+  const result = parseNaturalLanguage('kal shaam 4 se 3 baje meeting', { now });
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'invalid_time_range');
+});
+
+test('yaad dilao and yaad karana are reminder intent and are removed from title', () => {
+  for (const phrase of ['kal shaam 6 baje meeting yaad dilao', 'kal subah 7 baje meeting yaad karana']) {
+    const result = parseNaturalLanguage(phrase, { now });
+    assert.equal(result.status, 'ready', phrase);
+    assert.equal(result.kind, 'reminder', phrase);
+    assert.equal(result.title, 'meeting', phrase);
+  }
+});
+
+
+test('bare remind phrase is routed to a reminder and removed from its title', () => {
+  const result = parseNaturalLanguage('kal subah 8 baje remind dentist appointment', { now: '2026-11-23T05:00:00.000Z', timeZone: 'Asia/Kolkata' });
+  assert.equal(result.status, 'ready');
+  assert.equal(result.kind, 'reminder');
+  assert.equal(result.title, 'dentist appointment');
+});
+
+test('time ranges: "kal shaam 3 se 4 meeting" works without repeating baje', () => {
+  const result = parseNaturalLanguage('kal shaam 3 se 4 meeting', { now: '2026-11-23T05:00:00.000Z', timeZone: 'Asia/Kolkata' });
+  assert.equal(result.status, 'ready');
+  assert.equal(result.title, 'meeting');
+  assert.equal(new Date(result.due_at).toISOString(), '2026-11-24T09:30:00.000Z');
+  assert.equal(new Date(result.ends_at).toISOString(), '2026-11-24T10:30:00.000Z');
+});

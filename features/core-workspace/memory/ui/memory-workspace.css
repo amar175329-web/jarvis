@@ -1,0 +1,25 @@
+.mw-page,.mw-page *{box-sizing:border-box;min-width:0}
+.mw-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:visible;max-width:100%}.mw-tabs button{padding-left:5px;padding-right:5px;font-size:11px}
+.mw-form{padding:17px 18px;margin-bottom:15px;display:grid;gap:9px;min-width:0}
+.mw-form label{font-size:11px;font-weight:800;color:var(--ink,#101d43)}
+.mw-form input,.mw-form textarea{width:100%;min-width:0;border:1px solid var(--line,#e4ebfa);border-radius:12px;background:#fff;padding:11px 12px;font:500 12px 'DM Sans',sans-serif;color:var(--ink,#101d43);outline-color:var(--blue,#1768ee)}
+.mw-form textarea{resize:vertical;max-width:100%}
+.mw-form button{justify-self:start;border:0;border-radius:12px;background:linear-gradient(135deg,#2383ff,#1358e5);color:#fff;font-size:12px;font-weight:800;padding:10px 16px;cursor:pointer}
+.mw-form button:disabled{opacity:.6;cursor:wait}
+.mw-form small,.mw-private-note{font-size:10px;line-height:1.5;color:var(--muted,#7180a1);overflow-wrap:anywhere}
+.mw-list,.mw-private-section{padding:18px;margin-bottom:15px;min-width:0}
+.mw-list .s08-list{list-style:none;margin:0;padding:0;display:grid;gap:13px}
+.mw-list .s08-list li{display:flex;align-items:flex-start;gap:10px;min-width:0;overflow-wrap:anywhere}
+.mw-item-copy{min-width:0;flex:1;overflow-wrap:anywhere}
+.mw-item-copy b{font-size:12px;display:block;overflow-wrap:anywhere}
+.mw-item-copy p{font-size:11px;color:var(--muted,#7180a1);margin:5px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.mw-item-copy small{font-size:10px;color:var(--muted,#7180a1);display:block;margin-top:4px;overflow-wrap:anywhere}
+.mw-dot{width:7px;height:7px;border-radius:50%;background:#348cef;flex:0 0 7px;margin-top:5px}
+.mw-private-section{border-style:solid}
+.mw-private-section .card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mw-private-section .s08-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.mw-private-section .s08-list li{display:flex;align-items:center;gap:8px;min-width:0}
+.mw-private-copy{flex:1;font-size:11px;color:var(--muted,#7180a1)}
+.mw-private-badge{display:inline-flex;align-items:center;border:1px solid #d9d4f2;border-radius:999px;padding:3px 8px;font-size:9px;font-weight:800;letter-spacing:.03em;color:#6553a5;background:#f7f5ff;text-transform:lowercase;white-space:nowrap}
+.mw-private-note{margin:12px 0 0}
+@media(max-width:650px){.mw-form,.mw-list,.mw-private-section{padding:14px}.mw-form button{width:100%;min-height:40px}.mw-private-section .s08-list li{flex-wrap:wrap}.mw-private-section .s08-list .s08-inline-action{margin-left:auto}}

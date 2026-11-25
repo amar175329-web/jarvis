@@ -5,10 +5,13 @@
   "group": "home",
   "owner_squad": "S02",
   "phase": 1,
-  "status": "planned",
-  "does": "आज का schedule",
-  "uses": [],
+  "status": "built",
+  "does": "Read-only Today's Schedule Home card backed by the S08 tasks.today projection",
+  "uses": [
+    "features.core-workspace.today",
+    "features.core-workspace.task-manager"
+  ],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.1.0"
 }

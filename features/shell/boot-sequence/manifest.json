@@ -5,10 +5,10 @@
   "group": "shell",
   "owner_squad": "S00",
   "phase": 1,
-  "status": "planned",
-  "does": "शुरुआती INITIALIZING CORE स्क्रीन",
+  "status": "built",
+  "does": "Reusable approved-style startup sequence component for the shell.",
   "uses": [],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.2.0"
 }

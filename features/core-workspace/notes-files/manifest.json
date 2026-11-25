@@ -5,15 +5,15 @@
   "group": "core-workspace",
   "owner_squad": "S09",
   "phase": 1,
-  "status": "planned",
-  "does": "Notes aur Files (tags, search, project se jodna)",
+  "status": "broken",
+  "does": "Owner-only notes and files; text is classified before save and private rows are segregated; file metadata defaults private until scanning exists.",
   "uses": [
     "packages.memory",
-    "memory.knowledge"
+    "features.core-workspace.memory"
   ],
   "knows": [
     "memory.graph"
   ],
   "autonomy_default": "L0",
-  "version": "0.1.0"
+  "version": "0.2.1"
 }

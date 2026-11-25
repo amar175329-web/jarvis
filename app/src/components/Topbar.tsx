@@ -6,6 +6,7 @@ const PAGE_META: Record<Page, { title: string; subtitle: string; searchPlacehold
   home: { title: 'Home', subtitle: 'Your personal space, ready when you are.', searchPlaceholder: 'Search anything...' },
   today: { title: 'Today', subtitle: 'Aaj ke tasks aur reminders, ek jagah.', searchPlaceholder: 'Search anything...' },
   tasks: { title: 'Tasks', subtitle: 'Tasks aur reminders manage karo.', searchPlaceholder: 'Search anything...' },
+  memory: { title: 'Memory', subtitle: 'Yaadein, notes, files aur projects — private items alag.', searchPlaceholder: 'Search normal content...' },
   more: { title: 'More', subtitle: 'Everything Jarvis can do, organized in one place.', searchPlaceholder: 'Search features...' },
 };
 

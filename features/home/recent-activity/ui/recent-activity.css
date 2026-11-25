@@ -1,0 +1,10 @@
+.d2-history-card { min-width: 0; width: 100%; }
+.d2-history-row { min-width: 0; }
+.d2-history-copy { min-width: 0; flex: 1 1 auto; overflow-wrap: anywhere; }
+.d2-history-copy b { display: block; }
+.d2-history-row time { flex: 0 0 auto; }
+.d2-history-state { margin: 0; color: #7a89a5; font-size: 10px; line-height: 1.5; }
+@media (max-width: 390px) {
+  .d2-history-row { gap: 8px; }
+  .d2-history-row time { font-size: 8px; }
+}

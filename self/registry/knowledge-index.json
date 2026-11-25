@@ -198,28 +198,28 @@
     "limits": "- Nothing is built yet. Everything above is planned."
   },
   "features.core-workspace.activity-logs": {
-    "status": "planned",
-    "what_it_is": "Activity Logs",
-    "can_do": "- (planned) Activity Logs",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "S05 ka unified, owner-scoped activity log (who / what / when / result). Existing `public.activity_log` table is the source; no duplicate log table is created.",
+    "can_do": "- (built) Provide `logActivity()` for squads to record a small, allow-listed metadata row after the originating action passes its registered power gate.\n- (built) Provide `activity-logs.list` as a read-only owner endpoint with action, actor, outcome and before filters.\n- (built) Redact health, medicine, finance, family, emotion, location and secret-bearing text using S08 shared `classifySensitivity()` plus S09's real memory `classify()` / `findSecrets()` helpers.\n- (built) Render a responsive Activity Logs panel with local search, actor/result filters and who/what/when/result details.",
+    "limits": "- No content search over raw messages, notes, files or private detail.\n- No model calls, no raw user text in audit metadata, no service-role key, no direct API function, and no delete/export action.\n- Private values are replaced before logging and again before display. Existing historic rows are redacted on read; this does not rewrite old DB rows."
   },
   "features.core-workspace.boards": {
-    "status": "planned",
-    "what_it_is": "Boards",
-    "can_do": "- (planned) Boards",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "S10 owner-scoped Kanban boards linked to existing S08 tasks. Board tables hold board/column metadata and task links only; they do not copy task content.",
+    "can_do": "- Create and list owner boards with three default columns (To do, In progress, Done).\n- Link eligible existing owner tasks to boards, move a link between columns, unlink a task, and delete a board.\n- Show safe task titles/status metadata; private task text is represented as a generic `Private task` badge and is never copied into board metadata or audit logs.\n- Reject private/secret board names and column labels using S05's shared S08/S09 privacy projection.\n- Enforce owner session + bearer + anon-key RLS, S22 power gates, explicit L2 confirmation, fail-closed kill-switch reads, and metadata-only activity logging.",
+    "limits": "- Does not create duplicate tasks, edit task body/title/status, or copy task text into board tables.\n- Does not process attachments, notes, memory, or private content with any model.\n- Does not bypass RLS; missing powers, ON/unreadable kill switch, or unavailable audit intent blocks mutations.\n- Mutations remain blocked at L0/L1; S22 must explicitly raise a registered power before an action can execute."
   },
   "features.core-workspace.history": {
-    "status": "planned",
-    "what_it_is": "पुरानी chats और activity",
-    "can_do": "- (planned) पुरानी chats और activity",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Owner-only history view for stored JARVIS chat conversations, plus the Activity Logs tab provided by S05.",
+    "can_do": "- (built) List recent chat threads, paginate by update time, and select a conversation.\n- (built) List completed messages for an owner-verified thread in chronological order, with sequence-based pagination.\n- (built) Mask private messages and private thread titles with a generic label and `private` badge; normal title search only sees the redacted projection.\n- (built) Render a mobile-first two-pane desktop / stacked mobile History page and expose Activity Logs as a tab.",
+    "limits": "- No edit, delete, export, restore, or content indexing.\n- No model calls. Private message bodies, health/medicine/money/family/feeling/location data and secrets are never sent to a cloud or local model.\n- No access to another owner's threads: session owner + user bearer + PostgREST RLS are required.\n- Pending/in-progress chat messages are omitted; only `status='done'` messages are returned."
   },
   "features.core-workspace.insights": {
-    "status": "planned",
-    "what_it_is": "Insights",
-    "can_do": "- (planned) Insights",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "S10 owner-scoped insights page that summarizes only existing safe task and activity metadata projections. News & Briefing has a reserved D2-owned slot.",
+    "can_do": "- Show aggregate task counts by status, overdue count, completion rate, and activity totals for a bounded 7- or 30-day period.\n- Display a seven-day daily trend or five grouped six-day buckets for a 30-day period without selecting task titles, notes, message bodies, memory bodies, file names, activity actions, targets, or detail JSON.\n- Render the `CR_D2_NEWS_PLACEMENT` integration slot; D2 owns News & Briefing content and its data source.\n- Enforce owner session, owner_id filters, anon-key + owner-bearer PostgREST access, `insights.read`, and a fail-closed kill-switch read.\n- Record only a static, metadata-only `insights.overview` audit reason; no model calls are made.",
+    "limits": "- Cannot summarize private owner text, messages, notes, files, health, medicine, money, family, feelings, or credentials.\n- Cannot infer from raw content or call cloud/local models. Any future model feature must use model-gateway + the models router and receive decision-015 approval.\n- Cannot trigger actions, alter tasks, export personal data, or bypass S22/kill-switch gates.\n- Counts are based only on existing owner-scoped task status and activity timestamp/success projections; they are not a health or financial assessment."
   },
   "features.core-workspace.knowledge-base": {
     "status": "planned",
@@ -228,22 +228,22 @@
     "limits": "- Abhi kuch bana nahi hai.\n- Folder-vault sync, Obsidian plugin, web clipper v1 mein nahi.\n- Poora note kisi bahari service ko nahi jaata."
   },
   "features.core-workspace.memory": {
-    "status": "planned",
-    "what_it_is": "Memory screen: Amit dekhta hai JARVIS ne kya yaad rakha, kyun (why), kahan se (source), aur sab control uske haath mein.",
-    "can_do": "- (planned) Category ke hisaab se list; private wali alag; \"kyun yaad hai?\" har row par.\n- (planned) Edit (revision check), delete (confirm), \"sab bhool jao\" (2 kadam + app tap), export (JSON).\n- (planned) Size meter: kitni yaadein, kitne MB, aur 400 MB / 30k par banner.",
-    "limits": "- Abhi kuch bana nahi hai.\n- UI approved look se alag nahi banega: wahi cards, tokens, icons. Naya design nahi.\n- Voice se \"sab bhool jao\" nahi: app par tap chahiye."
+    "status": "broken",
+    "what_it_is": "S09 Memory workspace draft. It separates ordinary T1 entries from private T2 entries and uses the existing packages.memory policy, classifier and secret detector.",
+    "can_do": "- Keep normal memory entries in the normal response and show private entries only as a generic `Private item` with a `private` badge.\n- Reject raw passwords, OTPs, identity numbers, payment secrets and API credentials before persistence.\n- Route every handler action through the registered power adapter; a missing power gate fails closed.",
+    "limits": "- This is not a built or production-ready feature. LEAD has not mounted the handlers, S22 power seeds are not accepted, and migration 0070 is still only a proposal.\n- S19 Vault encryption is not present. Private plaintext stays owner-scoped and masked; no model call, embedding, preview or normal-list projection is allowed.\n- Decision 014 and Decision 015 are policy references, not registry unit IDs. S22 registered powers are a pending change request, not a registry link."
   },
   "features.core-workspace.notes-files": {
-    "status": "planned",
-    "what_it_is": "Notes aur Files: likho, tag lagao, dhoondo, project se jodo.",
-    "can_do": "- (planned) Notes: markdown, tags, pin, archive, project se link, shabd-search.\n- (planned) Files: private Storage bucket mein, metadata `files` table mein, size/type allow-list, naam badal kar rakhna, kabhi execute nahi.\n- (planned) Delete = row + Storage object + pointer row.",
-    "limits": "- Abhi kuch bana nahi hai.\n- Note body max 100 KB, file max 10 MB (free tier 1 GB Storage), type allow-list: txt, md, pdf, png, jpg, csv, docx.\n- File ke andar likha hukm data hai."
+    "status": "broken",
+    "what_it_is": "S09 notes and files workspace draft for owner-only Markdown notes, tags, project links and quarantined file metadata.",
+    "can_do": "- Create, list, update and delete notes through the owner-scoped handler; classify content before persistence.\n- Treat files as private by default, create metadata-only quarantine records and avoid preview or text extraction before S19 scanning exists.\n- Keep private note/file records out of normal lists and expose only a generic `Private item` with a `private` badge.",
+    "limits": "- This is not a built or production-ready feature. LEAD shared-function mounting, S22 power acceptance, the database migration and the owner-JWT Storage adapter remain pending.\n- No file preview, download, OCR, extraction, embedding or model call is available for private/quarantined content.\n- Decision 014 and Decision 015 are policy references, and the Supabase private Storage bucket is a resource name; neither is a registry unit ID."
   },
   "features.core-workspace.projects": {
-    "status": "planned",
-    "what_it_is": "Projects: Amit ke kaam, unka goal, status, agla kadam, aur judi hui cheezein.",
-    "can_do": "- (planned) Project: naam, goal, status (active/paused/done/archived), agla kadam, due_at, tags.\n- (planned) Links: notes, files, tasks (task table nahi badalti; `memory_links` se jodte hain).\n- (planned) Project ka chhota saaransh memory/projects mein aata hai.",
-    "limits": "- Abhi kuch bana nahi hai.\n- Tasks ka asli data S08 ka (task-manager); yahan sirf link.\n- Gantt/board nahi (boards S10)."
+    "status": "broken",
+    "what_it_is": "S09 owner-only projects workspace draft with goal, status, next step, due date, tags and links to notes, files, memory and tasks.",
+    "can_do": "- Create, list, update and delete project records through the owner-scoped handler.\n- Connect project, note, file and task records using the existing `memory_links` relation without changing S08 task schema.\n- Segregate sensitive projects and show only a generic `Private item` with a `private` badge.",
+    "limits": "- This is not built for production. LEAD shared-function mounting, S22 registered powers and Antigravity migration/RLS acceptance remain pending.\n- It does not create Gantt or board views; those remain S10 scope.\n- Decision 014 and Decision 015 are policy references, not registry unit IDs. S22 registered powers are requested through a change request, not linked in the manifest."
   },
   "features.core-workspace.reminders": {
     "status": "built",
@@ -360,94 +360,94 @@
     "limits": "- Nothing is built yet. Everything above is planned."
   },
   "features.home.jarvis-insight": {
-    "status": "planned",
-    "what_it_is": "आदतों से सुझाव",
-    "can_do": "- (planned) आदतों से सुझाव",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Home JARVIS Insight card with a concise deterministic pattern summary and seven-day mini-bars.",
+    "can_do": "- (built) Aggregate allowlisted action metadata and non-sensitive task status/date metadata for the last seven days.\n- (built) Produce fixed, non-personalized Hindi/Hinglish tips from counts only.\n- (built) Exclude tasks whose title matches the shared sensitivity classifier or the feature local family/finance deny-list; never return task titles, activity detail or targets.",
+    "limits": "- Cannot send Amit's data, private text, health, medicine, money, family, credentials or uncertain content to any cloud model.\n- Does not call a local model (not running) or any model; suggestions are deterministic and explainable.\n- Does not add a table, migration, API function or new dependency."
   },
   "features.home.live-activity": {
-    "status": "planned",
-    "what_it_is": "JARVIS अभी क्या कर रहा है",
-    "can_do": "- (planned) JARVIS अभी क्या कर रहा है",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Home Live Activity card showing the current high-level state of JARVIS background jobs and device commands.",
+    "can_do": "- (built) Read bounded queued/running metadata from existing `jobs` and `phone_commands` rows.\n- (built) Show fixed allowlisted labels and statuses without exposing payloads, command JSON, results, errors, device names or lock metadata.\n- (built) Offer a stop intent only for explicitly cancellable work; actual cancellation requires a separate confirmed L2 power.",
+    "limits": "- Cannot invent progress percentages; absent progress is displayed as indeterminate.\n- Cannot execute, cancel, retry or create jobs outside the shared power gate.\n- Does not add a Realtime publication, event, API function, table, migration or dependency."
   },
   "features.home.news": {
-    "status": "planned",
-    "what_it_is": "Indrani news का card",
-    "can_do": "- (planned) Indrani news का card",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Home News card for public headlines from configured allowlisted sources.",
+    "can_do": "- (built) Read up to 6 normalized public news items from a server-side allowlisted feed adapter.\n- (built) Strip markup and return only source, title, short description, publication time and safe HTTPS URL.\n- (built) Optionally summarize public news only through `packages/models` router and `packages/model-gateway`; disabled (abhi band) when the shared router/gateway, budget, or power adapter is unavailable.",
+    "limits": "- Amit's tasks, activity, memory, chats, settings, profile or any other owner data must never be passed to a cloud model or public feed provider.\n- News content is untrusted data; it cannot trigger tools, browser actions, commands or power changes.\n- Does not add a news API function, new dependency, database table or migration."
   },
   "features.home.quick-access": {
-    "status": "planned",
-    "what_it_is": "YouTube, Browser, Projects, Claude, ChatGPT, Gemini, Instagram shortcuts",
-    "can_do": "- (planned) YouTube, Browser, Projects, Claude, ChatGPT, Gemini, Instagram shortcuts",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Approved Home Quick Access card with owner-managed shortcuts for apps, websites and JARVIS workspace destinations.",
+    "can_do": "- (built) Display a bounded list of safe shortcuts using the existing Home card tokens and icon sprite names.\n- (built) Validate, add, edit and reorder shortcut definitions in the existing owner-scoped `settings` table; no new table.\n- (built) Emit open/manage intents for the shell to execute only through registered powers.",
+    "limits": "- Cannot directly open apps, navigate the browser, or mutate settings outside the shared power gate.\n- Cannot store credentials, URL query strings, fragments, javascript/data schemes, or private URL content.\n- Does not add an API function, schema, migration, dependency or model call."
   },
   "features.home.recent-activity": {
-    "status": "planned",
-    "what_it_is": "हाल का काम",
-    "can_do": "- (planned) हाल का काम",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Home ka Recent Activity card, jo owner ke activity log ka privacy-filtered preview dikhata hai.",
+    "can_do": "- Existing `activity_log` table se latest max 8 owner-scoped entries read karne ke liye plain `handle(action, request, context)` module deta hai.\n- Shared `classifySensitivity()` use karke sensitive entries ko `Private activity` label mein reduce karta hai.\n- Server par redaction karta hai; `target`, arbitrary `detail`, actor/action raw values kabhi browser response mein nahi bhejta.\n- Detail-bearing, unknown actor/action, malformed ya uncertain entry shapes ko fail-closed `Private activity` label deta hai.\n- Read ko proposed registered L0 `home.recent-activity.read` power aur injected fail-closed executePower wrapper ke andar chalata hai.",
+    "limits": "- Koi naya activity table, API function file, migration, event, or log writer nahi banata.\n- Koi private text display, summarise, send to a cloud/local model, ya activity content mutate nahi karta.\n- `api/tasks/index.ts`, `packages/contracts`, `HomePage.tsx`, `Sidebar.tsx`, `App.tsx` ya `vercel.json` edit nahi karta.\n- Existing shared classifier ka family phrase coverage limited hai; free-form values isliye hamesha hidden hain."
   },
   "features.home.today-focus": {
-    "status": "planned",
-    "what_it_is": "आज के 3 tasks",
-    "can_do": "- (planned) आज के 3 tasks",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Home ka Today's Focus card jo S08 ke existing `tasks.today` projection se daily task status read karta hai.",
+    "can_do": "- Real `open_count` aur `overdue_count` dikhata hai.\n- S08 se `completed_today` aur configured `daily_goal` milne par progress ring percentage derive karta hai; missing values ko guess nahi karta.\n- Optional S08 `streak_days` value display kar sakta hai.\n- Loading, unavailable aur no-task states dikhata hai.",
+    "limits": "- Naya task table, task endpoint, migration, ya task mutation nahi banata.\n- Daily goal ya streak invent nahi karta; P28 ke current projection mein ye fields nahi hain, isliye ring `—` dikhata hai jab tak CR accept na ho.\n- `HomePage.tsx`, `Sidebar.tsx`, `App.tsx` ya shared CSS ko edit nahi karta; S00/Antigravity component mount karega."
   },
   "features.home.todays-schedule": {
-    "status": "planned",
-    "what_it_is": "आज का schedule",
-    "can_do": "- (planned) आज का schedule",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Home ka Today's Schedule card jo S08 ke existing `tasks.today` projection se aaj ka task/reminder timeline read karta hai.",
+    "can_do": "- Existing `schedule` projection ke aaj ke task aur generic reminder slots dikhata hai (first 3, same as approved static card density).\n- Owner timezone use karke time labels format karta hai.\n- Loading, error aur empty states dikhata hai.",
+    "limits": "- Koi calendar/event table, Google Calendar sync, task table, route, migration ya write action nahi banata.\n- Generic reminder title ko private reminder text se replace nahi karta.\n- `HomePage.tsx`, `Sidebar.tsx`, `App.tsx` ya shared CSS ko edit nahi karta; S00/Antigravity component mount karega."
   },
   "features.shell.boot-sequence": {
-    "status": "planned",
-    "what_it_is": "शुरुआती INITIALIZING CORE स्क्रीन",
-    "can_do": "- (planned) शुरुआती INITIALIZING CORE स्क्रीन",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Reusable shell startup sequence matching the existing approved Boot visual language.",
+    "can_do": "- Show the four existing boot status messages with reduced-motion support.\n- Allow the user to skip the overlay; remove it after the startup sequence.",
+    "limits": "- No backend requests, model call, persisted state, or action execution.\n- No app/src/components/Boot.tsx, App.tsx, or global shell edits in this patch; Antigravity swaps the mount."
   },
   "features.shell.connect": {
-    "status": "planned",
-    "what_it_is": "Connect devices बटन",
-    "can_do": "- (planned) Connect devices बटन",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Read-only connected-device status panel, without a pairing flow.",
+    "can_do": "- List active devices through owner RLS and display safe name/kind/paired/last-seen status.\n- Project online state using a bounded freshness window.",
+    "limits": "- Never selects or returns device tokens, token hashes, permissions, secrets, or auth metadata.\n- Pairing/QR/token generation is deliberately not implemented; S17 must provide a registered L2-or-lower pairing flow first.\n- No api/ file, table, migration, or service-role key."
   },
   "features.shell.global-search": {
-    "status": "planned",
-    "what_it_is": "Search anything / Search features",
-    "can_do": "- (planned) Search anything / Search features",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Local-only search over a curated allowlist of navigation destinations and feature metadata. It never queries owner records, chat contents, tasks, files, or remote services.",
+    "can_do": "- Search currently mounted and CR-approved destinations with English, Hindi, and Roman-Hinglish aliases.\n- Return a destination identifier and a short public description; let the shell own the actual route transition.",
+    "limits": "- No private record or full-text owner-data search.\n- No cloud/local model call, no network request, and no new dependency.\n- No HomePage.tsx, Sidebar.tsx, App.tsx, or vercel.json edits; LEAD mounts this component."
   },
   "features.shell.notifications": {
-    "status": "planned",
-    "what_it_is": "घंटी",
-    "can_do": "- (planned) घंटी",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Owner-scoped notifications reader with fixed safe labels and an unread cursor. This is only the shell display/read-state surface; it never fires reminders.",
+    "can_do": "- Read allowlisted event metadata (`id`, `type`, `ts`) through the owner bearer and Supabase anon key under RLS.\n- Project fixed labels and derive unread state from `settings.notifications.read_through`.\n- Mark the visible list read after explicit confirmation and the registered `notifications.mark-read` power.",
+    "limits": "- Never selects or returns event payload, source, detail, or free-text summary. Unknown event types are dropped.\n- No reminder polling, scheduling, worker, firing, or notification delivery. D1a owns reminder firing.\n- No service-role key in this feature or browser bundle; no new table, migration, or api/ file."
   },
   "features.shell.power-off": {
-    "status": "planned (folder created first, per Folder-First rule; no code yet)\nOWNER: S22 BRAIN (policy). Enforcement = harness/permissions. Kill switch + audit = safety/.",
-    "what_it_is": "Power-off: the shell button that turns JARVIS off (kill switch). Policy: S22_POLICY.md; kill switch itself lives in safety/.",
-    "can_do": "Nothing yet (planned). Will follow the L0-L4 rules in S22_POLICY.md.",
-    "limits": "Nothing here runs yet. Never changes the kill switch from here without S19/safety."
+    "status": "built",
+    "what_it_is": "Owner-confirmed, persistent emergency OFF switch surface, using the existing `system_state` kill record and system API.",
+    "can_do": "- Read kill state; when `kill=false` is verified, show an explicit confirm dialog.\n- Request only `kill:true` with mandatory `confirm:true`, through the `system.power-off` S22 power adapter.\n- Keep the entire app blocked when kill is ON, malformed, or unreadable.",
+    "limits": "- There is no `kill:false` payload, resume function, boot reset, timer, fallback, or silent re-enable path in this feature.\n- An OFF state persists in existing `system_state`; a separate owner-confirmed S22 `system.power-resume` action must be implemented/accepted by LEAD before re-arming is possible.\n- No new table, migration, API file, or browser-side service key."
   },
   "features.shell.profile-status": {
-    "status": "planned",
-    "what_it_is": "तुम्हारा card और Phone Connected की हालत",
-    "can_do": "- (planned) तुम्हारा card और Phone Connected की हालत",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Small owner-session and connected-device status summary for the existing profile slot.",
+    "can_do": "- Display the verified session email and a count of online/total devices from the safe devices projection.\n- Offer a callback to open Connect.",
+    "limits": "- Does not fetch its own user data or infer identity; consumes only a verified session prop and already-sanitized device projection.\n- No private profile details, new route, table, or model call."
   },
   "features.shell.settings": {
-    "status": "planned",
-    "what_it_is": "Settings page",
-    "can_do": "- (planned) Settings page",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Owner-scoped general shell preferences page; model/provider settings, billing, budgets, credentials and private data remain outside this feature.",
+    "can_do": "- Read and update allowlisted language, timezone, and reduced-motion preferences in the existing `settings` table.\n- Support Hindi, Hinglish, and English, with Asia/Kolkata or UTC timezone options.",
+    "limits": "- Reject unknown keys/values and never read or write provider keys, model config, pricing, health, money, family, password, or other private content.\n- No table/migration/api file; uses the owner JWT plus Supabase anon key and existing RLS."
   },
   "features.shell.sidebar-nav": {
-    "status": "planned",
-    "what_it_is": "Home, Chat, Today, Tasks, Memory, Insights, Boards, History, More",
-    "can_do": "- (planned) Home, Chat, Today, Tasks, Memory, Insights, Boards, History, More",
-    "limits": "- Nothing is built yet. Everything above is planned."
+    "status": "built",
+    "what_it_is": "Reusable navigation and bottom utility components for the already-approved sidebar layout.",
+    "can_do": "- Render the existing destinations and sprite icon IDs in their approved order.\n- Expose navigation callbacks without owning router state.\n- Provide a drop-in utilities block for Connect, Settings, and the PowerOff component.",
+    "limits": "- Does not edit or redesign Sidebar.tsx; existing brand, device pill, profile and spacing remain shell-owned.\n- Does not create destinations; disabled destinations remain disabled until LEAD registers their routes."
   },
   "features.system.api-management": {
     "status": "planned",

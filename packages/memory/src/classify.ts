@@ -14,12 +14,12 @@ const anyPhrase = (hay: string, list: string[]): boolean => list.some((p) => hay
 const HEALTH = [
   'bimar', 'bimari', 'bimaar', 'bukhar', 'fever', 'diabetes', 'diabetic', 'bp', 'blood pressure', 'blood sugar', 'sugar level', 'cancer', 'tumor', 'tumour', 'asthma', 'thyroid', 'migraine',
   'depression', 'depressed', 'anxiety', 'panic attack', 'adhd', 'ocd', 'bipolar', 'mental health', 'therapy', 'therapist', 'psychiatrist', 'psychologist', 'antidepressant',
-  'medicine', 'medicines', 'dawai', 'dawa', 'dawaai', 'tablet', 'tablets', 'pill', 'pills', 'hospital', 'surgery', 'pregnant', 'pregnancy', 'cholesterol', 'allergy', 'allergic', 'infection', 'covid', 'hiv',
+  'medicine', 'medicines', 'dawai', 'dwai', 'dawa', 'daava', 'dava', 'davai', 'dawaai', 'tablet', 'tablets', 'pill', 'pills', 'goli', 'goliyan', 'goliyaan', 'hospital', 'surgery', 'pregnant', 'pregnancy', 'cholesterol', 'allergy', 'allergic', 'infection', 'covid', 'hiv',
   'injury', 'fracture', 'symptom', 'symptoms', 'diagnosis', 'diagnosed', 'prescription', 'dard', 'sardard', 'chakkar', 'ulti', 'ilaaj', 'ilaj', 'tabiyat', 'heart attack',
-  'weight', 'body weight', 'wazan', 'vajan', 'workout', 'exercise', 'gym', 'fitness', 'training', 'walk routine', 'running routine',
+  'weight', 'body weight', 'wazan', 'vajan', 'workout', 'exercise', 'fitness', 'training', 'walk routine', 'running routine',
   'बीमार', 'बीमारी', 'बुखार', 'दवाई', 'दवा', 'अस्पताल', 'मधुमेह', 'डिप्रेशन', 'कैंसर', 'इलाज', 'सर्जरी', 'दर्द', 'तबीयत', 'गर्भवती', 'चक्कर', 'डॉक्टर ने', 'डॉक्टर से', 'डॉक्टर के पास', 'वजन', 'कसरत', 'व्यायाम',
 ];
-const MEDICINE = ['medicine', 'medicines', 'medication', 'medications', 'dawai', 'dawa', 'dawaai', 'tablet', 'tablets', 'pill', 'pills', 'capsule', 'capsules', 'दवाई', 'दवा', 'गोली', 'कैप्सूल'];
+const MEDICINE = ['medicine', 'medicines', 'medication', 'medications', 'dawai', 'dwai', 'dawa', 'daava', 'dava', 'davai', 'dawaai', 'tablet', 'tablets', 'pill', 'pills', 'goli', 'goliyan', 'goliyaan', 'capsule', 'capsules', 'दवाई', 'दवा', 'गोली', 'गोलियां', 'कैप्सूल'];
 const FITNESS = ['workout', 'exercise', 'gym', 'fitness', 'training', 'walk routine', 'running routine', 'कसरत', 'व्यायाम'];
 const WEIGHT = ['weight', 'body weight', 'wazan', 'vajan', 'वजन', 'kg', 'kilo', 'kilogram'];
 const FAMILY = [
@@ -34,7 +34,7 @@ const ABUSE = [
 const SELF_HARM = [
   'suicide', 'suicidal', 'kill myself', 'end my life', 'end it all', 'self harm', 'selfharm', 'hurt myself', 'cut myself', 'want to die', 'wanna die', 'overdose',
   'khudkushi', 'khudkhushi', 'aatmahatya', 'atmahatya', 'mar jana chahta', 'mar jaana chahta', 'mar jana chahti', 'marna chahta', 'marna chahti', 'jeena nahi chahta', 'jeena nahi chahti',
-  'jeene ka mann nahi', 'jeene ka man nahi', 'khud ko khatam', 'khatam kar lunga', 'khatam kar lungi', 'jaan de dunga', 'jaan de dungi',
+  'jeene ka mann nahi', 'jeene ka man nahi', 'khud ko hurt', 'khud ko harm', 'khud ko nuksan', 'khud ko chot', 'hurt myself', 'self harm', 'self-harm', 'khud ko khatam', 'khatam kar lunga', 'khatam kar lungi', 'jaan de dunga', 'jaan de dungi',
   // LEAD 2026-11-12: more everyday Hinglish/Hindi phrasings (the first list missed 'mar jaana hai'). Care signal only, never blocks Amit.
   'mar jaana hai', 'mar jana hai', 'mar jaunga', 'mar jaungi', 'mar jaun', 'mar jau', 'jaan dena chahta', 'jaan dena chahti', 'zindagi khatam', 'jindagi khatam', 'jeene ki ichha nahi', 'jeene ki iccha nahi', 'khatam kar dun', 'khatam kar du',
   'मर जाना है', 'मर जाऊँगा', 'मर जाऊंगा', 'मर जाऊँगी', 'ज़िंदगी खत्म', 'जिंदगी खत्म', 'जीने की इच्छा नहीं',
@@ -45,8 +45,8 @@ const OTHER_SENSITIVE = [
   'vote', 'voted', 'sex', 'sexual', 'affair', 'gay', 'lesbian', 'bisexual', 'orientation', 'yaun', 'धर्म', 'जाति', 'राजनीति', 'वोट', 'यौन',
   'jhagda', 'jhagde', 'breakup', 'break up', 'talaq', 'divorce', 'cheating', 'dhokha', 'ladai hui',
 ];
-const SENSITIVE_SELF_MONEY = ['paise ki tangi', 'paise nahi hain', 'paison ki dikkat', 'financial problem', 'financial stress', 'karz mein', 'debt mein', 'broke hoon', 'पैसों की तंगी', 'कर्ज में'];
-const EMOTION = ['mood kharab', 'mood off', 'mood theek nahi', 'bura lag raha', 'sad hoon', 'upset hoon', 'bahut gussa', 'bohot gussa', 'gussa aa raha', 'pagal ho jaunga', 'nafrat', 'tang aa gaya', 'tang aa gayi', 'thak gaya hoon', 'frustrated', 'i hate', 'sab khatam', 'andar se pareshan', 'pareshan hoon', 'lonely', 'akela mehsoos', 'अकेला महसूस', 'मन खराब', 'मूड खराब', 'बहुत गुस्सा', 'तंग आ गया', 'तंग आ गई', 'नफरत', 'नफ़रत'];
+const SENSITIVE_SELF_MONEY = ['bank balance', 'account balance', 'balance kitna', 'balance kitne', 'balance kitni', 'bank mein kitna', 'account mein kitna', 'paisa kitna', 'paise kitne', 'paise ki tangi', 'paise nahi hain', 'paison ki dikkat', 'financial problem', 'financial stress', 'karz mein', 'debt mein', 'broke hoon', 'पैसों की तंगी', 'कर्ज में'];
+const EMOTION = ['mood kharab', 'mood off', 'mood theek nahi', 'bura lag raha', 'sad hoon', 'udaas', 'udas', 'bahut udaas', 'bohot udaas', 'dukhi', 'bahut dukhi', 'bohot dukhi', 'upset hoon', 'bahut gussa', 'bohot gussa', 'gussa aa raha', 'pagal ho jaunga', 'nafrat', 'tang aa gaya', 'tang aa gayi', 'thak gaya hoon', 'frustrated', 'i hate', 'sab khatam', 'andar se pareshan', 'pareshan hoon', 'lonely', 'akela mehsoos', 'अकेला महसूस', 'मन खराब', 'मूड खराब', 'बहुत गुस्सा', 'तंग आ गया', 'तंग आ गई', 'नफरत', 'नफ़रत'];
 const DEEP_EMOTION = [
   'kai mahino se', 'kai mahine se', 'mahino se', 'mahinon se', 'saalon se', 'kai saal se', 'lambe samay se', 'bahut samay se', 'baar baar', 'bar bar', 'roz aisa', 'har din', 'hamesha aisa', 'andar se', 'for months', 'for years', 'for a long time', 'every day', 'everyday', 'repeatedly', 'keeps happening', 'again and again', 'recurring', 'long term', 'long-term', 'deeply', 'months', 'years',
 ];

@@ -162,10 +162,10 @@
     "group": "core-workspace",
     "owner_squad": "S05",
     "phase": 1,
-    "status": "planned",
-    "does": "Activity Logs",
+    "status": "built",
+    "does": "Unified owner-scoped activity timeline with safe metadata, filters and detail projection",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "features/core-workspace/activity-logs"
   },
   {
@@ -175,10 +175,10 @@
     "group": "core-workspace",
     "owner_squad": "S10",
     "phase": 2,
-    "status": "planned",
+    "status": "built",
     "does": "Boards",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "path": "features/core-workspace/boards"
   },
   {
@@ -188,10 +188,10 @@
     "group": "core-workspace",
     "owner_squad": "S05",
     "phase": 1,
-    "status": "planned",
-    "does": "पुरानी chats और activity",
+    "status": "built",
+    "does": "Owner-scoped chat history with private-message masking and a linked Activity Logs tab",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "features/core-workspace/history"
   },
   {
@@ -201,10 +201,10 @@
     "group": "core-workspace",
     "owner_squad": "S10",
     "phase": 2,
-    "status": "planned",
+    "status": "built",
     "does": "Insights",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "path": "features/core-workspace/insights"
   },
   {
@@ -227,10 +227,10 @@
     "group": "core-workspace",
     "owner_squad": "S09",
     "phase": 1,
-    "status": "planned",
-    "does": "Memory screen: Amit apni memory dekhe, badle, mitaye, export kare, privacy chalaye (asli memory memory/ mein nahi, DB mein)",
+    "status": "broken",
+    "does": "Owner-only Memory workspace: normal and private memory are separate; private rows are metadata-only in UI.",
     "autonomy_default": "L0",
-    "version": "0.1.0",
+    "version": "0.2.1",
     "path": "features/core-workspace/memory"
   },
   {
@@ -240,10 +240,10 @@
     "group": "core-workspace",
     "owner_squad": "S09",
     "phase": 1,
-    "status": "planned",
-    "does": "Notes aur Files (tags, search, project se jodna)",
+    "status": "broken",
+    "does": "Owner-only notes and files; text is classified before save and private rows are segregated; file metadata defaults private until scanning exists.",
     "autonomy_default": "L0",
-    "version": "0.1.0",
+    "version": "0.2.1",
     "path": "features/core-workspace/notes-files"
   },
   {
@@ -253,10 +253,10 @@
     "group": "core-workspace",
     "owner_squad": "S09",
     "phase": 1,
-    "status": "planned",
-    "does": "Projects (goal, status, agla kadam, notes/files/tasks se link)",
+    "status": "broken",
+    "does": "Owner-only projects and links to notes/files/tasks; private projects are separated and rendered metadata-only.",
     "autonomy_default": "L0",
-    "version": "0.1.0",
+    "version": "0.2.1",
     "path": "features/core-workspace/projects"
   },
   {
@@ -267,9 +267,9 @@
     "owner_squad": "S08",
     "phase": 1,
     "status": "built",
-    "does": "Reminders",
+    "does": "Owner-scoped reminders with optimistic editing, completion/cancellation UX, duplicate-warning UI, and recurrence",
     "autonomy_default": "L0",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "path": "features/core-workspace/reminders"
   },
   {
@@ -280,9 +280,9 @@
     "owner_squad": "S08",
     "phase": 1,
     "status": "built",
-    "does": "Task Manager",
+    "does": "Task Manager with optimistic transitions, due-time ranges, clash-aware scheduling UI, and Hindi/Hinglish quick-add",
     "autonomy_default": "L0",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "path": "features/core-workspace/task-manager"
   },
   {
@@ -513,10 +513,10 @@
     "group": "home",
     "owner_squad": "S04",
     "phase": 2,
-    "status": "planned",
-    "does": "आदतों से सुझाव",
+    "status": "built",
+    "does": "Deterministic daily/weekly activity and safe-task aggregates with short Hindi/Hinglish suggestions and mini-bars.",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "features/home/jarvis-insight"
   },
   {
@@ -526,10 +526,10 @@
     "group": "home",
     "owner_squad": "S03",
     "phase": 1,
-    "status": "planned",
-    "does": "JARVIS अभी क्या कर रहा है",
+    "status": "built",
+    "does": "Read-only, privacy-minimized live status of active JARVIS jobs and phone commands with a power-gated stop intent.",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "features/home/live-activity"
   },
   {
@@ -539,10 +539,10 @@
     "group": "home",
     "owner_squad": "S06",
     "phase": 1,
-    "status": "planned",
-    "does": "Indrani news का card",
+    "status": "built",
+    "does": "Display bounded headlines from explicitly allowlisted public news feeds; optional public-only summarization via the shared models router and model gateway.",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "features/home/news"
   },
   {
@@ -552,10 +552,10 @@
     "group": "home",
     "owner_squad": "S06",
     "phase": 1,
-    "status": "planned",
-    "does": "YouTube, Browser, Projects, Claude, ChatGPT, Gemini, Instagram shortcuts",
+    "status": "built",
+    "does": "Owner-managed Home shortcuts stored in the existing owner settings row; UI emits open/manage intents for registered powers.",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "features/home/quick-access"
   },
   {
@@ -565,10 +565,10 @@
     "group": "home",
     "owner_squad": "S05",
     "phase": 1,
-    "status": "planned",
-    "does": "हाल का काम",
+    "status": "built",
+    "does": "Read-only privacy-filtered Recent Activity Home card using the existing activity_log table",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.1",
     "path": "features/home/recent-activity"
   },
   {
@@ -578,10 +578,10 @@
     "group": "home",
     "owner_squad": "S01",
     "phase": 1,
-    "status": "planned",
-    "does": "आज के 3 tasks",
+    "status": "built",
+    "does": "Read-only Today's Focus Home card backed by the S08 tasks.today projection",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "features/home/today-focus"
   },
   {
@@ -591,10 +591,10 @@
     "group": "home",
     "owner_squad": "S02",
     "phase": 1,
-    "status": "planned",
-    "does": "आज का schedule",
+    "status": "built",
+    "does": "Read-only Today's Schedule Home card backed by the S08 tasks.today projection",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "path": "features/home/todays-schedule"
   },
   {
@@ -604,10 +604,10 @@
     "group": "shell",
     "owner_squad": "S00",
     "phase": 1,
-    "status": "planned",
-    "does": "शुरुआती INITIALIZING CORE स्क्रीन",
+    "status": "built",
+    "does": "Reusable approved-style startup sequence component for the shell.",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "path": "features/shell/boot-sequence"
   },
   {
@@ -617,10 +617,10 @@
     "group": "shell",
     "owner_squad": "S17",
     "phase": 3,
-    "status": "planned",
-    "does": "Connect devices बटन",
+    "status": "built",
+    "does": "Read-only connected-device and connection entry panel; actual pairing remains S17/S16A gated work.",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "path": "features/shell/connect"
   },
   {
@@ -630,10 +630,10 @@
     "group": "shell",
     "owner_squad": "S00",
     "phase": 1,
-    "status": "planned",
-    "does": "Search anything / Search features",
+    "status": "built",
+    "does": "Search approved navigation destinations and feature metadata locally; never search private records in this shell widget.",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "path": "features/shell/global-search"
   },
   {
@@ -643,10 +643,10 @@
     "group": "shell",
     "owner_squad": "S00",
     "phase": 1,
-    "status": "planned",
-    "does": "घंटी",
+    "status": "built",
+    "does": "Read-only notifications surface with a safe type allowlist and unread/read cursor; never fires reminders.",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "path": "features/shell/notifications"
   },
   {
@@ -655,11 +655,11 @@
     "kind": "feature",
     "group": "shell",
     "owner_squad": "S22",
-    "phase": 2,
-    "status": "planned",
-    "does": "S22: power-off / kill button in the shell",
+    "phase": 1,
+    "status": "built",
+    "does": "Persistent owner-triggered JARVIS power-off UI backed by the existing global kill switch.",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "path": "features/shell/power-off"
   },
   {
@@ -669,10 +669,10 @@
     "group": "shell",
     "owner_squad": "S17",
     "phase": 3,
-    "status": "planned",
-    "does": "तुम्हारा card और Phone Connected की हालत",
+    "status": "built",
+    "does": "Read-only owner and device profile status summary.",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "path": "features/shell/profile-status"
   },
   {
@@ -682,10 +682,10 @@
     "group": "shell",
     "owner_squad": "S13",
     "phase": 2,
-    "status": "planned",
-    "does": "Settings page",
+    "status": "built",
+    "does": "Shell settings page for safe general preferences only; model/provider settings remain S13-owned.",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "path": "features/shell/settings"
   },
   {
@@ -695,10 +695,10 @@
     "group": "shell",
     "owner_squad": "S00",
     "phase": 1,
-    "status": "planned",
-    "does": "Home, Chat, Today, Tasks, Memory, Insights, Boards, History, More",
+    "status": "built",
+    "does": "Reusable navigation items for the existing approved sidebar.",
     "autonomy_default": "L0",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "path": "features/shell/sidebar-nav"
   },
   {

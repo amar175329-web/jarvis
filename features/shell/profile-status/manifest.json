@@ -5,10 +5,12 @@
   "group": "shell",
   "owner_squad": "S17",
   "phase": 3,
-  "status": "planned",
-  "does": "तुम्हारा card और Phone Connected की हालत",
-  "uses": [],
+  "status": "built",
+  "does": "Read-only owner and device profile status summary.",
+  "uses": [
+    "features.shell.connect"
+  ],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.2.0"
 }

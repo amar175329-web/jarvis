@@ -5,10 +5,12 @@
   "group": "home",
   "owner_squad": "S06",
   "phase": 1,
-  "status": "planned",
-  "does": "YouTube, Browser, Projects, Claude, ChatGPT, Gemini, Instagram shortcuts",
-  "uses": [],
+  "status": "built",
+  "does": "Owner-managed Home shortcuts stored in the existing owner settings row; UI emits open/manage intents for registered powers.",
+  "uses": [
+    "api.tasks"
+  ],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.1.0"
 }

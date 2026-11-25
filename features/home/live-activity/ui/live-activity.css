@@ -1,0 +1,14 @@
+.d2-live-card,.d2-live-card *{box-sizing:border-box}
+.d2-live-card{min-width:0;max-width:100%}
+.d2-live-list{display:grid;gap:12px;min-width:0}
+.d2-live-item{min-width:0;align-items:center}
+.d2-live-copy{flex:1;min-width:0}
+.d2-live-copy>b,.d2-live-copy>p{display:block;overflow-wrap:anywhere}
+.d2-live-copy>p{margin-top:4px}
+.d2-live-progress{margin-top:9px}
+.d2-live-progress:after{width:35%;animation:d2-live-pulse 1.8s ease-in-out infinite alternate}
+.d2-live-stop{flex:0 0 auto;border:1px solid #f2d5d5;background:#fff7f7;color:#b54747;border-radius:9px;padding:7px 10px;font:700 10px 'DM Sans',sans-serif;cursor:pointer}
+.d2-live-stop:disabled{opacity:.5;cursor:not-allowed}
+.d2-live-state{margin:0;color:#7b89a5;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+@keyframes d2-live-pulse{from{width:24%}to{width:68%}}
+@media(max-width:390px){.d2-live-item{gap:8px}.d2-live-item .activity-thumb{width:42px;height:42px;flex:0 0 42px}.d2-live-stop{padding:6px 8px}}

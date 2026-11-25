@@ -2,13 +2,13 @@
   "id": "features.shell.power-off",
   "name": "power-off",
   "kind": "feature",
-  "owner_squad": "S22",
-  "phase": 2,
-  "status": "planned",
-  "autonomy_default": "L0",
-  "version": "0.0.1",
   "group": "shell",
-  "does": "S22: power-off / kill button in the shell",
+  "owner_squad": "S22",
+  "phase": 1,
+  "status": "built",
+  "does": "Persistent owner-triggered JARVIS power-off UI backed by the existing global kill switch.",
   "uses": [],
-  "knows": []
+  "knows": [],
+  "autonomy_default": "L0",
+  "version": "0.2.0"
 }

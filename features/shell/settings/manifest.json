@@ -5,10 +5,10 @@
   "group": "shell",
   "owner_squad": "S13",
   "phase": 2,
-  "status": "planned",
-  "does": "Settings page",
+  "status": "built",
+  "does": "Shell settings page for safe general preferences only; model/provider settings remain S13-owned.",
   "uses": [],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.2.0"
 }

@@ -5,15 +5,16 @@
   "group": "core-workspace",
   "owner_squad": "S09",
   "phase": 1,
-  "status": "planned",
-  "does": "Memory screen: Amit apni memory dekhe, badle, mitaye, export kare, privacy chalaye (asli memory memory/ mein nahi, DB mein)",
+  "status": "broken",
+  "does": "Owner-only Memory workspace: normal and private memory are separate; private rows are metadata-only in UI.",
   "uses": [
-    "packages.memory"
+    "packages.memory",
+    "features.core-workspace.task-manager"
   ],
   "knows": [
     "memory.rules",
     "memory.engine"
   ],
   "autonomy_default": "L0",
-  "version": "0.1.0"
+  "version": "0.2.1"
 }

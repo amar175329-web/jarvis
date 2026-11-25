@@ -25,3 +25,7 @@ CHANGE LOG:
 - 2026-11-10 - S09: code likha (policy, store, service, embed, growth, supabase adapter), 68 tests pass, docs/ likhi; status built - 0.1.0
 
 - 2026-11-11 - S09 Round 2: T1/T2 tier, typed-purpose recall, T2 no-vector enforcement, no T2 events, medicine reminder hand-off, deep-feeling/crisis rules, and guarded workout/weight history compaction hook; docs updated - 0.2.0.
+
+- 2026-11-23 - Hinglish privacy coverage adds medicine spellings (dwai/daava/dava/davai/goli variants), “khud ko hurt” self-harm phrasing, udaas/dukhi emotion variants, and bank-balance questions. Generic “gym jaana” no longer triggers the health category; existing workout/weight coverage remains. Version 0.2.1.
+
+- 2026-11-23 - LEAD Hinglish privacy-gap fix: expanded Roman Hinglish medicine variants, self-harm care markers, emotional distress and bank-balance/paisa phrases; removed broad “gym” from the health category while keeping workout/fitness intent tags; version 0.2.1.

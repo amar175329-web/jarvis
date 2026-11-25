@@ -32,3 +32,28 @@
 .s08-confirm-actions{display:flex;gap:8px;flex-wrap:wrap}
 .s08-confirm-yes{border:0;border-radius:10px;background:linear-gradient(135deg,#2383ff,#1358e5);color:#fff;font-size:12px;font-weight:800;padding:8px 14px;cursor:pointer}
 
+
+/* Bundle 3: keep the approved cards/tokens while making dense actions safe on 390px screens. */
+.s08-page,.s08-manager,.s08-manager-list,.s08-manager-list ul,.s08-manager-list li{min-width:0;max-width:100%}
+.s08-manager-list li{align-items:start;grid-template-columns:8px minmax(0,1fr) minmax(0,auto)}
+.s08-actions{display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:5px;min-width:0;max-width:100%}
+.s08-row-confirm{grid-column:2/-1;display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0;padding:9px 10px;border:1px solid var(--line,#e4ebfa);border-radius:10px;background:var(--panel,#f7f9fd);font-size:11px;color:var(--ink,#101d43)}
+.s08-row-confirm span{flex:1 1 100%;font-weight:700;overflow-wrap:anywhere}
+.s08-archive{margin-top:14px;border-top:1px solid var(--line,#e4ebfa);padding-top:12px;min-width:0}
+.s08-archive summary{cursor:pointer;color:var(--muted,#7180a1);font-size:11px;font-weight:800;padding:5px 0}
+.s08-archive ul{margin-top:12px}
+.s08-fade-out{opacity:0!important;transform:translateY(-3px);transition:opacity .18s ease,transform .18s ease;pointer-events:none}
+.s08-clash-card{border-color:var(--line,#e4ebfa)}
+.s08-inline-action:disabled,.s08-confirm-yes:disabled{opacity:.55;cursor:wait}
+@media(max-width:650px){
+  .s08-manager-list li{grid-template-columns:8px minmax(0,1fr)!important;gap:8px}
+  .s08-manager-list li>.s08-actions{grid-column:2;justify-content:flex-start}
+  .s08-manager-list li>.s08-row-confirm,.s08-edit-form{grid-column:1/-1}
+  .s08-fields-grid{grid-template-columns:minmax(0,1fr)}
+  .s08-actions .s08-inline-action{padding:7px 8px}
+  .s08-tabs{min-width:0;max-width:100%}
+  .s08-tabs button{min-width:0;padding-inline:9px}
+}
+.s08-undo-strip{display:grid;gap:7px;margin:0 0 12px;padding:9px 12px;border:1px solid var(--line,#e4ebfa);border-radius:12px;background:var(--panel,#f7f9fd);min-width:0}
+.s08-undo-entry{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;font-size:11px;color:var(--ink,#101d43)}
+.s08-undo-entry>span{min-width:0;overflow-wrap:anywhere}

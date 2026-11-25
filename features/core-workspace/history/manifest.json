@@ -5,10 +5,15 @@
   "group": "core-workspace",
   "owner_squad": "S05",
   "phase": 1,
-  "status": "planned",
-  "does": "पुरानी chats और activity",
-  "uses": [],
+  "status": "built",
+  "does": "Owner-scoped chat history with private-message masking and a linked Activity Logs tab",
+  "uses": [
+    "api.auth",
+    "packages.brain",
+    "packages.memory",
+    "features.core-workspace.activity-logs"
+  ],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.1.0"
 }

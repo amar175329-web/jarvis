@@ -5,10 +5,12 @@
   "group": "home",
   "owner_squad": "S03",
   "phase": 1,
-  "status": "planned",
-  "does": "JARVIS अभी क्या कर रहा है",
-  "uses": [],
+  "status": "built",
+  "does": "Read-only, privacy-minimized live status of active JARVIS jobs and phone commands with a power-gated stop intent.",
+  "uses": [
+    "api.tasks"
+  ],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.1.0"
 }

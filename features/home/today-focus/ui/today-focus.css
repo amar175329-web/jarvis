@@ -1,0 +1,6 @@
+.d2-focus-card { min-width: 0; width: 100%; }
+.d2-focus-copy { min-width: 0; overflow-wrap: anywhere; }
+.d2-focus-copy b { display: block; }
+.d2-focus-copy small { display: block; line-height: 1.45; }
+.s01-progress-ring { flex: 0 0 66px; }
+.s01-progress-ring::before { content: attr(data-progress-label); }

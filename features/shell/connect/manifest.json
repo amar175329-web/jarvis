@@ -5,10 +5,10 @@
   "group": "shell",
   "owner_squad": "S17",
   "phase": 3,
-  "status": "planned",
-  "does": "Connect devices बटन",
+  "status": "built",
+  "does": "Read-only connected-device and connection entry panel; actual pairing remains S17/S16A gated work.",
   "uses": [],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.2.0"
 }

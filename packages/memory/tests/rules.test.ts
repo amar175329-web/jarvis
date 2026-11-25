@@ -54,3 +54,28 @@ for (const t of ['mujhe mar jaana hai', 'main mar jaunga', 'zindagi khatam kar d
   test('LEAD: Hinglish self-harm carries care: ' + t, () => assert.equal(d({ text: t }).care, 'self_harm'));
 for (const t of ['project 2026 mein khatam', 'kaam khatam kar dunga kal', 'movie khatam ho gayi', 'Rahul ka email rahul@gmail.com'])
   test('LEAD: not a false self-harm/secret: ' + t, () => { const v = d({ text: t }); assert.notEqual(v.care, 'self_harm'); assert.equal(findSecrets(t).filter((f) => f.kind === 'password' || f.kind === 'gov_id').length, 0); });
+
+
+test('LEAD Hinglish privacy regression: self-harm, feelings, money, medicine and safe negatives', () => {
+  const privateCases = [
+    'khud ko hurt karna hai',
+    'main bahut udaas hoon',
+    'bank balance kitna hai',
+    'dwai leni hai',
+    'daava lena hai',
+    'davai leni hai',
+    'dava lena hai',
+    'goli leni hai',
+    'dawai leni hai',
+  ];
+  for (const text of privateCases) {
+    const result = classify(text);
+    assert.ok(result.categories.length > 0, text);
+    if (text === 'khud ko hurt karna hai') assert.equal(result.care, 'self_harm', text);
+  }
+  assert.ok(classify('main bahut udaas hoon').categories.includes('emotion'));
+  assert.ok(classify('bank balance kitna hai').categories.includes('sensitive_self'));
+  for (const text of ['report bhejni hai', 'gym jaana']) {
+    assert.deepEqual(classify(text).categories, [], text);
+  }
+});

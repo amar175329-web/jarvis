@@ -5,10 +5,14 @@
   "group": "home",
   "owner_squad": "S06",
   "phase": 1,
-  "status": "planned",
-  "does": "Indrani news का card",
-  "uses": [],
+  "status": "built",
+  "does": "Display bounded headlines from explicitly allowlisted public news feeds; optional public-only summarization via the shared models router and model gateway.",
+  "uses": [
+    "api.tasks",
+    "packages.model-gateway",
+    "packages.models"
+  ],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.1.0"
 }

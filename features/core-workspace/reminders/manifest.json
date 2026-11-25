@@ -6,7 +6,7 @@
   "owner_squad": "S08",
   "phase": 1,
   "status": "built",
-  "does": "Reminders",
+  "does": "Owner-scoped reminders with optimistic editing, completion/cancellation UX, duplicate-warning UI, and recurrence",
   "uses": [
     "api.tasks",
     "packages.memory",
@@ -16,5 +16,5 @@
   ],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.1.0"
+  "version": "0.2.0"
 }

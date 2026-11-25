@@ -5,10 +5,10 @@
   "group": "shell",
   "owner_squad": "S00",
   "phase": 1,
-  "status": "planned",
-  "does": "घंटी",
+  "status": "built",
+  "does": "Read-only notifications surface with a safe type allowlist and unread/read cursor; never fires reminders.",
   "uses": [],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.2.0"
 }

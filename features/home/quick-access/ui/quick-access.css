@@ -1,0 +1,9 @@
+.d2-quick-card,.d2-quick-card *{box-sizing:border-box}
+.d2-quick-card{min-width:0;max-width:100%}
+.d2-quick-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-width:0}
+.d2-quick-app{min-width:0;width:100%;border:0;background:transparent;padding:0;cursor:pointer;overflow-wrap:anywhere;text-align:center}
+.d2-quick-app:disabled{cursor:default;opacity:.65}
+.d2-quick-app>span:last-child{max-width:100%;line-height:1.25}
+.d2-quick-state{margin:0;color:#7b89a5;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+.d2-quick-add .app-icon{color:#657693}
+@media(max-width:390px){.d2-quick-grid{gap:5px}.d2-quick-app{font-size:9px}.d2-quick-app .app-icon{width:40px;height:40px}}

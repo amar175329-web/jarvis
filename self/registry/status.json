@@ -132,19 +132,19 @@
     "evidence": null
   },
   "features.core-workspace.activity-logs": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.core-workspace.boards": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.core-workspace.history": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.core-workspace.insights": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.core-workspace.knowledge-base": {
@@ -152,15 +152,15 @@
     "evidence": null
   },
   "features.core-workspace.memory": {
-    "status": "planned",
+    "status": "broken",
     "evidence": null
   },
   "features.core-workspace.notes-files": {
-    "status": "planned",
+    "status": "broken",
     "evidence": null
   },
   "features.core-workspace.projects": {
-    "status": "planned",
+    "status": "broken",
     "evidence": null
   },
   "features.core-workspace.reminders": {
@@ -240,63 +240,63 @@
     "evidence": null
   },
   "features.home.jarvis-insight": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.home.live-activity": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.home.news": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.home.quick-access": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.home.recent-activity": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.home.today-focus": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.home.todays-schedule": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.shell.boot-sequence": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.shell.connect": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.shell.global-search": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.shell.notifications": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.shell.power-off": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.shell.profile-status": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.shell.settings": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.shell.sidebar-nav": {
-    "status": "planned",
+    "status": "built",
     "evidence": null
   },
   "features.system.api-management": {

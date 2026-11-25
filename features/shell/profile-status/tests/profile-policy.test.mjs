@@ -1,0 +1,3 @@
+import test from 'node:test'; import assert from 'node:assert/strict'; import { projectProfileStatus } from '../src/profile-policy.mjs';
+test('profile card presents bounded owner/device summary only', () => { assert.deepEqual(projectProfileStatus({ email: 'amit@example.test', password: 'do-not-show' }, [{ online: true }, { online: false }]), { email: 'amit@example.test', session: 'Active', devices: 2, devicesOnline: 1 }); });
+test('missing session fails closed in profile projection', () => { assert.deepEqual(projectProfileStatus(null, []), { email: null, session: 'Unavailable', devices: 0, devicesOnline: 0 }); });

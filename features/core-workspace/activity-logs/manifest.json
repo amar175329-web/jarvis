@@ -5,10 +5,15 @@
   "group": "core-workspace",
   "owner_squad": "S05",
   "phase": 1,
-  "status": "planned",
-  "does": "Activity Logs",
-  "uses": [],
+  "status": "built",
+  "does": "Unified owner-scoped activity timeline with safe metadata, filters and detail projection",
+  "uses": [
+    "api.auth",
+    "packages.brain",
+    "packages.memory",
+    "features.core-workspace.task-manager"
+  ],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.1.0"
 }

@@ -5,10 +5,10 @@
   "group": "shell",
   "owner_squad": "S00",
   "phase": 1,
-  "status": "planned",
-  "does": "Home, Chat, Today, Tasks, Memory, Insights, Boards, History, More",
+  "status": "built",
+  "does": "Reusable navigation items for the existing approved sidebar.",
   "uses": [],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.2.0"
 }

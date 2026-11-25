@@ -1,0 +1,15 @@
+.d2-news-card,.d2-news-card *{box-sizing:border-box}
+.d2-news-card{min-width:0;max-width:100%;padding:18px 20px}
+.d2-news-list{display:grid;gap:12px;min-width:0}
+.d2-news-item{min-width:0;padding-bottom:10px;border-bottom:1px solid #edf1f8}
+.d2-news-item:last-child{border-bottom:0;padding-bottom:0}
+.d2-news-meta{display:flex;align-items:center;gap:8px;color:#8a96ad;font-size:9px}
+.d2-news-meta time{margin-left:auto}
+.d2-news-title{display:block;width:100%;padding:4px 0 0;border:0;background:transparent;text-align:left;color:#253b5c;font:800 11px/1.45 Manrope, sans-serif;overflow-wrap:anywhere;cursor:pointer}
+.d2-news-title:disabled{cursor:default}
+.d2-news-item p,.d2-news-summary{margin:4px 0 0;color:#7b89a5;font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.d2-news-summary{padding:10px;border-radius:10px;background:#f5f8ff;color:#526582}
+.d2-news-state{margin:0;color:#7b89a5;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+.d2-news-summarize{margin-top:12px;border:1px solid #dfe9fa;border-radius:10px;padding:7px 10px;background:#f8fbff;color:#2874e9;font:700 10px 'DM Sans',sans-serif;cursor:pointer}
+.d2-news-summarize:disabled{opacity:.55;cursor:not-allowed}
+@media(max-width:390px){.d2-news-card{padding:16px}.d2-news-meta{gap:6px}}

@@ -1,15 +1,24 @@
 # boot-sequence
-STATUS: planned
-WHAT IT IS: शुरुआती INITIALIZING CORE स्क्रीन
+STATUS: built
+WHAT IT IS: Reusable shell startup sequence matching the existing approved Boot visual language.
 WHAT IT CAN DO:
-- (planned) शुरुआती INITIALIZING CORE स्क्रीन
+- Show the four existing boot status messages with reduced-motion support.
+- Allow the user to skip the overlay; remove it after the startup sequence.
 WHAT IT CANNOT DO / LIMITS:
-- Nothing is built yet. Everything above is planned.
-HOW IT WORKS: Not written yet. S00 writes this BEFORE any code (Folder-First step 2).
-INPUTS / OUTPUTS: Not written yet.
-USES / USED BY: None recorded yet (must match manifest "uses" and "knows").
-POWER LEVEL & CONFIRMATION: L0 (provisional). It does not act by itself; powers live in library/ and packages/.
-EXAMPLES: Not written yet.
-KNOWN ISSUES: None known (nothing built).
+- No backend requests, model call, persisted state, or action execution.
+- No app/src/components/Boot.tsx, App.tsx, or global shell edits in this patch; Antigravity swaps the mount.
+HOW IT WORKS:
+`src/boot-policy.mjs` owns the sequence strings/timing thresholds; `ui/BootSequence.tsx` handles visibility and the browser reduced-motion preference.
+INPUTS / OUTPUTS:
+No routes, tables, events, or writes. Output is a display-only startup overlay.
+USES / USED BY:
+Uses only existing owner session/RLS and shell contracts; dependencies are listed in manifest.json. LEAD/Antigravity mounts the UI and actions.
+POWER LEVEL & CONFIRMATION:
+L0 display-only.
+EXAMPLES:
+When reduced motion is enabled, the overlay does not animate or render.
+KNOWN ISSUES:
+Antigravity must replace the existing `<Boot />` mount with `<BootSequence />`, not mount both.
 CHANGE LOG:
-- (append-only) folder-first: created as planned, version 0.0.1. Owner: S00.
+- 2026-11-23 - Folder-First knowledge and planned manifest refreshed for D2 shell bundle 3 - 0.1.0.
+- 2026-11-23 - Implemented D2 shell bundle 3, added component/handler/tests and updated implementation knowledge; version 0.2.0.

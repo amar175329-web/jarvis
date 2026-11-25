@@ -1,0 +1,3 @@
+export const POWER_OFF_ACTIONS: readonly string[];
+export type PowerOffContext = { requireOwner(request: Request): Promise<{ ok: true; user: { id: string } } | { ok: false; status?: number; message?: string }>; executePower(args: { powerId: string; ownerId: string; confirmed: boolean; why: string; run: () => Promise<unknown> }): Promise<{ executed: boolean; result?: unknown }>; setKillSwitch(args: { ownerId: string; kill: true; reason: string }): Promise<{ kill: true; epoch: number } | null> };
+export function handle(action: string, request: Request, context?: PowerOffContext): Promise<Response>;

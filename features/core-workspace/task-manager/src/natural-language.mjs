@@ -113,7 +113,28 @@ function detectTime(text) {
 
 const INVALID_TIME_MSG = "Time samajh nahi aaya. 'aaj 10 pm' ya '22:00' likho.";
 
-function resolveHour(time, daypart) {
+function normalizeSuffix(value) {
+  return String(value ?? '').replaceAll('.', '').toLowerCase();
+}
+
+/** Detect a same-day time interval such as "3 se 4 baje" or "3 pm to 4 pm". */
+function detectTimeRange(text) {
+  const normalized = normalizeDigits(text);
+  const re = /(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?\s*(?:baje|बजे)?\s*(?:se|से|to|तक|[-–])\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)?\s*(?:baje|बजे)?/iu;
+  const match = re.exec(normalized);
+  if (!match) return null;
+  let startSuffix = normalizeSuffix(match[3]);
+  let endSuffix = normalizeSuffix(match[6]);
+  if (!startSuffix && endSuffix) startSuffix = endSuffix;
+  if (!endSuffix && startSuffix) endSuffix = startSuffix;
+  return {
+    start: { hour: Number(match[1]), minute: Number(match[2] ?? 0), suffix: startSuffix, explicit: Boolean(startSuffix) },
+    end: { hour: Number(match[4]), minute: Number(match[5] ?? 0), suffix: endSuffix, explicit: Boolean(endSuffix) },
+    span: [match.index, match.index + match[0].length],
+  };
+}
+
+function resolveHour(time, daypart, allowRangeStart = false) {
   if (!time) return null;
   let hour = time.hour;
   if (!Number.isInteger(hour) || hour < 0 || hour > 24 || time.minute < 0 || time.minute > 59 || (hour === 24 && time.minute !== 0)) return { invalid: true };
@@ -131,7 +152,7 @@ function resolveHour(time, daypart) {
       else if (hour >= 1 && hour <= 5) hour += 12;
       else return { invalid: true };
     } else if (daypart.name === 'evening') {
-      if (hour >= 4 && hour <= 9) hour += 12;
+      if (hour >= 4 && hour <= 9 || allowRangeStart && hour === 3) hour += 12;
       else return { invalid: true };
     } else if (daypart.name === 'night') {
       if (hour >= 8 && hour <= 11) hour += 12;
@@ -178,7 +199,7 @@ function cleanTitle(text, spans) {
     for (let i = start; i < end; i += 1) chars[i] = ' ';
   }
   let title = chars.join('')
-    .replace(/\b(?:remind\s+me|please|yaad\s+(?:dila(?:na)?|dilana|kar(?:na)?|rakhna)|reminder|alarm|task|add|create|schedule|set\s+(?:a\s+)?reminder|remember|yaad\s+rakhna)\b/giu, ' ')
+    .replace(/\b(?:remind(?:\s+me)?|please|yaad\s+(?:dila(?:na|o)?|dilao|kar(?:na|ana)?|rakhna)|reminder|alarm|task|add|create|schedule|set\s+(?:a\s+)?reminder|remember|yaad\s+rakhna)\b/giu, ' ')
     .replace(/(?:याद\s*(?:दिलाना|करना|रखना)|रिमाइंड(?:र)?|अलार्म|कृपया|कर\s*देना)/gu, ' ')
     .replace(/[;,|]+/g, ' ')
     .replace(/\s+/g, ' ').trim();
@@ -197,24 +218,28 @@ export function parseNaturalLanguage(input, options = {}) {
   const text = normalizeDigits(input.trim());
   const date = detectDate(text, nowParts);
   const daypart = detectDaypart(text);
-  const time = detectTime(text);
+  const timeRange = detectTimeRange(text);
+  const time = timeRange?.start ?? detectTime(text);
+  const endTime = timeRange?.end ?? null;
   const repeat = detectRepeat(text);
   const priorityResult = detectPriority(text);
-  const spans = [date?.span, daypart?.span, time?.span, repeat.span, priorityResult.span];
+  const spans = [date?.span, daypart?.span, timeRange?.span ?? time?.span, repeat.span, priorityResult.span];
   const title = cleanTitle(text, spans);
   const sensitivity = classifySensitivity(text);
   const sensitive = sensitivity.sensitive;
-  const looksReminder = /\b(?:remind|reminder|alarm)\b|\byaad\s+dil(?:ana)?\b|याद\s*दिला|रिमाइंडर/iu.test(text) || sensitive;
+  const looksReminder = /\b(?:remind|reminder|alarm)\b|\byaad\s+(?:dila(?:na|o)?|dilao|kar(?:na|ana)?)\b|याद\s*(?:दिला|कर)|रिमाइंडर/iu.test(text) || sensitive;
   const kind = looksReminder ? 'reminder' : 'task';
   const priorityValue = priorityResult.value;
   const repeatRule = repeat.rule;
-  const resolved = resolveHour(time, daypart);
+  const resolved = resolveHour(time, daypart, Boolean(timeRange));
+  const resolvedEnd = endTime ? resolveHour(endTime, daypart, true) : null;
 
   if (!title) return { ok: true, status: 'needs_confirmation', reason: 'title_missing', title: '', kind, sensitive, priority: priorityValue, repeat_rule: repeatRule, date_text: date?.token ?? null };
 
-  if (time && resolved?.invalid) return { ok: false, code: 'invalid_time', message: INVALID_TIME_MSG, title, kind, sensitive };
+  if (time && resolved?.invalid || endTime && resolvedEnd?.invalid) return { ok: false, code: 'invalid_time', message: INVALID_TIME_MSG, title, kind, sensitive };
   if (time && resolved?.needsConfirmation) return { ok: true, status: 'needs_confirmation', reason: resolved.needsConfirmation, message: resolved.message, title, kind, sensitive, priority: priorityValue, repeat_rule: repeatRule, date_text: date?.token ?? null, time_text: `${time.hour}:${String(time.minute).padStart(2, '0')}` };
-  if (time && resolved?.ambiguous) return { ok: true, status: 'needs_confirmation', reason: 'am_pm_ambiguous', title, kind, sensitive, priority: priorityValue, repeat_rule: repeatRule, date_text: date?.token ?? null, time_text: `${time.hour}:${String(time.minute).padStart(2, '0')}` };
+  if (endTime && resolvedEnd?.needsConfirmation) return { ok: true, status: 'needs_confirmation', reason: resolvedEnd.needsConfirmation, message: resolvedEnd.message, title, kind, sensitive, priority: priorityValue, repeat_rule: repeatRule, date_text: date?.token ?? null, time_text: `${endTime.hour}:${String(endTime.minute).padStart(2, '0')}` };
+  if (time && (resolved?.ambiguous || endTime && resolvedEnd?.ambiguous)) return { ok: true, status: 'needs_confirmation', reason: 'am_pm_ambiguous', title, kind, sensitive, priority: priorityValue, repeat_rule: repeatRule, date_text: date?.token ?? null, time_text: timeRange ? `${time.hour}:${String(time.minute).padStart(2, '0')}-${endTime.hour}:${String(endTime.minute).padStart(2, '0')}` : `${time.hour}:${String(time.minute).padStart(2, '0')}` };
   if (daypart && !time) return { ok: true, status: 'needs_confirmation', reason: 'exact_time_required', title, kind, sensitive, priority: priorityValue, repeat_rule: repeatRule, date_text: date?.token ?? null };
   if (!date && !time && !daypart && !repeatRule) return { ok: false, code: 'no_schedule_detected', title, kind, sensitive, priority: priorityValue };
 
@@ -223,10 +248,16 @@ export function parseNaturalLanguage(input, options = {}) {
   const hasTime = Boolean(time && resolved && !resolved.ambiguous);
   const hour = hasTime ? resolved.hour : 23;
   const minute = hasTime ? resolved.minute : 59;
-  let dueAt = localToUtc({ ...day, hour, minute, second: 0 }, timeZone);
+  let dueDay = day;
+  let dueAt = localToUtc({ ...dueDay, hour, minute, second: 0 }, timeZone);
   if (!date && hasTime && dueAt.getTime() <= now.getTime()) {
-    const nextDay = shiftDate(nowParts, 1);
-    dueAt = localToUtc({ ...nextDay, hour, minute, second: 0 }, timeZone);
+    dueDay = shiftDate(nowParts, 1);
+    dueAt = localToUtc({ ...dueDay, hour, minute, second: 0 }, timeZone);
+  }
+  let endsAt = null;
+  if (endTime && resolvedEnd && !resolvedEnd.ambiguous) {
+    endsAt = localToUtc({ ...dueDay, hour: resolvedEnd.hour, minute: resolvedEnd.minute, second: 0 }, timeZone);
+    if (endsAt.getTime() <= dueAt.getTime()) return { ok: false, code: 'invalid_time_range', message: 'End time start time ke baad hona chahiye.', title, kind, sensitive };
   }
   if (date?.token && DAY_WORDS.get(date.token.toLowerCase()) === 'today' && dueAt.getTime() < now.getTime()) {
     return { ok: true, status: 'needs_confirmation', reason: 'time_already_passed_today', title, kind, sensitive, priority: priorityValue, repeat_rule: repeatRule };
@@ -234,7 +265,7 @@ export function parseNaturalLanguage(input, options = {}) {
   if (kind === 'reminder' && !hasTime) return { ok: true, status: 'needs_confirmation', reason: 'exact_time_required', title, kind, sensitive, priority: priorityValue, repeat_rule: repeatRule, date_text: date?.token ?? null };
 
   return {
-    ok: true, status: 'ready', kind, title, sensitive, due_at: dueAt.toISOString(), time_zone: timeZone,
+    ok: true, status: 'ready', kind, title, sensitive, due_at: dueAt.toISOString(), ...(endsAt ? { ends_at: endsAt.toISOString() } : {}), time_zone: timeZone,
     priority: priorityValue, repeat_rule: repeatRule, date_text: date?.token ?? null,
     parsed_by: 'deterministic-rules',
   };

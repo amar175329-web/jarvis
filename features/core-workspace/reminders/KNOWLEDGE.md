@@ -23,3 +23,9 @@ KNOWN ISSUES: S09's current hand-off has no date field; `date_text` and `time_zo
 CHANGE LOG:
 - 2026-11-21 - Folder-First plan created by S08 before code; version 0.0.1.
 - 2026-11-21 - Added recurrence, S09 hand-off validator, fail-closed worker handler, reminder UI and API client; version 0.1.0.
+
+- Bundle 3 (2026-11-23): UI supports reminder edit (text/time/repeat), done/cancel with five-second Undo, hard-delete confirmation, and a collapsed Cancelled/Done archive. List refresh occurs on focus, visible-state return and 30-second visible polling; per-action handlers patch one item.
+- Reminder update/complete/delete server routes are not yet mounted. See `docs/s08-bundle3/CHANGE_REQUEST_API.md`; route client support must not be mistaken for server readiness.
+- Reminder edit must run the same shared sensitivity classifier before any write. Editing also requires transactional cancellation of the old queued `reminders.fire` job and enqueue of the new reminder job, keyed by reminder ID + new time. These DB changes are only proposed in `docs/s08-bundle3/0061_s08_proposal.sql`.
+- Reminder firing and Android notification delivery remain out of scope; no worker/device code changed.
+- 2026-11-23 - Bundle 3: optimistic reminder edit/done/cancel/delete UX, Undo, archive handling, safe retry messages and CR/0061 proposals; version 0.2.0.

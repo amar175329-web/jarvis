@@ -90,3 +90,28 @@ test('P28 additional health terms (Roman + Devanagari) are marked sensitive', ()
     assert.equal(classifySensitivity(text).category, 'health', text);
   }
 });
+
+test('financial and family references are blocked from public task/reminder fields', () => {
+  for (const phrase of ['salary transfer', 'rent payment', 'meri wife ka appointment', 'papa ko call karna', 'परिवार की बात', 'माँ को फोन']) {
+    assert.equal(classifySensitivity(phrase).sensitive, true, phrase);
+  }
+});
+
+test('Hinglish sensitivity gaps are private and safe everyday phrases stay ordinary', () => {
+  for (const text of [
+    'khud ko hurt karna hai',
+    'main bahut udaas hoon',
+    'bank balance kitna hai',
+    'dwai leni hai',
+    'daava lena hai',
+    'davai leni hai',
+    'dava lena hai',
+    'goli leni hai',
+    'dawai leni hai',
+  ]) {
+    assert.equal(classifySensitivity(text).sensitive, true, text);
+  }
+  for (const text of ['report bhejni hai', 'gym jaana']) {
+    assert.equal(classifySensitivity(text).sensitive, false, text);
+  }
+});

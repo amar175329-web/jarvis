@@ -5,10 +5,13 @@
   "group": "home",
   "owner_squad": "S05",
   "phase": 1,
-  "status": "planned",
-  "does": "हाल का काम",
-  "uses": [],
+  "status": "built",
+  "does": "Read-only privacy-filtered Recent Activity Home card using the existing activity_log table",
+  "uses": [
+    "features.core-workspace.task-manager",
+    "api.tasks"
+  ],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.1.1"
 }

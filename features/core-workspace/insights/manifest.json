@@ -5,10 +5,15 @@
   "group": "core-workspace",
   "owner_squad": "S10",
   "phase": 2,
-  "status": "planned",
+  "status": "built",
   "does": "Insights",
-  "uses": [],
+  "uses": [
+    "api.tasks",
+    "features.core-workspace.task-manager",
+    "features.core-workspace.activity-logs",
+    "packages.brain"
+  ],
   "knows": [],
   "autonomy_default": "L0",
-  "version": "0.0.1"
+  "version": "0.2.0"
 }

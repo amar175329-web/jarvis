@@ -5,15 +5,15 @@
   "group": "core-workspace",
   "owner_squad": "S09",
   "phase": 1,
-  "status": "planned",
-  "does": "Projects (goal, status, agla kadam, notes/files/tasks se link)",
+  "status": "broken",
+  "does": "Owner-only projects and links to notes/files/tasks; private projects are separated and rendered metadata-only.",
   "uses": [
     "packages.memory",
-    "memory.projects"
+    "features.core-workspace.memory"
   ],
   "knows": [
     "memory.graph"
   ],
   "autonomy_default": "L0",
-  "version": "0.1.0"
+  "version": "0.2.1"
 }
