@@ -399,7 +399,7 @@
       "path": "/api/tasks/tasks.natural-add",
       "method": "POST",
       "auth": "owner",
-      "summary": "Parse Hindi/Hinglish natural language into a task or reminder; returns 409 conflict on ambiguous time or sensitive content.",
+      "summary": "Parse Hindi/Hinglish natural language into a task or reminder; returns 409 conflict on ambiguous time, clash, duplicate, or sensitive content.",
       "killSensitive": true,
       "errors": [
         "bad_request",
@@ -485,6 +485,24 @@
       "response": "TasksTasksCancelResponse"
     },
     {
+      "name": "tasks.tasks.delete",
+      "path": "/api/tasks/tasks.delete",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Hard-delete an owner task after confirmation.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "TasksTasksDeleteRequest",
+      "response": "TasksTasksDeleteResponse"
+    },
+    {
       "name": "reminders.reminders.list",
       "path": "/api/reminders/reminders.list",
       "method": "POST",
@@ -517,11 +535,66 @@
       "response": "RemindersRemindersCreateResponse"
     },
     {
+      "name": "reminders.reminders.update",
+      "path": "/api/reminders/reminders.update",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Update a non-sensitive owner reminder and replace its queued worker job atomically.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "payload_too_large",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "RemindersRemindersUpdateRequest",
+      "response": "RemindersRemindersUpdateResponse"
+    },
+    {
+      "name": "reminders.reminders.complete",
+      "path": "/api/reminders/reminders.complete",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Mark an owner reminder done and cancel its queued worker job atomically.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "RemindersRemindersCompleteRequest",
+      "response": "RemindersRemindersCompleteResponse"
+    },
+    {
+      "name": "reminders.reminders.delete",
+      "path": "/api/reminders/reminders.delete",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Cancel any queued reminder job and hard-delete an owner reminder atomically.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "RemindersRemindersDeleteRequest",
+      "response": "RemindersRemindersDeleteResponse"
+    },
+    {
       "name": "reminders.reminders.cancel",
       "path": "/api/reminders/reminders.cancel",
       "method": "POST",
       "auth": "owner",
-      "summary": "Cancel a pending owner reminder and its queued job.",
+      "summary": "Cancel a pending owner reminder and its queued job atomically.",
       "killSensitive": false,
       "errors": [
         "bad_request",
@@ -547,6 +620,475 @@
       ],
       "request": "RemindersRemindersConsumeMemoryRequest",
       "response": "RemindersRemindersConsumeMemoryResponse"
+    },
+    {
+      "name": "tasks.history.threads.list",
+      "path": "/api/tasks/history.threads.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "List the signed-in owner’s recent chat threads; private titles are replaced by a generic label.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "unavailable"
+      ],
+      "request": "TasksHistoryThreadsListRequest",
+      "response": "TasksHistoryThreadsListResponse"
+    },
+    {
+      "name": "tasks.history.messages.list",
+      "path": "/api/tasks/history.messages.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "List completed messages from an owner-owned thread; sensitive content is masked and never sent to a model.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "unavailable"
+      ],
+      "request": "TasksHistoryMessagesListRequest",
+      "response": "TasksHistoryMessagesListResponse"
+    },
+    {
+      "name": "tasks.activity-logs.list",
+      "path": "/api/tasks/activity-logs.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "List safe owner activity metadata with optional action, actor, result and time filters.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "unavailable"
+      ],
+      "request": "TasksActivityLogsListRequest",
+      "response": "TasksActivityLogsListResponse"
+    },
+    {
+      "name": "memory.memory.list",
+      "path": "/api/memory/memory.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "List owner memory with normal and private items separated.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "unavailable"
+      ],
+      "request": "MemoryMemoryListRequest",
+      "response": "MemoryMemoryListResponse"
+    },
+    {
+      "name": "memory.memory.get",
+      "path": "/api/memory/memory.get",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Read one owner memory item or private placeholder.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "unavailable"
+      ],
+      "request": "MemoryMemoryGetRequest",
+      "response": "MemoryMemoryGetResponse"
+    },
+    {
+      "name": "memory.memory.remember",
+      "path": "/api/memory/memory.remember",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Save an owner-requested memory item; private text is inserted directly as T2.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "payload_too_large",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "MemoryMemoryRememberRequest",
+      "response": "MemoryMemoryRememberResponse"
+    },
+    {
+      "name": "memory.memory.update",
+      "path": "/api/memory/memory.update",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Update owner memory with optimistic concurrency revision and sticky T2 privacy.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "payload_too_large",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "MemoryMemoryUpdateRequest",
+      "response": "MemoryMemoryUpdateResponse"
+    },
+    {
+      "name": "memory.memory.forget",
+      "path": "/api/memory/memory.forget",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Hard-delete one owner memory after confirmation.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "MemoryMemoryForgetRequest",
+      "response": "MemoryMemoryForgetResponse"
+    },
+    {
+      "name": "memory.memory.forget-all",
+      "path": "/api/memory/memory.forget-all",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Hard-delete all owner memories after fresh count and app confirmation.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "MemoryMemoryForgetAllRequest",
+      "response": "MemoryMemoryForgetAllResponse"
+    },
+    {
+      "name": "memory.memory.export",
+      "path": "/api/memory/memory.export",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Export normal-tier owner memory as NDJSON attachment; private rows never exported.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "MemoryMemoryExportRequest",
+      "response": "MemoryMemoryExportResponse"
+    },
+    {
+      "name": "memory.memory.stats",
+      "path": "/api/memory/memory.stats",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Read owner memory count summary without row text.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "unavailable"
+      ],
+      "request": "MemoryMemoryStatsRequest",
+      "response": "MemoryMemoryStatsResponse"
+    },
+    {
+      "name": "notes-files.workspace.notes.list",
+      "path": "/api/notes-files/workspace.notes.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "List owner notes with normal and private placeholders separated.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "unavailable"
+      ],
+      "request": "NotesFilesWorkspaceNotesListRequest",
+      "response": "NotesFilesWorkspaceNotesListResponse"
+    },
+    {
+      "name": "notes-files.workspace.notes.get",
+      "path": "/api/notes-files/workspace.notes.get",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Read one owner note or private placeholder.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "unavailable"
+      ],
+      "request": "NotesFilesWorkspaceNotesGetRequest",
+      "response": "NotesFilesWorkspaceNotesGetResponse"
+    },
+    {
+      "name": "notes-files.workspace.notes.create",
+      "path": "/api/notes-files/workspace.notes.create",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Create a classified owner note (up to 110 KB request cap).",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "payload_too_large",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "NotesFilesWorkspaceNotesCreateRequest",
+      "response": "NotesFilesWorkspaceNotesCreateResponse"
+    },
+    {
+      "name": "notes-files.workspace.notes.update",
+      "path": "/api/notes-files/workspace.notes.update",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Update a classified owner note with sticky T2 privacy (up to 110 KB request cap).",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "payload_too_large",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "NotesFilesWorkspaceNotesUpdateRequest",
+      "response": "NotesFilesWorkspaceNotesUpdateResponse"
+    },
+    {
+      "name": "notes-files.workspace.notes.delete",
+      "path": "/api/notes-files/workspace.notes.delete",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Hard-delete an owner note after confirmation.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "NotesFilesWorkspaceNotesDeleteRequest",
+      "response": "NotesFilesWorkspaceNotesDeleteResponse"
+    },
+    {
+      "name": "notes-files.workspace.files.list",
+      "path": "/api/notes-files/workspace.files.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "List private owner file placeholders only.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "unavailable"
+      ],
+      "request": "NotesFilesWorkspaceFilesListRequest",
+      "response": "NotesFilesWorkspaceFilesListResponse"
+    },
+    {
+      "name": "notes-files.workspace.files.upload-url",
+      "path": "/api/notes-files/workspace.files.upload-url",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Create an owner-token signed PUT upload URL for the private files bucket.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "payload_too_large",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "NotesFilesWorkspaceFilesUploadUrlRequest",
+      "response": "NotesFilesWorkspaceFilesUploadUrlResponse"
+    },
+    {
+      "name": "notes-files.workspace.files.complete-upload",
+      "path": "/api/notes-files/workspace.files.complete-upload",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Complete and quarantine an owner file upload.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "NotesFilesWorkspaceFilesCompleteUploadRequest",
+      "response": "NotesFilesWorkspaceFilesCompleteUploadResponse"
+    },
+    {
+      "name": "notes-files.workspace.files.delete",
+      "path": "/api/notes-files/workspace.files.delete",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Delete an owner private Storage object and metadata row.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "NotesFilesWorkspaceFilesDeleteRequest",
+      "response": "NotesFilesWorkspaceFilesDeleteResponse"
+    },
+    {
+      "name": "notes-files.workspace.search",
+      "path": "/api/notes-files/workspace.search",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Search normal-tier owner notes only.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "unavailable"
+      ],
+      "request": "NotesFilesWorkspaceSearchRequest",
+      "response": "NotesFilesWorkspaceSearchResponse"
+    },
+    {
+      "name": "projects.workspace.projects.list",
+      "path": "/api/projects/workspace.projects.list",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "List owner projects with normal and private placeholders separated.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "unavailable"
+      ],
+      "request": "ProjectsWorkspaceProjectsListRequest",
+      "response": "ProjectsWorkspaceProjectsListResponse"
+    },
+    {
+      "name": "projects.workspace.projects.get",
+      "path": "/api/projects/workspace.projects.get",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Read one owner project or private placeholder.",
+      "killSensitive": false,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "unavailable"
+      ],
+      "request": "ProjectsWorkspaceProjectsGetRequest",
+      "response": "ProjectsWorkspaceProjectsGetResponse"
+    },
+    {
+      "name": "projects.workspace.projects.create",
+      "path": "/api/projects/workspace.projects.create",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Create a classified owner project.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "payload_too_large",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "ProjectsWorkspaceProjectsCreateRequest",
+      "response": "ProjectsWorkspaceProjectsCreateResponse"
+    },
+    {
+      "name": "projects.workspace.projects.update",
+      "path": "/api/projects/workspace.projects.update",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Update an owner project with sticky T2 privacy.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "not_found",
+        "conflict",
+        "payload_too_large",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "ProjectsWorkspaceProjectsUpdateRequest",
+      "response": "ProjectsWorkspaceProjectsUpdateResponse"
+    },
+    {
+      "name": "projects.workspace.projects.delete",
+      "path": "/api/projects/workspace.projects.delete",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Delete an owner project after confirmation.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "ProjectsWorkspaceProjectsDeleteRequest",
+      "response": "ProjectsWorkspaceProjectsDeleteResponse"
+    },
+    {
+      "name": "projects.workspace.projects.link-item",
+      "path": "/api/projects/workspace.projects.link-item",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Link an owner project to a memory, note, file, task, or project via memory_links.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "ProjectsWorkspaceProjectsLinkItemRequest",
+      "response": "ProjectsWorkspaceProjectsLinkItemResponse"
+    },
+    {
+      "name": "projects.workspace.projects.unlink-item",
+      "path": "/api/projects/workspace.projects.unlink-item",
+      "method": "POST",
+      "auth": "owner",
+      "summary": "Remove an owner project link after confirmation.",
+      "killSensitive": true,
+      "errors": [
+        "bad_request",
+        "forbidden",
+        "conflict",
+        "kill_switch_on",
+        "unavailable"
+      ],
+      "request": "ProjectsWorkspaceProjectsUnlinkItemRequest",
+      "response": "ProjectsWorkspaceProjectsUnlinkItemResponse"
     }
   ],
   "definitions": {
@@ -1399,6 +1941,1508 @@
       ],
       "additionalProperties": false
     },
+    "MemoryMemoryExportRequest": {
+      "type": "object",
+      "properties": {
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryMemoryExportResponse": {
+      "type": "string"
+    },
+    "MemoryMemoryForgetAllRequest": {
+      "type": "object",
+      "properties": {
+        "expectedCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "expectedCount",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryMemoryForgetAllResponse": {
+      "type": "object",
+      "properties": {
+        "deleted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "derived_deleted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "links_deleted": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "deleted",
+        "derived_deleted",
+        "links_deleted"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryMemoryForgetRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryMemoryForgetResponse": {
+      "type": "object",
+      "properties": {
+        "deleted": {
+          "type": "boolean"
+        },
+        "derived_deleted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "links_deleted": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "deleted",
+        "derived_deleted",
+        "links_deleted"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryMemoryGetRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "MemoryMemoryGetResponse": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "fact",
+                "profile",
+                "preference",
+                "routine",
+                "project",
+                "episode",
+                "knowledge",
+                "person"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "body": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "maxItems": 12
+            },
+            "pinned": {
+              "type": "boolean"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "created_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "kind",
+            "title",
+            "body",
+            "tags",
+            "pinned",
+            "revision",
+            "created_at",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "label": {
+              "type": "string",
+              "const": "Private item"
+            },
+            "badge": {
+              "type": "string",
+              "const": "private"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "badge",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "MemoryMemoryListRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "MemoryMemoryListResponse": {
+      "type": "object",
+      "properties": {
+        "normal": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "fact",
+                  "profile",
+                  "preference",
+                  "routine",
+                  "project",
+                  "episode",
+                  "knowledge",
+                  "person"
+                ]
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "body": {
+                "type": "string",
+                "maxLength": 2000
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                "maxItems": 12
+              },
+              "pinned": {
+                "type": "boolean"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "created_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              },
+              "updated_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "title",
+              "body",
+              "tags",
+              "pinned",
+              "revision",
+              "created_at",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "private": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "label": {
+                "type": "string",
+                "const": "Private item"
+              },
+              "badge": {
+                "type": "string",
+                "const": "private"
+              },
+              "updated_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "badge",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "total": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "counts": {
+          "type": "object",
+          "properties": {
+            "normal": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "private": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "normal",
+            "private"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "normal",
+        "private",
+        "total",
+        "counts"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryMemoryRememberRequest": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "fact",
+            "profile",
+            "preference",
+            "routine",
+            "project",
+            "episode",
+            "knowledge",
+            "person"
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "maxItems": 12
+        },
+        "pinned": {
+          "type": "boolean"
+        },
+        "private": {
+          "type": "boolean"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "text",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryMemoryRememberResponse": {
+      "type": "object",
+      "properties": {
+        "saved": {
+          "type": "boolean",
+          "const": true
+        },
+        "deduped": {
+          "type": "boolean"
+        },
+        "item": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "#/definitions/Device/properties/id"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "fact",
+                    "profile",
+                    "preference",
+                    "routine",
+                    "project",
+                    "episode",
+                    "knowledge",
+                    "person"
+                  ]
+                },
+                "title": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "body": {
+                  "type": "string",
+                  "maxLength": 2000
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "maxLength": 40
+                  },
+                  "maxItems": 12
+                },
+                "pinned": {
+                  "type": "boolean"
+                },
+                "revision": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "created_at": {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                "updated_at": {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                }
+              },
+              "required": [
+                "id",
+                "kind",
+                "title",
+                "body",
+                "tags",
+                "pinned",
+                "revision",
+                "created_at",
+                "updated_at"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "$ref": "#/definitions/Device/properties/id"
+                },
+                "label": {
+                  "type": "string",
+                  "const": "Private item"
+                },
+                "badge": {
+                  "type": "string",
+                  "const": "private"
+                },
+                "updated_at": {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                }
+              },
+              "required": [
+                "id",
+                "label",
+                "badge",
+                "updated_at"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "saved",
+        "deduped",
+        "item"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryMemoryStatsRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "MemoryMemoryStatsResponse": {
+      "type": "object",
+      "additionalProperties": {}
+    },
+    "MemoryMemoryUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "maxItems": 12
+        },
+        "private": {
+          "type": "boolean"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryMemoryUpdateResponse": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "fact",
+                "profile",
+                "preference",
+                "routine",
+                "project",
+                "episode",
+                "knowledge",
+                "person"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "body": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "maxItems": 12
+            },
+            "pinned": {
+              "type": "boolean"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "created_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "kind",
+            "title",
+            "body",
+            "tags",
+            "pinned",
+            "revision",
+            "created_at",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "label": {
+              "type": "string",
+              "const": "Private item"
+            },
+            "badge": {
+              "type": "string",
+              "const": "private"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "badge",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "NotesFilesWorkspaceFilesCompleteUploadRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "sha256",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceFilesCompleteUploadResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "status": {
+          "type": "string",
+          "const": "quarantined"
+        },
+        "label": {
+          "type": "string",
+          "const": "Private file"
+        },
+        "badge": {
+          "type": "string",
+          "const": "private"
+        }
+      },
+      "required": [
+        "id",
+        "status",
+        "label",
+        "badge"
+      ],
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceFilesDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceFilesDeleteResponse": {
+      "type": "object",
+      "properties": {
+        "deleted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "deleted"
+      ],
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceFilesListRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceFilesListResponse": {
+      "type": "object",
+      "properties": {
+        "normal": {
+          "type": "array",
+          "items": {
+            "not": {}
+          }
+        },
+        "private": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "label": {
+                "type": "string",
+                "const": "Private item"
+              },
+              "badge": {
+                "type": "string",
+                "const": "private"
+              },
+              "updated_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "badge",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "counts": {
+          "type": "object",
+          "properties": {
+            "normal": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "private": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "normal",
+            "private"
+          ],
+          "additionalProperties": false
+        },
+        "upload_note": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "normal",
+        "private",
+        "counts",
+        "upload_note"
+      ],
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceFilesUploadUrlRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "mime": {
+          "type": "string",
+          "enum": [
+            "text/plain",
+            "text/markdown",
+            "application/pdf",
+            "image/png",
+            "image/jpeg",
+            "text/csv",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          ]
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10485760
+        },
+        "project_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "maxItems": 12
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "mime",
+        "size_bytes",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceFilesUploadUrlResponse": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "upload": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string",
+              "const": "PUT"
+            },
+            "url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "headers": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "method",
+            "url",
+            "headers"
+          ],
+          "additionalProperties": false
+        },
+        "private": {
+          "type": "boolean",
+          "const": true
+        }
+      },
+      "required": [
+        "id",
+        "upload",
+        "private"
+      ],
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceNotesCreateRequest": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "body_md": {
+          "type": "string",
+          "maxLength": 100000
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "maxItems": 12
+        },
+        "project_id": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pinned": {
+          "type": "boolean"
+        },
+        "private": {
+          "type": "boolean"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "title",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceNotesCreateResponse": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "body_md": {
+              "type": "string",
+              "maxLength": 100000
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "maxItems": 12
+            },
+            "project_id": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "pinned": {
+              "type": "boolean"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "created_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "body_md",
+            "tags",
+            "project_id",
+            "pinned",
+            "revision",
+            "created_at",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "label": {
+              "type": "string",
+              "const": "Private item"
+            },
+            "badge": {
+              "type": "string",
+              "const": "private"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "badge",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "NotesFilesWorkspaceNotesDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceNotesDeleteResponse": {
+      "type": "object",
+      "properties": {
+        "deleted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "deleted"
+      ],
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceNotesGetRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceNotesGetResponse": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "body_md": {
+              "type": "string",
+              "maxLength": 100000
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "maxItems": 12
+            },
+            "project_id": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "pinned": {
+              "type": "boolean"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "created_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "body_md",
+            "tags",
+            "project_id",
+            "pinned",
+            "revision",
+            "created_at",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "label": {
+              "type": "string",
+              "const": "Private item"
+            },
+            "badge": {
+              "type": "string",
+              "const": "private"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "badge",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "NotesFilesWorkspaceNotesListRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceNotesListResponse": {
+      "type": "object",
+      "properties": {
+        "normal": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "body_md": {
+                "type": "string",
+                "maxLength": 100000
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                "maxItems": 12
+              },
+              "project_id": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Device/properties/id"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "pinned": {
+                "type": "boolean"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "created_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              },
+              "updated_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "body_md",
+              "tags",
+              "project_id",
+              "pinned",
+              "revision",
+              "created_at",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "private": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "label": {
+                "type": "string",
+                "const": "Private item"
+              },
+              "badge": {
+                "type": "string",
+                "const": "private"
+              },
+              "updated_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "badge",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "counts": {
+          "type": "object",
+          "properties": {
+            "normal": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "private": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "normal",
+            "private"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "normal",
+        "private",
+        "counts"
+      ],
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceNotesUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "body_md": {
+          "type": "string",
+          "maxLength": 100000
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "maxItems": 12
+        },
+        "pinned": {
+          "type": "boolean"
+        },
+        "private": {
+          "type": "boolean"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceNotesUpdateResponse": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "body_md": {
+              "type": "string",
+              "maxLength": 100000
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "maxItems": 12
+            },
+            "project_id": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "pinned": {
+              "type": "boolean"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "created_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "body_md",
+            "tags",
+            "project_id",
+            "pinned",
+            "revision",
+            "created_at",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "label": {
+              "type": "string",
+              "const": "Private item"
+            },
+            "badge": {
+              "type": "string",
+              "const": "private"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "badge",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "NotesFilesWorkspaceSearchRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "NotesFilesWorkspaceSearchResponse": {
+      "type": "object",
+      "properties": {
+        "normal": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "body_md": {
+                "type": "string",
+                "maxLength": 100000
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                "maxItems": 12
+              },
+              "project_id": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Device/properties/id"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "pinned": {
+                "type": "boolean"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "created_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              },
+              "updated_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "body_md",
+              "tags",
+              "project_id",
+              "pinned",
+              "revision",
+              "created_at",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "private": {
+          "type": "array",
+          "items": {
+            "not": {}
+          }
+        },
+        "counts": {
+          "type": "object",
+          "properties": {
+            "normal": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "private": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "normal",
+            "private"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "normal",
+        "private",
+        "counts"
+      ],
+      "additionalProperties": false
+    },
     "PhoneCommand": {
       "type": "object",
       "properties": {
@@ -1651,6 +3695,771 @@
         "expired"
       ]
     },
+    "ProjectsWorkspaceProjectsCreateRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "goal": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next_step": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "paused",
+            "done",
+            "archived"
+          ]
+        },
+        "due_at": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "maxItems": 12
+        },
+        "private": {
+          "type": "boolean"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectsWorkspaceProjectsCreateResponse": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "goal": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 1000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "next_step": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 300
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "active",
+                "paused",
+                "done",
+                "archived"
+              ]
+            },
+            "due_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "maxItems": 12
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "created_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "goal",
+            "next_step",
+            "status",
+            "due_at",
+            "tags",
+            "revision",
+            "created_at",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "label": {
+              "type": "string",
+              "const": "Private item"
+            },
+            "badge": {
+              "type": "string",
+              "const": "private"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "badge",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ProjectsWorkspaceProjectsDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectsWorkspaceProjectsDeleteResponse": {
+      "type": "object",
+      "properties": {
+        "deleted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "deleted"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectsWorkspaceProjectsGetRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "ProjectsWorkspaceProjectsGetResponse": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "goal": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 1000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "next_step": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 300
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "active",
+                "paused",
+                "done",
+                "archived"
+              ]
+            },
+            "due_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "maxItems": 12
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "created_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "goal",
+            "next_step",
+            "status",
+            "due_at",
+            "tags",
+            "revision",
+            "created_at",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "label": {
+              "type": "string",
+              "const": "Private item"
+            },
+            "badge": {
+              "type": "string",
+              "const": "private"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "badge",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ProjectsWorkspaceProjectsLinkItemRequest": {
+      "type": "object",
+      "properties": {
+        "src_type": {
+          "type": "string",
+          "enum": [
+            "memory",
+            "note",
+            "file",
+            "project",
+            "task"
+          ]
+        },
+        "src_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "rel": {
+          "type": "string",
+          "pattern": "^[a-z_]{2,40}$"
+        },
+        "dst_type": {
+          "$ref": "#/definitions/ProjectsWorkspaceProjectsLinkItemRequest/properties/src_type"
+        },
+        "dst_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "src_type",
+        "src_id",
+        "rel",
+        "dst_type",
+        "dst_id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectsWorkspaceProjectsLinkItemResponse": {
+      "type": "object",
+      "properties": {
+        "linked": {
+          "type": "boolean",
+          "const": true
+        },
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        }
+      },
+      "required": [
+        "linked"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectsWorkspaceProjectsListRequest": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    },
+    "ProjectsWorkspaceProjectsListResponse": {
+      "type": "object",
+      "properties": {
+        "normal": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "goal": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "next_step": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "paused",
+                  "done",
+                  "archived"
+                ]
+              },
+              "due_at": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Device/properties/paired_at"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                "maxItems": 12
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "created_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              },
+              "updated_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "goal",
+              "next_step",
+              "status",
+              "due_at",
+              "tags",
+              "revision",
+              "created_at",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "private": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "label": {
+                "type": "string",
+                "const": "Private item"
+              },
+              "badge": {
+                "type": "string",
+                "const": "private"
+              },
+              "updated_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "badge",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "counts": {
+          "type": "object",
+          "properties": {
+            "normal": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "private": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "normal",
+            "private"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "normal",
+        "private",
+        "counts"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectsWorkspaceProjectsUnlinkItemRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectsWorkspaceProjectsUnlinkItemResponse": {
+      "type": "object",
+      "properties": {
+        "unlinked": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "unlinked"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectsWorkspaceProjectsUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "goal": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next_step": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "paused",
+            "done",
+            "archived"
+          ]
+        },
+        "due_at": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "maxItems": 12
+        },
+        "private": {
+          "type": "boolean"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectsWorkspaceProjectsUpdateResponse": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120
+            },
+            "goal": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 1000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "next_step": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 300
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "active",
+                "paused",
+                "done",
+                "archived"
+              ]
+            },
+            "due_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 40
+              },
+              "maxItems": 12
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "created_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "goal",
+            "next_step",
+            "status",
+            "due_at",
+            "tags",
+            "revision",
+            "created_at",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "label": {
+              "type": "string",
+              "const": "Private item"
+            },
+            "badge": {
+              "type": "string",
+              "const": "private"
+            },
+            "updated_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            }
+          },
+          "required": [
+            "id",
+            "label",
+            "badge",
+            "updated_at"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
     "RemindersRemindersCancelRequest": {
       "type": "object",
       "properties": {
@@ -1670,6 +4479,61 @@
     "RemindersRemindersCancelResponse": {
       "type": "object",
       "properties": {
+        "reminder": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "remind_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "repeat_rule": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "FREQ=DAILY",
+                    "FREQ=WEEKLY",
+                    "FREQ=MONTHLY",
+                    "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "time_zone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "fired",
+                "done",
+                "cancelled"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "text",
+            "remind_at",
+            "repeat_rule",
+            "time_zone",
+            "state"
+          ],
+          "additionalProperties": false
+        },
         "cancelled": {
           "type": "boolean",
           "const": true
@@ -1677,6 +4541,86 @@
       },
       "required": [
         "cancelled"
+      ],
+      "additionalProperties": false
+    },
+    "RemindersRemindersCompleteRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "RemindersRemindersCompleteResponse": {
+      "type": "object",
+      "properties": {
+        "reminder": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "remind_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "repeat_rule": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "FREQ=DAILY",
+                    "FREQ=WEEKLY",
+                    "FREQ=MONTHLY",
+                    "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "time_zone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "fired",
+                "done",
+                "cancelled"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "text",
+            "remind_at",
+            "repeat_rule",
+            "time_zone",
+            "state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "reminder"
       ],
       "additionalProperties": false
     },
@@ -1799,6 +4743,9 @@
         },
         "confirmed": {
           "type": "boolean"
+        },
+        "allow_duplicate": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -1851,6 +4798,7 @@
               "enum": [
                 "pending",
                 "fired",
+                "done",
                 "cancelled"
               ]
             }
@@ -1868,6 +4816,39 @@
       },
       "required": [
         "reminder"
+      ],
+      "additionalProperties": false
+    },
+    "RemindersRemindersDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "RemindersRemindersDeleteResponse": {
+      "type": "object",
+      "properties": {
+        "deleted": {
+          "type": "boolean",
+          "const": true
+        },
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        }
+      },
+      "required": [
+        "deleted",
+        "id"
       ],
       "additionalProperties": false
     },
@@ -1921,6 +4902,7 @@
                 "enum": [
                   "pending",
                   "fired",
+                  "done",
                   "cancelled"
                 ]
               }
@@ -1939,6 +4921,120 @@
       },
       "required": [
         "reminders"
+      ],
+      "additionalProperties": false
+    },
+    "RemindersRemindersUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "remind_at": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        },
+        "repeat_rule": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "FREQ=DAILY",
+                "FREQ=WEEKLY",
+                "FREQ=MONTHLY",
+                "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "time_zone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "confirmed": {
+          "type": "boolean"
+        },
+        "allow_duplicate": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "remind_at",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "RemindersRemindersUpdateResponse": {
+      "type": "object",
+      "properties": {
+        "reminder": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "#/definitions/Device/properties/id"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500
+            },
+            "remind_at": {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            "repeat_rule": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "FREQ=DAILY",
+                    "FREQ=WEEKLY",
+                    "FREQ=MONTHLY",
+                    "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "time_zone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "state": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "fired",
+                "done",
+                "cancelled"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "text",
+            "remind_at",
+            "repeat_rule",
+            "time_zone",
+            "state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "reminder"
       ],
       "additionalProperties": false
     },
@@ -2084,6 +5180,268 @@
     "SystemKillSetResponse": {
       "$ref": "#/definitions/KillState"
     },
+    "TasksActivityLogsListRequest": {
+      "type": "object",
+      "properties": {
+        "before": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "confirmed": {
+          "type": "boolean"
+        },
+        "action": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*(\\.[a-z][a-z0-9-]*)+$"
+        },
+        "actor": {
+          "type": "string",
+          "pattern": "^(owner|jarvis|worker|system|s[0-9]{2}[a-z]?)$"
+        },
+        "ok": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "TasksActivityLogsListResponse": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 30
+              },
+              "ts": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              },
+              "actor": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "action": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "target": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "detail": {
+                "type": "object",
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 240
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              },
+              "ok": {
+                "type": "boolean"
+              },
+              "decision_id": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Device/properties/id"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "ts",
+              "actor",
+              "action",
+              "target",
+              "detail",
+              "ok",
+              "decision_id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "next_before": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        }
+      },
+      "required": [
+        "items"
+      ],
+      "additionalProperties": false
+    },
+    "TasksHistoryMessagesListRequest": {
+      "type": "object",
+      "properties": {
+        "thread_id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "before_sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "thread_id"
+      ],
+      "additionalProperties": false
+    },
+    "TasksHistoryMessagesListResponse": {
+      "type": "object",
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "thread_id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "assistant"
+                ]
+              },
+              "content": {
+                "type": "string",
+                "maxLength": 12000
+              },
+              "private": {
+                "type": "boolean"
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "created_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              }
+            },
+            "required": [
+              "id",
+              "thread_id",
+              "role",
+              "content",
+              "private",
+              "sequence",
+              "created_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "next_before_sequence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "messages"
+      ],
+      "additionalProperties": false
+    },
+    "TasksHistoryThreadsListRequest": {
+      "type": "object",
+      "properties": {
+        "before": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "TasksHistoryThreadsListResponse": {
+      "type": "object",
+      "properties": {
+        "threads": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "#/definitions/Device/properties/id"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "private": {
+                "type": "boolean"
+              },
+              "created_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              },
+              "updated_at": {
+                "$ref": "#/definitions/Device/properties/paired_at"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "private",
+              "created_at",
+              "updated_at"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "next_before": {
+          "$ref": "#/definitions/Device/properties/paired_at"
+        }
+      },
+      "required": [
+        "threads"
+      ],
+      "additionalProperties": false
+    },
     "TasksTasksCancelRequest": {
       "type": "object",
       "properties": {
@@ -2115,6 +5473,16 @@
               "maxLength": 500
             },
             "due_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "ends_at": {
               "anyOf": [
                 {
                   "$ref": "#/definitions/Device/properties/paired_at"
@@ -2212,6 +5580,16 @@
               "maxLength": 500
             },
             "due_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "ends_at": {
               "anyOf": [
                 {
                   "$ref": "#/definitions/Device/properties/paired_at"
@@ -2321,6 +5699,16 @@
             }
           ]
         },
+        "ends_at": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "priority": {
           "type": "integer",
           "minimum": 1,
@@ -2352,6 +5740,9 @@
         },
         "confirmed": {
           "type": "boolean"
+        },
+        "allow_clash": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -2375,6 +5766,16 @@
               "maxLength": 500
             },
             "due_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "ends_at": {
               "anyOf": [
                 {
                   "$ref": "#/definitions/Device/properties/paired_at"
@@ -2438,6 +5839,39 @@
       },
       "required": [
         "task"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksDeleteRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        },
+        "confirmed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "confirmed"
+      ],
+      "additionalProperties": false
+    },
+    "TasksTasksDeleteResponse": {
+      "type": "object",
+      "properties": {
+        "deleted": {
+          "type": "boolean",
+          "const": true
+        },
+        "id": {
+          "$ref": "#/definitions/Device/properties/id"
+        }
+      },
+      "required": [
+        "deleted",
+        "id"
       ],
       "additionalProperties": false
     },
@@ -2516,6 +5950,16 @@
                   }
                 ]
               },
+              "ends_at": {
+                "anyOf": [
+                  {
+                    "$ref": "#/definitions/Device/properties/paired_at"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
               "status": {
                 "type": "string",
                 "enum": [
@@ -2584,6 +6028,12 @@
         },
         "confirmed": {
           "type": "boolean"
+        },
+        "allow_clash": {
+          "type": "boolean"
+        },
+        "allow_duplicate": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -2616,6 +6066,16 @@
                   "maxLength": 500
                 },
                 "due_at": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Device/properties/paired_at"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "ends_at": {
                   "anyOf": [
                     {
                       "$ref": "#/definitions/Device/properties/paired_at"
@@ -2708,6 +6168,7 @@
                   "enum": [
                     "pending",
                     "fired",
+                    "done",
                     "cancelled"
                   ]
                 }
@@ -2773,6 +6234,16 @@
                     "maxLength": 500
                   },
                   "due_at": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/definitions/Device/properties/paired_at"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "ends_at": {
                     "anyOf": [
                       {
                         "$ref": "#/definitions/Device/properties/paired_at"
@@ -2924,6 +6395,16 @@
             }
           ]
         },
+        "ends_at": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Device/properties/paired_at"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "priority": {
           "type": "integer",
           "minimum": 1,
@@ -2955,6 +6436,9 @@
         },
         "confirmed": {
           "type": "boolean"
+        },
+        "allow_clash": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -2978,6 +6462,16 @@
               "maxLength": 500
             },
             "due_at": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Device/properties/paired_at"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "ends_at": {
               "anyOf": [
                 {
                   "$ref": "#/definitions/Device/properties/paired_at"

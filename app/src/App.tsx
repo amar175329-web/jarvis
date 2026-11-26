@@ -12,6 +12,9 @@ const Boot = lazy(() => import('./components/Boot').then((m) => ({ default: m.Bo
 const TodayPage = lazy(() => import('../../features/core-workspace/today/ui/TodayPage').then((m) => ({ default: m.TodayPage })));
 const TaskManagerPage = lazy(() => import('../../features/core-workspace/task-manager/ui/TaskManagerPage').then((m) => ({ default: m.TaskManagerPage })));
 const MemoryWorkspacePage = lazy(() => import('../../features/core-workspace/memory/ui/MemoryWorkspacePage').then((m) => ({ default: m.MemoryWorkspacePage })));
+const InsightsPage = lazy(() => import('../../features/core-workspace/insights/ui/InsightsPage').then((m) => ({ default: m.InsightsPage })));
+const BoardsPage = lazy(() => import('../../features/core-workspace/boards/ui/BoardsPage').then((m) => ({ default: m.BoardsPage })));
+const HistoryPage = lazy(() => import('../../features/core-workspace/history/ui/HistoryPage').then((m) => ({ default: m.HistoryPage })));
 
 export function App() {
   const [authState, setAuthState] = useState<AuthGateState>('loading');
@@ -97,6 +100,9 @@ export function App() {
           {page === 'today' && <TodayPage onOpenTasks={() => go('tasks')} />}
           {page === 'tasks' && <TaskManagerPage />}
           {page === 'memory' && <MemoryWorkspacePage />}
+          {page === 'insights' && <InsightsPage />}
+          {page === 'boards' && <BoardsPage />}
+          {page === 'history' && <HistoryPage />}
           <MorePage active={page === 'more'} query={query} />
         </main>
       </div>

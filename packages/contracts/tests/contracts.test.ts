@@ -111,3 +111,35 @@ test('S21 approved voice API contracts exist with metadata references, not binar
   assert.equal(ROUTES['voice.transcribe'].killSensitive, true);
   assert.equal(ROUTES['voice.speak'].killSensitive, true);
 });
+test('S08 B3 task/reminder mutation and clash/duplicate contracts parse strictly', () => {
+  const tid = id();
+  assert.ok(ROUTES['tasks.tasks.create'].input.safeParse({ title: 'Meeting', due_at: now, ends_at: now, confirmed: true, allow_clash: false }).success);
+  assert.ok(ROUTES['tasks.tasks.natural-add'].input.safeParse({ text: 'kal 3 se 4 meeting', confirmed: true, allow_clash: true, allow_duplicate: false }).success);
+  assert.ok(ROUTES['tasks.tasks.delete'].input.safeParse({ id: tid, confirmed: true }).success);
+  assert.ok(ROUTES['reminders.reminders.update'].input.safeParse({ id: tid, text: 'Call Sam', remind_at: now, confirmed: true, allow_duplicate: false }).success);
+  assert.ok(ROUTES['reminders.reminders.complete'].input.safeParse({ id: tid, confirmed: true }).success);
+  assert.ok(ROUTES['reminders.reminders.delete'].input.safeParse({ id: tid, confirmed: true }).success);
+  assert.ok(ROUTES['reminders.reminders.complete'].output.safeParse({ reminder: { id: tid, text: 'Call Sam', remind_at: now, repeat_rule: null, time_zone: 'Asia/Kolkata', state: 'done' } }).success);
+});
+test('S05 history and activity-logs contracts parse strictly', () => {
+  const tid = id();
+  assert.equal(ROUTES['tasks.history.threads.list'].path, '/api/tasks/history.threads.list');
+  assert.equal(ROUTES['tasks.history.messages.list'].path, '/api/tasks/history.messages.list');
+  assert.equal(ROUTES['tasks.activity-logs.list'].path, '/api/tasks/activity-logs.list');
+  assert.ok(ROUTES['tasks.history.threads.list'].input.safeParse({ limit: 30, confirmed: true }).success);
+  assert.ok(ROUTES['tasks.history.messages.list'].input.safeParse({ thread_id: tid, limit: 50 }).success);
+  assert.ok(ROUTES['tasks.activity-logs.list'].input.safeParse({ action: 'tasks.create', actor: 'owner', ok: true }).success);
+  assert.ok(!ROUTES['tasks.activity-logs.list'].input.safeParse({ actor: 'invalid-actor' }).success);
+});
+test('S09 memory, notes-files, and projects contracts cover all 25 actions with strict private placeholders', () => {
+  const s09Keys = Object.keys(ROUTES).filter((k) => k.startsWith('memory.') || k.startsWith('notes-files.') || k.startsWith('projects.'));
+  assert.equal(s09Keys.length, 25);
+  assert.ok(ROUTES['memory.memory.remember'].input.safeParse({ text: 'Chai pasand hai', confirmed: true }).success);
+  assert.ok(ROUTES['notes-files.workspace.notes.create'].input.safeParse({ title: 'Plan', body_md: '# Hello', confirmed: true }).success);
+  assert.ok(ROUTES['notes-files.workspace.files.upload-url'].input.safeParse({ name: 'doc.pdf', mime: 'application/pdf', size_bytes: 1024, confirmed: true }).success);
+  assert.ok(!ROUTES['notes-files.workspace.files.upload-url'].input.safeParse({ name: 'bad.exe', mime: 'application/x-msdownload', size_bytes: 1024, confirmed: true }).success);
+  assert.ok(ROUTES['projects.workspace.projects.link-item'].input.safeParse({ src_type: 'project', src_id: id(), rel: 'part_of', dst_type: 'task', dst_id: id(), confirmed: true }).success);
+  assert.ok(ROUTES['memory.memory.get'].output.safeParse({ id: id(), label: 'Private item', badge: 'private', updated_at: now }).success);
+  assert.ok(!ROUTES['memory.memory.get'].output.safeParse({ id: id(), label: 'Private item', badge: 'private', updated_at: now, title: 'leak' }).success);
+});
+

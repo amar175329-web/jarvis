@@ -7,6 +7,9 @@ const PAGE_META: Record<Page, { title: string; subtitle: string; searchPlacehold
   today: { title: 'Today', subtitle: 'Aaj ke tasks aur reminders, ek jagah.', searchPlaceholder: 'Search anything...' },
   tasks: { title: 'Tasks', subtitle: 'Tasks aur reminders manage karo.', searchPlaceholder: 'Search anything...' },
   memory: { title: 'Memory', subtitle: 'Yaadein, notes, files aur projects — private items alag.', searchPlaceholder: 'Search normal content...' },
+  insights: { title: 'Insights', subtitle: 'Aapke tasks aur progress ka saaf summary.', searchPlaceholder: 'Search anything...' },
+  boards: { title: 'Boards', subtitle: 'Tasks ko columns mein organize karo.', searchPlaceholder: 'Search anything...' },
+  history: { title: 'History', subtitle: 'Purani baatein aur activity timeline.', searchPlaceholder: 'Search history...' },
   more: { title: 'More', subtitle: 'Everything Jarvis can do, organized in one place.', searchPlaceholder: 'Search features...' },
 };
 

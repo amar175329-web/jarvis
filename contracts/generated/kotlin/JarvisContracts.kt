@@ -39,10 +39,42 @@ object JarvisRoutes {
     const val TASKS_TASKS_LINK_PROJECT = "/api/tasks/tasks.link-project"
     const val TASKS_TASKS_COMPLETE = "/api/tasks/tasks.complete"
     const val TASKS_TASKS_CANCEL = "/api/tasks/tasks.cancel"
+    const val TASKS_TASKS_DELETE = "/api/tasks/tasks.delete"
     const val REMINDERS_REMINDERS_LIST = "/api/reminders/reminders.list"
     const val REMINDERS_REMINDERS_CREATE = "/api/reminders/reminders.create"
+    const val REMINDERS_REMINDERS_UPDATE = "/api/reminders/reminders.update"
+    const val REMINDERS_REMINDERS_COMPLETE = "/api/reminders/reminders.complete"
+    const val REMINDERS_REMINDERS_DELETE = "/api/reminders/reminders.delete"
     const val REMINDERS_REMINDERS_CANCEL = "/api/reminders/reminders.cancel"
     const val REMINDERS_REMINDERS_CONSUME_MEMORY = "/api/reminders/reminders.consume-memory"
+    const val TASKS_HISTORY_THREADS_LIST = "/api/tasks/history.threads.list"
+    const val TASKS_HISTORY_MESSAGES_LIST = "/api/tasks/history.messages.list"
+    const val TASKS_ACTIVITY_LOGS_LIST = "/api/tasks/activity-logs.list"
+    const val MEMORY_MEMORY_LIST = "/api/memory/memory.list"
+    const val MEMORY_MEMORY_GET = "/api/memory/memory.get"
+    const val MEMORY_MEMORY_REMEMBER = "/api/memory/memory.remember"
+    const val MEMORY_MEMORY_UPDATE = "/api/memory/memory.update"
+    const val MEMORY_MEMORY_FORGET = "/api/memory/memory.forget"
+    const val MEMORY_MEMORY_FORGET_ALL = "/api/memory/memory.forget-all"
+    const val MEMORY_MEMORY_EXPORT = "/api/memory/memory.export"
+    const val MEMORY_MEMORY_STATS = "/api/memory/memory.stats"
+    const val NOTES_FILES_WORKSPACE_NOTES_LIST = "/api/notes-files/workspace.notes.list"
+    const val NOTES_FILES_WORKSPACE_NOTES_GET = "/api/notes-files/workspace.notes.get"
+    const val NOTES_FILES_WORKSPACE_NOTES_CREATE = "/api/notes-files/workspace.notes.create"
+    const val NOTES_FILES_WORKSPACE_NOTES_UPDATE = "/api/notes-files/workspace.notes.update"
+    const val NOTES_FILES_WORKSPACE_NOTES_DELETE = "/api/notes-files/workspace.notes.delete"
+    const val NOTES_FILES_WORKSPACE_FILES_LIST = "/api/notes-files/workspace.files.list"
+    const val NOTES_FILES_WORKSPACE_FILES_UPLOAD_URL = "/api/notes-files/workspace.files.upload-url"
+    const val NOTES_FILES_WORKSPACE_FILES_COMPLETE_UPLOAD = "/api/notes-files/workspace.files.complete-upload"
+    const val NOTES_FILES_WORKSPACE_FILES_DELETE = "/api/notes-files/workspace.files.delete"
+    const val NOTES_FILES_WORKSPACE_SEARCH = "/api/notes-files/workspace.search"
+    const val PROJECTS_WORKSPACE_PROJECTS_LIST = "/api/projects/workspace.projects.list"
+    const val PROJECTS_WORKSPACE_PROJECTS_GET = "/api/projects/workspace.projects.get"
+    const val PROJECTS_WORKSPACE_PROJECTS_CREATE = "/api/projects/workspace.projects.create"
+    const val PROJECTS_WORKSPACE_PROJECTS_UPDATE = "/api/projects/workspace.projects.update"
+    const val PROJECTS_WORKSPACE_PROJECTS_DELETE = "/api/projects/workspace.projects.delete"
+    const val PROJECTS_WORKSPACE_PROJECTS_LINK_ITEM = "/api/projects/workspace.projects.link-item"
+    const val PROJECTS_WORKSPACE_PROJECTS_UNLINK_ITEM = "/api/projects/workspace.projects.unlink-item"
 }
 
 @Serializable
@@ -222,6 +254,208 @@ data class KillState(
 )
 
 @Serializable
+data class MemoryMemoryExportRequest(
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+typealias MemoryMemoryExportResponse = String
+
+@Serializable
+data class MemoryMemoryForgetAllRequest(
+    @SerialName("expectedCount") val expectedCount: Int,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class MemoryMemoryForgetAllResponse(
+    @SerialName("deleted") val deleted: Int,
+    @SerialName("derived_deleted") val derivedDeleted: Int,
+    @SerialName("links_deleted") val linksDeleted: Int
+)
+
+@Serializable
+data class MemoryMemoryForgetRequest(
+    @SerialName("id") val id: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class MemoryMemoryForgetResponse(
+    @SerialName("deleted") val deleted: Boolean,
+    @SerialName("derived_deleted") val derivedDeleted: Int,
+    @SerialName("links_deleted") val linksDeleted: Int
+)
+
+@Serializable
+class MemoryMemoryGetRequest
+
+typealias MemoryMemoryGetResponse = JsonElement
+
+@Serializable
+class MemoryMemoryListRequest
+
+@Serializable
+data class MemoryMemoryListResponse(
+    @SerialName("normal") val normal: List<MemoryMemoryListResponseNormalItem>,
+    @SerialName("private") val private: List<MemoryMemoryListResponsePrivateItem>,
+    @SerialName("total") val total: Int?,
+    @SerialName("counts") val counts: MemoryMemoryListResponseCounts
+)
+
+@Serializable
+data class MemoryMemoryRememberRequest(
+    @SerialName("text") val text: String,
+    @SerialName("title") val title: String? = null,
+    @SerialName("kind") val kind: MemoryMemoryRememberRequestKind? = null,
+    @SerialName("tags") val tags: List<String>? = null,
+    @SerialName("pinned") val pinned: Boolean? = null,
+    @SerialName("private") val private: Boolean? = null,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class MemoryMemoryRememberResponse(
+    @SerialName("saved") val saved: Boolean,
+    @SerialName("deduped") val deduped: Boolean,
+    @SerialName("item") val item: JsonElement
+)
+
+@Serializable
+class MemoryMemoryStatsRequest
+
+typealias MemoryMemoryStatsResponse = Map<String, JsonElement>
+
+@Serializable
+data class MemoryMemoryUpdateRequest(
+    @SerialName("id") val id: String,
+    @SerialName("revision") val revision: Int,
+    @SerialName("title") val title: String? = null,
+    @SerialName("body") val body: String? = null,
+    @SerialName("tags") val tags: List<String>? = null,
+    @SerialName("private") val private: Boolean? = null,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+typealias MemoryMemoryUpdateResponse = JsonElement
+
+@Serializable
+data class NotesFilesWorkspaceFilesCompleteUploadRequest(
+    @SerialName("id") val id: String,
+    @SerialName("sha256") val sha256: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class NotesFilesWorkspaceFilesCompleteUploadResponse(
+    @SerialName("id") val id: String,
+    @SerialName("status") val status: String,
+    @SerialName("label") val label: String,
+    @SerialName("badge") val badge: String
+)
+
+@Serializable
+data class NotesFilesWorkspaceFilesDeleteRequest(
+    @SerialName("id") val id: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class NotesFilesWorkspaceFilesDeleteResponse(
+    @SerialName("deleted") val deleted: Boolean
+)
+
+@Serializable
+class NotesFilesWorkspaceFilesListRequest
+
+@Serializable
+data class NotesFilesWorkspaceFilesListResponse(
+    @SerialName("normal") val normal: List<JsonElement>,
+    @SerialName("private") val private: List<NotesFilesWorkspaceFilesListResponsePrivateItem>,
+    @SerialName("counts") val counts: NotesFilesWorkspaceFilesListResponseCounts,
+    @SerialName("upload_note") val uploadNote: String
+)
+
+@Serializable
+data class NotesFilesWorkspaceFilesUploadUrlRequest(
+    @SerialName("name") val name: String,
+    @SerialName("mime") val mime: NotesFilesWorkspaceFilesUploadUrlRequestMime,
+    @SerialName("size_bytes") val sizeBytes: Int,
+    @SerialName("project_id") val projectId: String? = null,
+    @SerialName("tags") val tags: List<String>? = null,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class NotesFilesWorkspaceFilesUploadUrlResponse(
+    @SerialName("id") val id: String,
+    @SerialName("upload") val upload: NotesFilesWorkspaceFilesUploadUrlResponseUpload,
+    @SerialName("private") val private: Boolean
+)
+
+@Serializable
+data class NotesFilesWorkspaceNotesCreateRequest(
+    @SerialName("title") val title: String,
+    @SerialName("body_md") val bodyMd: String? = null,
+    @SerialName("tags") val tags: List<String>? = null,
+    @SerialName("project_id") val projectId: String? = null,
+    @SerialName("pinned") val pinned: Boolean? = null,
+    @SerialName("private") val private: Boolean? = null,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+typealias NotesFilesWorkspaceNotesCreateResponse = JsonElement
+
+@Serializable
+data class NotesFilesWorkspaceNotesDeleteRequest(
+    @SerialName("id") val id: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class NotesFilesWorkspaceNotesDeleteResponse(
+    @SerialName("deleted") val deleted: Boolean
+)
+
+@Serializable
+class NotesFilesWorkspaceNotesGetRequest
+
+typealias NotesFilesWorkspaceNotesGetResponse = JsonElement
+
+@Serializable
+class NotesFilesWorkspaceNotesListRequest
+
+@Serializable
+data class NotesFilesWorkspaceNotesListResponse(
+    @SerialName("normal") val normal: List<NotesFilesWorkspaceNotesListResponseNormalItem>,
+    @SerialName("private") val private: List<NotesFilesWorkspaceNotesListResponsePrivateItem>,
+    @SerialName("counts") val counts: NotesFilesWorkspaceNotesListResponseCounts
+)
+
+@Serializable
+data class NotesFilesWorkspaceNotesUpdateRequest(
+    @SerialName("id") val id: String,
+    @SerialName("revision") val revision: Int,
+    @SerialName("title") val title: String? = null,
+    @SerialName("body_md") val bodyMd: String? = null,
+    @SerialName("tags") val tags: List<String>? = null,
+    @SerialName("pinned") val pinned: Boolean? = null,
+    @SerialName("private") val private: Boolean? = null,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+typealias NotesFilesWorkspaceNotesUpdateResponse = JsonElement
+
+@Serializable
+class NotesFilesWorkspaceSearchRequest
+
+@Serializable
+data class NotesFilesWorkspaceSearchResponse(
+    @SerialName("normal") val normal: List<NotesFilesWorkspaceSearchResponseNormalItem>,
+    @SerialName("private") val private: List<JsonElement>,
+    @SerialName("counts") val counts: NotesFilesWorkspaceSearchResponseCounts
+)
+
+@Serializable
 data class PhoneCommand(
     @SerialName("id") val id: String,
     @SerialName("device_id") val deviceId: String,
@@ -313,6 +547,89 @@ enum class PhoneCommandState {
 }
 
 @Serializable
+data class ProjectsWorkspaceProjectsCreateRequest(
+    @SerialName("name") val name: String,
+    @SerialName("goal") val goal: String? = null,
+    @SerialName("next_step") val nextStep: String? = null,
+    @SerialName("status") val status: ProjectsWorkspaceProjectsCreateRequestStatus? = null,
+    @SerialName("due_at") val dueAt: String? = null,
+    @SerialName("tags") val tags: List<String>? = null,
+    @SerialName("private") val private: Boolean? = null,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+typealias ProjectsWorkspaceProjectsCreateResponse = JsonElement
+
+@Serializable
+data class ProjectsWorkspaceProjectsDeleteRequest(
+    @SerialName("id") val id: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class ProjectsWorkspaceProjectsDeleteResponse(
+    @SerialName("deleted") val deleted: Boolean
+)
+
+@Serializable
+class ProjectsWorkspaceProjectsGetRequest
+
+typealias ProjectsWorkspaceProjectsGetResponse = JsonElement
+
+@Serializable
+data class ProjectsWorkspaceProjectsLinkItemRequest(
+    @SerialName("src_type") val srcType: ProjectsWorkspaceProjectsLinkItemRequestSrcType,
+    @SerialName("src_id") val srcId: String,
+    @SerialName("rel") val rel: String,
+    @SerialName("dst_type") val dstType: ProjectsWorkspaceProjectsLinkItemRequestDstType,
+    @SerialName("dst_id") val dstId: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class ProjectsWorkspaceProjectsLinkItemResponse(
+    @SerialName("linked") val linked: Boolean,
+    @SerialName("id") val id: String? = null
+)
+
+@Serializable
+class ProjectsWorkspaceProjectsListRequest
+
+@Serializable
+data class ProjectsWorkspaceProjectsListResponse(
+    @SerialName("normal") val normal: List<ProjectsWorkspaceProjectsListResponseNormalItem>,
+    @SerialName("private") val private: List<ProjectsWorkspaceProjectsListResponsePrivateItem>,
+    @SerialName("counts") val counts: ProjectsWorkspaceProjectsListResponseCounts
+)
+
+@Serializable
+data class ProjectsWorkspaceProjectsUnlinkItemRequest(
+    @SerialName("id") val id: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class ProjectsWorkspaceProjectsUnlinkItemResponse(
+    @SerialName("unlinked") val unlinked: Boolean
+)
+
+@Serializable
+data class ProjectsWorkspaceProjectsUpdateRequest(
+    @SerialName("id") val id: String,
+    @SerialName("revision") val revision: Int,
+    @SerialName("name") val name: String? = null,
+    @SerialName("goal") val goal: String? = null,
+    @SerialName("next_step") val nextStep: String? = null,
+    @SerialName("status") val status: ProjectsWorkspaceProjectsUpdateRequestStatus? = null,
+    @SerialName("due_at") val dueAt: String? = null,
+    @SerialName("tags") val tags: List<String>? = null,
+    @SerialName("private") val private: Boolean? = null,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+typealias ProjectsWorkspaceProjectsUpdateResponse = JsonElement
+
+@Serializable
 data class RemindersRemindersCancelRequest(
     @SerialName("id") val id: String,
     @SerialName("confirmed") val confirmed: Boolean
@@ -320,7 +637,19 @@ data class RemindersRemindersCancelRequest(
 
 @Serializable
 data class RemindersRemindersCancelResponse(
+    @SerialName("reminder") val reminder: RemindersRemindersCancelResponseReminder? = null,
     @SerialName("cancelled") val cancelled: Boolean
+)
+
+@Serializable
+data class RemindersRemindersCompleteRequest(
+    @SerialName("id") val id: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class RemindersRemindersCompleteResponse(
+    @SerialName("reminder") val reminder: RemindersRemindersCompleteResponseReminder
 )
 
 @Serializable
@@ -341,7 +670,8 @@ data class RemindersRemindersCreateRequest(
     @SerialName("repeat_rule") val repeatRule: RemindersRemindersCreateRequestRepeatRule? = null,
     @SerialName("time_zone") val timeZone: String? = null,
     @SerialName("task_id") val taskId: String? = null,
-    @SerialName("confirmed") val confirmed: Boolean
+    @SerialName("confirmed") val confirmed: Boolean,
+    @SerialName("allow_duplicate") val allowDuplicate: Boolean? = null
 )
 
 @Serializable
@@ -350,11 +680,39 @@ data class RemindersRemindersCreateResponse(
 )
 
 @Serializable
+data class RemindersRemindersDeleteRequest(
+    @SerialName("id") val id: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class RemindersRemindersDeleteResponse(
+    @SerialName("deleted") val deleted: Boolean,
+    @SerialName("id") val id: String
+)
+
+@Serializable
 class RemindersRemindersListRequest
 
 @Serializable
 data class RemindersRemindersListResponse(
     @SerialName("reminders") val reminders: List<RemindersRemindersListResponseRemindersItem>
+)
+
+@Serializable
+data class RemindersRemindersUpdateRequest(
+    @SerialName("id") val id: String,
+    @SerialName("text") val text: String,
+    @SerialName("remind_at") val remindAt: String,
+    @SerialName("repeat_rule") val repeatRule: RemindersRemindersUpdateRequestRepeatRule? = null,
+    @SerialName("time_zone") val timeZone: String? = null,
+    @SerialName("confirmed") val confirmed: Boolean,
+    @SerialName("allow_duplicate") val allowDuplicate: Boolean? = null
+)
+
+@Serializable
+data class RemindersRemindersUpdateResponse(
+    @SerialName("reminder") val reminder: RemindersRemindersUpdateResponseReminder
 )
 
 @Serializable
@@ -411,6 +769,49 @@ data class SystemKillSetRequest(
 typealias SystemKillSetResponse = KillState
 
 @Serializable
+data class TasksActivityLogsListRequest(
+    @SerialName("before") val before: String? = null,
+    @SerialName("limit") val limit: Int? = null,
+    @SerialName("confirmed") val confirmed: Boolean? = null,
+    @SerialName("action") val action: String? = null,
+    @SerialName("actor") val actor: String? = null,
+    @SerialName("ok") val ok: Boolean? = null
+)
+
+@Serializable
+data class TasksActivityLogsListResponse(
+    @SerialName("items") val items: List<TasksActivityLogsListResponseItemsItem>,
+    @SerialName("next_before") val nextBefore: String? = null
+)
+
+@Serializable
+data class TasksHistoryMessagesListRequest(
+    @SerialName("thread_id") val threadId: String,
+    @SerialName("before_sequence") val beforeSequence: Int? = null,
+    @SerialName("limit") val limit: Int? = null,
+    @SerialName("confirmed") val confirmed: Boolean? = null
+)
+
+@Serializable
+data class TasksHistoryMessagesListResponse(
+    @SerialName("messages") val messages: List<TasksHistoryMessagesListResponseMessagesItem>,
+    @SerialName("next_before_sequence") val nextBeforeSequence: Int? = null
+)
+
+@Serializable
+data class TasksHistoryThreadsListRequest(
+    @SerialName("before") val before: String? = null,
+    @SerialName("limit") val limit: Int? = null,
+    @SerialName("confirmed") val confirmed: Boolean? = null
+)
+
+@Serializable
+data class TasksHistoryThreadsListResponse(
+    @SerialName("threads") val threads: List<TasksHistoryThreadsListResponseThreadsItem>,
+    @SerialName("next_before") val nextBefore: String? = null
+)
+
+@Serializable
 data class TasksTasksCancelRequest(
     @SerialName("id") val id: String,
     @SerialName("confirmed") val confirmed: Boolean
@@ -439,16 +840,30 @@ data class TasksTasksCreateRequest(
     @SerialName("title") val title: String,
     @SerialName("notes") val notes: String? = null,
     @SerialName("due_at") val dueAt: String? = null,
+    @SerialName("ends_at") val endsAt: String? = null,
     @SerialName("priority") val priority: Int? = null,
     @SerialName("focus_today") val focusToday: Boolean? = null,
     @SerialName("repeat_rule") val repeatRule: TasksTasksCreateRequestRepeatRule? = null,
     @SerialName("time_zone") val timeZone: String? = null,
-    @SerialName("confirmed") val confirmed: Boolean
+    @SerialName("confirmed") val confirmed: Boolean,
+    @SerialName("allow_clash") val allowClash: Boolean? = null
 )
 
 @Serializable
 data class TasksTasksCreateResponse(
     @SerialName("task") val task: TasksTasksCreateResponseTask
+)
+
+@Serializable
+data class TasksTasksDeleteRequest(
+    @SerialName("id") val id: String,
+    @SerialName("confirmed") val confirmed: Boolean
+)
+
+@Serializable
+data class TasksTasksDeleteResponse(
+    @SerialName("deleted") val deleted: Boolean,
+    @SerialName("id") val id: String
 )
 
 @Serializable
@@ -475,7 +890,9 @@ data class TasksTasksListResponse(
 @Serializable
 data class TasksTasksNaturalAddRequest(
     @SerialName("text") val text: String,
-    @SerialName("confirmed") val confirmed: Boolean
+    @SerialName("confirmed") val confirmed: Boolean,
+    @SerialName("allow_clash") val allowClash: Boolean? = null,
+    @SerialName("allow_duplicate") val allowDuplicate: Boolean? = null
 )
 
 @Serializable
@@ -501,11 +918,13 @@ data class TasksTasksUpdateRequest(
     @SerialName("title") val title: String? = null,
     @SerialName("notes") val notes: String? = null,
     @SerialName("due_at") val dueAt: String? = null,
+    @SerialName("ends_at") val endsAt: String? = null,
     @SerialName("priority") val priority: Int? = null,
     @SerialName("repeat_rule") val repeatRule: TasksTasksUpdateRequestRepeatRule? = null,
     @SerialName("focus_today") val focusToday: Boolean? = null,
     @SerialName("time_zone") val timeZone: String? = null,
-    @SerialName("confirmed") val confirmed: Boolean
+    @SerialName("confirmed") val confirmed: Boolean,
+    @SerialName("allow_clash") val allowClash: Boolean? = null
 )
 
 @Serializable
@@ -657,11 +1076,262 @@ data class ChatThreadsListResponseThreadsItem(
 )
 
 @Serializable
+enum class MemoryMemoryListResponseNormalItemKind {
+    @SerialName("fact") FACT,
+    @SerialName("profile") PROFILE,
+    @SerialName("preference") PREFERENCE,
+    @SerialName("routine") ROUTINE,
+    @SerialName("project") PROJECT,
+    @SerialName("episode") EPISODE,
+    @SerialName("knowledge") KNOWLEDGE,
+    @SerialName("person") PERSON
+}
+
+@Serializable
+data class MemoryMemoryListResponseNormalItem(
+    @SerialName("id") val id: String,
+    @SerialName("kind") val kind: MemoryMemoryListResponseNormalItemKind,
+    @SerialName("title") val title: String,
+    @SerialName("body") val body: String,
+    @SerialName("tags") val tags: List<String>,
+    @SerialName("pinned") val pinned: Boolean,
+    @SerialName("revision") val revision: Int,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String
+)
+
+@Serializable
+data class MemoryMemoryListResponsePrivateItem(
+    @SerialName("id") val id: String,
+    @SerialName("label") val label: String,
+    @SerialName("badge") val badge: String,
+    @SerialName("updated_at") val updatedAt: String
+)
+
+@Serializable
+data class MemoryMemoryListResponseCounts(
+    @SerialName("normal") val normal: Int,
+    @SerialName("private") val private: Int
+)
+
+@Serializable
+enum class MemoryMemoryRememberRequestKind {
+    @SerialName("fact") FACT,
+    @SerialName("profile") PROFILE,
+    @SerialName("preference") PREFERENCE,
+    @SerialName("routine") ROUTINE,
+    @SerialName("project") PROJECT,
+    @SerialName("episode") EPISODE,
+    @SerialName("knowledge") KNOWLEDGE,
+    @SerialName("person") PERSON
+}
+
+@Serializable
+data class NotesFilesWorkspaceFilesListResponsePrivateItem(
+    @SerialName("id") val id: String,
+    @SerialName("label") val label: String,
+    @SerialName("badge") val badge: String,
+    @SerialName("updated_at") val updatedAt: String
+)
+
+@Serializable
+data class NotesFilesWorkspaceFilesListResponseCounts(
+    @SerialName("normal") val normal: Int,
+    @SerialName("private") val private: Int
+)
+
+@Serializable
+enum class NotesFilesWorkspaceFilesUploadUrlRequestMime {
+    @SerialName("text/plain") TEXT_PLAIN,
+    @SerialName("text/markdown") TEXT_MARKDOWN,
+    @SerialName("application/pdf") APPLICATION_PDF,
+    @SerialName("image/png") IMAGE_PNG,
+    @SerialName("image/jpeg") IMAGE_JPEG,
+    @SerialName("text/csv") TEXT_CSV,
+    @SerialName("application/vnd.openxmlformats-officedocument.wordprocessingml.document") APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_WORDPROCESSINGML_DOCUMENT
+}
+
+@Serializable
+data class NotesFilesWorkspaceFilesUploadUrlResponseUpload(
+    @SerialName("method") val method: String,
+    @SerialName("url") val url: String,
+    @SerialName("headers") val headers: Map<String, String>
+)
+
+@Serializable
+data class NotesFilesWorkspaceNotesListResponseNormalItem(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String,
+    @SerialName("body_md") val bodyMd: String,
+    @SerialName("tags") val tags: List<String>,
+    @SerialName("project_id") val projectId: String?,
+    @SerialName("pinned") val pinned: Boolean,
+    @SerialName("revision") val revision: Int,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String
+)
+
+@Serializable
+data class NotesFilesWorkspaceNotesListResponsePrivateItem(
+    @SerialName("id") val id: String,
+    @SerialName("label") val label: String,
+    @SerialName("badge") val badge: String,
+    @SerialName("updated_at") val updatedAt: String
+)
+
+@Serializable
+data class NotesFilesWorkspaceNotesListResponseCounts(
+    @SerialName("normal") val normal: Int,
+    @SerialName("private") val private: Int
+)
+
+@Serializable
+data class NotesFilesWorkspaceSearchResponseNormalItem(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String,
+    @SerialName("body_md") val bodyMd: String,
+    @SerialName("tags") val tags: List<String>,
+    @SerialName("project_id") val projectId: String?,
+    @SerialName("pinned") val pinned: Boolean,
+    @SerialName("revision") val revision: Int,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String
+)
+
+@Serializable
+data class NotesFilesWorkspaceSearchResponseCounts(
+    @SerialName("normal") val normal: Int,
+    @SerialName("private") val private: Int
+)
+
+@Serializable
 enum class PhoneCommandsAckRequestState {
     @SerialName("running") RUNNING,
     @SerialName("done") DONE,
     @SerialName("failed") FAILED
 }
+
+@Serializable
+enum class ProjectsWorkspaceProjectsCreateRequestStatus {
+    @SerialName("active") ACTIVE,
+    @SerialName("paused") PAUSED,
+    @SerialName("done") DONE,
+    @SerialName("archived") ARCHIVED
+}
+
+@Serializable
+enum class ProjectsWorkspaceProjectsLinkItemRequestSrcType {
+    @SerialName("memory") MEMORY,
+    @SerialName("note") NOTE,
+    @SerialName("file") FILE,
+    @SerialName("project") PROJECT,
+    @SerialName("task") TASK
+}
+
+@Serializable
+enum class ProjectsWorkspaceProjectsLinkItemRequestDstType {
+    @SerialName("memory") MEMORY,
+    @SerialName("note") NOTE,
+    @SerialName("file") FILE,
+    @SerialName("project") PROJECT,
+    @SerialName("task") TASK
+}
+
+@Serializable
+enum class ProjectsWorkspaceProjectsListResponseNormalItemStatus {
+    @SerialName("active") ACTIVE,
+    @SerialName("paused") PAUSED,
+    @SerialName("done") DONE,
+    @SerialName("archived") ARCHIVED
+}
+
+@Serializable
+data class ProjectsWorkspaceProjectsListResponseNormalItem(
+    @SerialName("id") val id: String,
+    @SerialName("name") val name: String,
+    @SerialName("goal") val goal: String?,
+    @SerialName("next_step") val nextStep: String?,
+    @SerialName("status") val status: ProjectsWorkspaceProjectsListResponseNormalItemStatus,
+    @SerialName("due_at") val dueAt: String?,
+    @SerialName("tags") val tags: List<String>,
+    @SerialName("revision") val revision: Int,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String
+)
+
+@Serializable
+data class ProjectsWorkspaceProjectsListResponsePrivateItem(
+    @SerialName("id") val id: String,
+    @SerialName("label") val label: String,
+    @SerialName("badge") val badge: String,
+    @SerialName("updated_at") val updatedAt: String
+)
+
+@Serializable
+data class ProjectsWorkspaceProjectsListResponseCounts(
+    @SerialName("normal") val normal: Int,
+    @SerialName("private") val private: Int
+)
+
+@Serializable
+enum class ProjectsWorkspaceProjectsUpdateRequestStatus {
+    @SerialName("active") ACTIVE,
+    @SerialName("paused") PAUSED,
+    @SerialName("done") DONE,
+    @SerialName("archived") ARCHIVED
+}
+
+@Serializable
+enum class RemindersRemindersCancelResponseReminderRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+enum class RemindersRemindersCancelResponseReminderState {
+    @SerialName("pending") PENDING,
+    @SerialName("fired") FIRED,
+    @SerialName("done") DONE,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+data class RemindersRemindersCancelResponseReminder(
+    @SerialName("id") val id: String,
+    @SerialName("text") val text: String,
+    @SerialName("remind_at") val remindAt: String,
+    @SerialName("repeat_rule") val repeatRule: RemindersRemindersCancelResponseReminderRepeatRule?,
+    @SerialName("time_zone") val timeZone: String,
+    @SerialName("state") val state: RemindersRemindersCancelResponseReminderState
+)
+
+@Serializable
+enum class RemindersRemindersCompleteResponseReminderRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+enum class RemindersRemindersCompleteResponseReminderState {
+    @SerialName("pending") PENDING,
+    @SerialName("fired") FIRED,
+    @SerialName("done") DONE,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+data class RemindersRemindersCompleteResponseReminder(
+    @SerialName("id") val id: String,
+    @SerialName("text") val text: String,
+    @SerialName("remind_at") val remindAt: String,
+    @SerialName("repeat_rule") val repeatRule: RemindersRemindersCompleteResponseReminderRepeatRule?,
+    @SerialName("time_zone") val timeZone: String,
+    @SerialName("state") val state: RemindersRemindersCompleteResponseReminderState
+)
 
 @Serializable
 data class RemindersRemindersConsumeMemoryRequestRequest(
@@ -696,6 +1366,7 @@ enum class RemindersRemindersCreateResponseReminderRepeatRule {
 enum class RemindersRemindersCreateResponseReminderState {
     @SerialName("pending") PENDING,
     @SerialName("fired") FIRED,
+    @SerialName("done") DONE,
     @SerialName("cancelled") CANCELLED
 }
 
@@ -721,6 +1392,7 @@ enum class RemindersRemindersListResponseRemindersItemRepeatRule {
 enum class RemindersRemindersListResponseRemindersItemState {
     @SerialName("pending") PENDING,
     @SerialName("fired") FIRED,
+    @SerialName("done") DONE,
     @SerialName("cancelled") CANCELLED
 }
 
@@ -732,6 +1404,78 @@ data class RemindersRemindersListResponseRemindersItem(
     @SerialName("repeat_rule") val repeatRule: RemindersRemindersListResponseRemindersItemRepeatRule?,
     @SerialName("time_zone") val timeZone: String,
     @SerialName("state") val state: RemindersRemindersListResponseRemindersItemState
+)
+
+@Serializable
+enum class RemindersRemindersUpdateRequestRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+enum class RemindersRemindersUpdateResponseReminderRepeatRule {
+    @SerialName("FREQ=DAILY") FREQ_DAILY,
+    @SerialName("FREQ=WEEKLY") FREQ_WEEKLY,
+    @SerialName("FREQ=MONTHLY") FREQ_MONTHLY,
+    @SerialName("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR") FREQ_WEEKLY_BYDAY_MO_TU_WE_TH_FR
+}
+
+@Serializable
+enum class RemindersRemindersUpdateResponseReminderState {
+    @SerialName("pending") PENDING,
+    @SerialName("fired") FIRED,
+    @SerialName("done") DONE,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+data class RemindersRemindersUpdateResponseReminder(
+    @SerialName("id") val id: String,
+    @SerialName("text") val text: String,
+    @SerialName("remind_at") val remindAt: String,
+    @SerialName("repeat_rule") val repeatRule: RemindersRemindersUpdateResponseReminderRepeatRule?,
+    @SerialName("time_zone") val timeZone: String,
+    @SerialName("state") val state: RemindersRemindersUpdateResponseReminderState
+)
+
+@Serializable
+data class TasksActivityLogsListResponseItemsItem(
+    @SerialName("id") val id: String,
+    @SerialName("ts") val ts: String,
+    @SerialName("actor") val actor: String,
+    @SerialName("action") val action: String,
+    @SerialName("target") val target: String?,
+    @SerialName("detail") val detail: Map<String, JsonElement>,
+    @SerialName("ok") val ok: Boolean,
+    @SerialName("decision_id") val decisionId: String?
+)
+
+@Serializable
+enum class TasksHistoryMessagesListResponseMessagesItemRole {
+    @SerialName("user") USER,
+    @SerialName("assistant") ASSISTANT
+}
+
+@Serializable
+data class TasksHistoryMessagesListResponseMessagesItem(
+    @SerialName("id") val id: String,
+    @SerialName("thread_id") val threadId: String,
+    @SerialName("role") val role: TasksHistoryMessagesListResponseMessagesItemRole,
+    @SerialName("content") val content: String,
+    @SerialName("private") val private: Boolean,
+    @SerialName("sequence") val sequence: Int,
+    @SerialName("created_at") val createdAt: String
+)
+
+@Serializable
+data class TasksHistoryThreadsListResponseThreadsItem(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String,
+    @SerialName("private") val private: Boolean,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String
 )
 
 @Serializable
@@ -755,6 +1499,7 @@ data class TasksTasksCancelResponseTask(
     @SerialName("id") val id: String,
     @SerialName("title") val title: String,
     @SerialName("due_at") val dueAt: String?,
+    @SerialName("ends_at") val endsAt: String? = null,
     @SerialName("status") val status: TasksTasksCancelResponseTaskStatus,
     @SerialName("priority") val priority: Int,
     @SerialName("focus_today") val focusToday: Boolean,
@@ -783,6 +1528,7 @@ data class TasksTasksCompleteResponseTask(
     @SerialName("id") val id: String,
     @SerialName("title") val title: String,
     @SerialName("due_at") val dueAt: String?,
+    @SerialName("ends_at") val endsAt: String? = null,
     @SerialName("status") val status: TasksTasksCompleteResponseTaskStatus,
     @SerialName("priority") val priority: Int,
     @SerialName("focus_today") val focusToday: Boolean,
@@ -811,6 +1557,7 @@ data class TasksTasksCompleteResponseNextTask(
     @SerialName("id") val id: String,
     @SerialName("title") val title: String,
     @SerialName("due_at") val dueAt: String?,
+    @SerialName("ends_at") val endsAt: String? = null,
     @SerialName("status") val status: TasksTasksCompleteResponseNextTaskStatus,
     @SerialName("priority") val priority: Int,
     @SerialName("focus_today") val focusToday: Boolean,
@@ -847,6 +1594,7 @@ data class TasksTasksCreateResponseTask(
     @SerialName("id") val id: String,
     @SerialName("title") val title: String,
     @SerialName("due_at") val dueAt: String?,
+    @SerialName("ends_at") val endsAt: String? = null,
     @SerialName("status") val status: TasksTasksCreateResponseTaskStatus,
     @SerialName("priority") val priority: Int,
     @SerialName("focus_today") val focusToday: Boolean,
@@ -875,6 +1623,7 @@ data class TasksTasksListResponseTasksItem(
     @SerialName("id") val id: String,
     @SerialName("title") val title: String,
     @SerialName("due_at") val dueAt: String?,
+    @SerialName("ends_at") val endsAt: String? = null,
     @SerialName("status") val status: TasksTasksListResponseTasksItemStatus,
     @SerialName("priority") val priority: Int,
     @SerialName("focus_today") val focusToday: Boolean,
@@ -909,6 +1658,7 @@ data class TasksTasksTodayResponseFocusTopTasksItem(
     @SerialName("id") val id: String,
     @SerialName("title") val title: String,
     @SerialName("due_at") val dueAt: String?,
+    @SerialName("ends_at") val endsAt: String? = null,
     @SerialName("status") val status: TasksTasksTodayResponseFocusTopTasksItemStatus,
     @SerialName("priority") val priority: Int,
     @SerialName("focus_today") val focusToday: Boolean,
@@ -968,6 +1718,7 @@ data class TasksTasksUpdateResponseTask(
     @SerialName("id") val id: String,
     @SerialName("title") val title: String,
     @SerialName("due_at") val dueAt: String?,
+    @SerialName("ends_at") val endsAt: String? = null,
     @SerialName("status") val status: TasksTasksUpdateResponseTaskStatus,
     @SerialName("priority") val priority: Int,
     @SerialName("focus_today") val focusToday: Boolean,

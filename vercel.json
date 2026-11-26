@@ -8,6 +8,9 @@
     { "source": "/api/chat/:action", "destination": "/api/chat" },
     { "source": "/api/tasks/:action", "destination": "/api/tasks?action=:action" },
     { "source": "/api/reminders/:action", "destination": "/api/tasks?action=:action" },
+    { "source": "/api/memory/:action", "destination": "/api/tasks?action=:action" },
+    { "source": "/api/notes-files/:action", "destination": "/api/tasks?action=:action" },
+    { "source": "/api/projects/:action", "destination": "/api/tasks?action=:action" },
     { "source": "/((?!api/|assets/).*)", "destination": "/index.html" }
   ],
   "functions": {
