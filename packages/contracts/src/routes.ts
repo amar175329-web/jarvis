@@ -191,6 +191,50 @@ const AllowedFileMime = z.enum([
 ]);
 const LinkEntityType = z.enum(['memory', 'note', 'file', 'project', 'task']);
 
+// S10 Insights + Boards schemas (CR-S10-LEAD-API-CONTRACTS).
+const InsightsOverview = z.object({
+  period_days: z.union([z.literal(7), z.literal(30)]),
+  tasks: z.object({
+    total: z.number().int().nonnegative(),
+    todo: z.number().int().nonnegative(),
+    doing: z.number().int().nonnegative(),
+    done: z.number().int().nonnegative(),
+    cancelled: z.number().int().nonnegative(),
+    overdue: z.number().int().nonnegative(),
+    completion_rate: z.number().min(0).max(100),
+  }).strict(),
+  activity: z.object({
+    total: z.number().int().nonnegative(),
+    successful: z.number().int().nonnegative(),
+    daily: z.array(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), count: z.number().int().nonnegative() }).strict()),
+  }).strict(),
+  truncated: z.boolean(),
+  generated_at: UtcTime,
+}).strict();
+const BoardTaskProjection = z.object({
+  id: Uuid,
+  title: z.string().min(1).max(500),
+  private: z.boolean(),
+  status: z.enum(['todo', 'doing', 'done', 'cancelled']).optional(),
+  priority: TaskPriority.optional(),
+  due_at: UtcTime.nullable().optional(),
+  link_id: Uuid.optional(),
+  position: z.number().int().nonnegative().optional(),
+}).strict();
+const BoardColumn = z.object({
+  id: Uuid,
+  name: z.string().min(1).max(40),
+  position: z.number().int().nonnegative(),
+  cards: z.array(BoardTaskProjection),
+}).strict();
+const Board = z.object({
+  id: Uuid,
+  name: z.string().min(1).max(60),
+  created_at: UtcTime,
+  updated_at: UtcTime,
+  columns: z.array(BoardColumn),
+}).strict();
+
 export const ROUTES = {
   'auth.session.create': route({
     path: '/api/auth/session.create', method: 'POST', auth: 'none', killSensitive: false, errors: ['bad_request', 'unauthorized', 'forbidden', 'unavailable'],
@@ -741,6 +785,77 @@ export const ROUTES = {
     summary: 'Remove an owner project link after confirmation.',
     input: z.object({ id: Uuid, confirmed: z.boolean() }).strict(),
     output: z.object({ unlinked: z.boolean() }).strict(),
+  }),
+  // S10 Insights + Boards (CR-S10-LEAD-API-CONTRACTS).
+  'tasks.insights.overview': route({
+    path: '/api/tasks/insights.overview', method: 'POST', auth: 'owner', killSensitive: false,
+    errors: ['bad_request', 'forbidden', 'conflict', 'unavailable'],
+    summary: 'Return owner aggregate task and activity counts for 7 or 30 days without private text.',
+    input: z.object({ period_days: z.union([z.literal(7), z.literal(30)]).optional(), confirmed: z.boolean().optional() }).strict(),
+    output: InsightsOverview,
+  }),
+  'tasks.boards.list': route({
+    path: '/api/tasks/boards.list', method: 'POST', auth: 'owner', killSensitive: false,
+    errors: ['bad_request', 'forbidden', 'conflict', 'unavailable'],
+    summary: 'List owner boards, columns, and safe task-card projections (private tasks masked).',
+    input: z.object({ confirmed: z.boolean().optional() }).strict(),
+    output: z.object({ boards: z.array(Board) }).strict(),
+  }),
+  'tasks.boards.tasks.available': route({
+    path: '/api/tasks/boards.tasks.available', method: 'POST', auth: 'owner', killSensitive: false,
+    errors: ['bad_request', 'forbidden', 'conflict', 'unavailable'],
+    summary: 'List safe non-private owner tasks eligible for linking to a board.',
+    input: z.object({ confirmed: z.boolean().optional() }).strict(),
+    output: z.object({ tasks: z.array(BoardTaskProjection) }).strict(),
+  }),
+  'tasks.boards.create': route({
+    path: '/api/tasks/boards.create', method: 'POST', auth: 'owner', killSensitive: true,
+    errors: ['bad_request', 'forbidden', 'conflict', 'kill_switch_on', 'unavailable'],
+    summary: 'Create an owner board with default columns.',
+    input: z.object({ name: z.string().min(1).max(60), confirmed: z.boolean().optional() }).strict(),
+    output: z.object({ board: z.object({ id: Uuid, name: z.string().min(1).max(60) }).strict() }).strict(),
+  }),
+  'tasks.boards.column.create': route({
+    path: '/api/tasks/boards.column.create', method: 'POST', auth: 'owner', killSensitive: true,
+    errors: ['bad_request', 'forbidden', 'not_found', 'conflict', 'kill_switch_on', 'unavailable'],
+    summary: 'Create a column on an owner board.',
+    input: z.object({ board_id: Uuid, name: z.string().min(1).max(40), confirmed: z.boolean().optional() }).strict(),
+    output: z.object({ column: z.object({ id: Uuid, name: z.string().min(1).max(40), position: z.number().int().nonnegative() }).strict() }).strict(),
+  }),
+  'tasks.boards.column.rename': route({
+    path: '/api/tasks/boards.column.rename', method: 'POST', auth: 'owner', killSensitive: true,
+    errors: ['bad_request', 'forbidden', 'not_found', 'conflict', 'kill_switch_on', 'unavailable'],
+    summary: 'Rename an owner board column.',
+    input: z.object({ column_id: Uuid, name: z.string().min(1).max(40), confirmed: z.boolean().optional() }).strict(),
+    output: z.object({ renamed: z.literal(true) }).strict(),
+  }),
+  'tasks.boards.task.link': route({
+    path: '/api/tasks/boards.task.link', method: 'POST', auth: 'owner', killSensitive: true,
+    errors: ['bad_request', 'forbidden', 'not_found', 'conflict', 'kill_switch_on', 'unavailable'],
+    summary: 'Link an existing safe owner task to a board column.',
+    input: z.object({ board_id: Uuid, column_id: Uuid, task_id: Uuid, confirmed: z.boolean().optional() }).strict(),
+    output: z.object({ link_id: Uuid.nullable() }).strict(),
+  }),
+  'tasks.boards.task.move': route({
+    path: '/api/tasks/boards.task.move', method: 'POST', auth: 'owner', killSensitive: true,
+    errors: ['bad_request', 'forbidden', 'not_found', 'conflict', 'kill_switch_on', 'unavailable'],
+    summary: 'Move an existing board task link to another column.',
+    input: z.object({ link_id: Uuid, column_id: Uuid, confirmed: z.boolean().optional() }).strict(),
+    output: z.object({ moved: z.literal(true) }).strict(),
+  }),
+  'tasks.boards.task.unlink': route({
+    path: '/api/tasks/boards.task.unlink', method: 'POST', auth: 'owner', killSensitive: true,
+    errors: ['bad_request', 'forbidden', 'not_found', 'conflict', 'kill_switch_on', 'unavailable'],
+    summary: 'Remove a task link from an owner board.',
+    input: z.object({ link_id: Uuid, confirmed: z.boolean().optional() }).strict(),
+    output: z.object({ unlinked: z.literal(true) }).strict(),
+  }),
+  'tasks.boards.delete': route({
+    path: '/api/tasks/boards.delete', method: 'POST', auth: 'owner', killSensitive: true,
+    errors: ['bad_request', 'forbidden', 'not_found', 'conflict', 'kill_switch_on', 'unavailable'],
+    summary: 'Hard-delete an owner board and its columns/links after confirmation.',
+    input: z.object({ board_id: Uuid, confirmed: z.boolean().optional() }).strict(),
+    output: z.object({ deleted: z.literal(true) }).strict(),
   }),
 } as const satisfies Record<string, Route>;
 

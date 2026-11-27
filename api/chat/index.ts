@@ -7,12 +7,18 @@ import {
   createGeminiProvider,
   EMPTY_MODEL_ROUTER_CONFIG,
   type ChatInput,
+  type ChatMemoryPort,
   type ChatThreadStore,
   type ChatGateway,
   type ModelRouterConfig,
   type ChatStreamEvent,
   type ChatMessage,
 } from '../../packages/chat/src/index.ts';
+import { SupabaseMemoryStore } from '../../packages/memory/src/supabase-store.ts';
+import { MemoryService } from '../../packages/memory/src/service.ts';
+import { classify as classifyMemoryText } from '../../packages/memory/src/classify.ts';
+import { findSecrets as findMemorySecrets } from '../../packages/memory/src/redact.ts';
+import { classifySensitivity } from '../../features/core-workspace/task-manager/src/sensitivity.mjs';
 import { createGateway } from '../../packages/model-gateway/src/gateway.ts';
 import { supabaseUsageStore, memoryUsageStore } from '../../packages/model-gateway/src/stores.ts';
 import type { UsageStore, ModelSpec } from '../../packages/model-gateway/src/types.ts';
@@ -35,6 +41,7 @@ export type ChatOptions = {
   fetch?: typeof fetch;
   gateway?: ChatGateway;
   threadStore?: ChatThreadStore;
+  memory?: ChatMemoryPort;
   killReader?: KillSwitchReader;
   modelConfig?: ModelRouterConfig;
   usageStore?: UsageStore;
@@ -175,6 +182,84 @@ function defaultKillReader(c: ChatConfig, defaultOwnerId?: string): KillSwitchRe
         }
       } catch { /* fail-closed */ }
       return { kill: true, epoch: -1 };
+    },
+  };
+}
+
+/** Read-only T1-only ChatMemoryPort adapter: user JWT + anon key (no service-role), fail-closed on kill ON/unreadable, strips any private/sensitive/secret item. */
+export function createReadOnlyChatMemoryPort(
+  c: { url: string; anonKey: string; fetcher: typeof fetch },
+  ownerId: string,
+  accessToken: string,
+  killReader: KillSwitchReader,
+): ChatMemoryPort {
+  const emptyRecall = (degraded: 'kill_switch' | 'no_embedder') => ({
+    block: '', card: [], items: [], private_hits: 0, unsafe_ids: [], degraded,
+  });
+  const isKillOff = async (): Promise<boolean> => {
+    try {
+      const ks = await killReader.read(ownerId);
+      return Boolean(ks && ks.kill === false && typeof ks.epoch === 'number' && ks.epoch >= 0);
+    } catch {
+      return false;
+    }
+  };
+  const store = new SupabaseMemoryStore({
+    url: c.url,
+    apiKey: c.anonKey,
+    ownerId,
+    getBearer: () => accessToken,
+    fetch: c.fetcher,
+  });
+  const service = new MemoryService({
+    store,
+    kill: async () => ((await isKillOff()) ? 'off' : 'on'),
+    embedder: null,
+    embedMode: () => 'off',
+    emit: async () => {},
+  });
+  const isSafeT1 = (title: string, body: string): boolean => {
+    const combined = `${title} ${body}`.trim();
+    if (!combined) return false;
+    if (findMemorySecrets(combined).length > 0) return false;
+    if (classifyMemoryText(combined).tier === 'sensitive') return false;
+    if (classifySensitivity(combined).sensitive) return false;
+    return true;
+  };
+  return {
+    async recall(opts) {
+      if (!(await isKillOff())) return emptyRecall('kill_switch');
+      try {
+        // Deliberately omit `purpose` so MemoryService.recall never requests T2/private rows.
+        const raw = await service.recall({ text: opts.text });
+        const safeCard = raw.card.filter((it) => isSafeT1(it.title, it.body));
+        const safeItems = raw.items.filter((it) => isSafeT1(it.title, it.body));
+        const lines: string[] = [];
+        if (safeCard.length) {
+          lines.push('Always-on profile:');
+          for (const it of safeCard) lines.push(`- ${it.title}: ${it.body}`);
+        }
+        if (safeItems.length) {
+          lines.push('Relevant memories:');
+          for (const it of safeItems) lines.push(`- ${it.title}: ${it.body}`);
+        }
+        return {
+          block: lines.join('\n'),
+          card: safeCard,
+          items: safeItems,
+          private_hits: 0,
+          unsafe_ids: raw.unsafe_ids,
+          degraded: raw.degraded,
+        };
+      } catch {
+        return emptyRecall('no_embedder');
+      }
+    },
+    async remember() {
+      return {
+        verdict: { verdict: 'skip', reason: 'read_only_chat_memory', userMessage: 'Chat memory port is read-only.' } as any,
+        fingerprint: 'read-only',
+      };
     },
   };
 }
@@ -683,9 +768,12 @@ export async function messagesStreamHandler(request: Request, options: ChatOptio
           currentUsage = { dayRequests: {}, dayUsd: 0, monthUsd: 0 };
         }
 
+        const chatMemory: ChatMemoryPort | undefined = options.memory ?? (c ? createReadOnlyChatMemoryPort(c, owner.user.id, owner.accessToken, killReader) : undefined);
+
         const result = await handleMessage(chatInput, {
           killSwitch: killReader,
           threads: threadStore,
+          memory: chatMemory,
           ownerId: owner.user.id,
           userMessagePersisted: true,
           gateway,

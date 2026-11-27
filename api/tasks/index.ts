@@ -13,6 +13,8 @@ import { consumeMedicineReminderRequest } from '../../features/core-workspace/re
 import { nextOccurrenceAfter } from '../../features/core-workspace/reminders/src/time-recurrence.mjs';
 import { handle as handleS05History } from '../../features/core-workspace/history/src/handler.ts';
 import { handle as handleS05ActivityLogs } from '../../features/core-workspace/activity-logs/src/handler.ts';
+import { handle as handleS10Insights } from '../../features/core-workspace/insights/src/handler.ts';
+import { handle as handleS10Boards } from '../../features/core-workspace/boards/src/handler.ts';
 import { handle as handleS09Memory, actions as S09_MEMORY_ACTIONS } from '../../features/core-workspace/memory/src/handler.mjs';
 import { handle as handleS09NotesFiles, actions as S09_NOTES_FILES_ACTIONS } from '../../features/core-workspace/notes-files/src/handler.mjs';
 import { handle as handleS09Projects, actions as S09_PROJECTS_ACTIONS } from '../../features/core-workspace/projects/src/handler.mjs';
@@ -560,6 +562,13 @@ async function dispatch(request: Request, options: Options = {}) {
   }
   if (action.startsWith('activity-logs.')) {
     return handleS05ActivityLogs(action, request, options);
+  }
+  // S10 mount (CR-S10-LEAD-API-CONTRACTS): before body read and shared owner resolution.
+  if (action === 'insights.overview') {
+    return handleS10Insights(action, request, options);
+  }
+  if (action.startsWith('boards.')) {
+    return handleS10Boards(action, request, options);
   }
   if (request.method !== 'POST') return fail(400, 'bad_request', 'POST required hai.');
   const c = config(options);

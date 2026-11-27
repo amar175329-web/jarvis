@@ -50,7 +50,8 @@ test('seven approved system prompt blocks are present in the same order and word
   assert.equal(SYSTEM_PROMPT_BLOCKS.length, 7);
   const built = buildSystemPrompt({ userText: 'hello', memoryReason: 'T1 only' });
   for (const block of SYSTEM_PROMPT_BLOCKS) assert.ok(built.system.includes(block));
-  assert.ok(built.system.includes('KYA YAAD HAI - REASON: T1 only'));
+  assert.ok(!built.system.includes('REASON'));
+  assert.ok(!built.system.includes('KYA YAAD HAI'));
   assert.match(built.system, /Family, bachche.*assume mat karo/);
 });
 
@@ -93,13 +94,15 @@ test('T2 default recall has no purpose; T2 is requested only through a typed pur
 test('hidden T2 match without a purpose is not placed in the prompt or described as recalled', async () => {
   const mem = fakeMemory({ ...blankRecall(), block: 'Only safe T1 context.', private_hits: 1 });
   const gw = gateway();
-  const r = await handleMessage({ text: 'Hi' }, deps({ memory: mem, gateway: gw }));
+  const logs: string[] = [];
+  const r = await handleMessage({ text: 'Hi' }, { ...deps({ memory: mem, gateway: gw }), onDecisionLog(line: string) { logs.push(line); } });
   const user = (gw.calls[0] as { input: { user: string } }).input.user;
   const system = (gw.calls[0] as { input: { system: string } }).input.system;
   assert.equal(mem.recalled[0]?.purpose, undefined);
   assert.doesNotMatch(user, /T1 context|T2/);
   assert.match(system, /Only safe T1 context/);
-  assert.match(system, /typed purpose nahi tha; T2 text recall nahi kiya/);
+  assert.doesNotMatch(system, /REASON|typed purpose nahi tha/);
+  assert.ok(logs.some((l) => /typed purpose nahi tha; T2 text recall nahi kiya/.test(l)));
   assert.equal((gw.calls[0] as { provider: string }).provider, 'anthropic');
   assert.equal('memoryRecall' in r, false);
 });
@@ -390,3 +393,45 @@ test('production PowerRunner preserves executed=true when harness decision log f
   assert.equal(result.executed, true);
   assert.match(result.logError ?? '', /test audit log failure/);
 });
+
+test('P34c: system prompt sent to model never contains REASON; reason goes to internal decision log', async () => {
+  const gw = gateway();
+  const logs: string[] = [];
+  const base = deps({ gateway: gw });
+  const r = await handleMessage({ text: 'Aaj ka plan batao' }, {
+    ...base,
+    onDecisionLog(line: string) { logs.push(line); },
+  });
+  assert.equal(r.status, 'ok');
+  const sentSystem = (gw.calls[0] as { input: { system: string } }).input.system;
+  assert.ok(!sentSystem.includes('REASON'), 'LLM system prompt must not contain REASON');
+  assert.ok(!sentSystem.includes('KYA YAAD HAI'), 'LLM system prompt must not contain KYA YAAD HAI');
+  assert.ok(logs.some((l) => l.startsWith('memory_recall:')), 'memoryReason must be recorded in internal decision log');
+});
+
+test('P34c: memory recall passes only T1 block to model and never exposes private text', async () => {
+  const gw = gateway();
+  const mem = fakeMemory({
+    block: 'Relevant memories:\n- Chai preference: Amit ko adrak chai pasand hai',
+    private_hits: 0,
+  });
+  const r = await handleMessage({ text: 'Mujhe kya pasand hai?' }, deps({ gateway: gw, memory: mem }));
+  assert.equal(r.status, 'ok');
+  assert.equal(mem.recalled.length, 1);
+  const sentSystem = (gw.calls[0] as { input: { system: string } }).input.system;
+  assert.ok(sentSystem.includes('adrak chai'), 'T1 memory should reach model');
+  assert.ok(!sentSystem.includes('REASON'), 'REASON must not leak into model prompt');
+  assert.ok(!sentSystem.includes('private-secret'), 'private text must not reach model');
+});
+
+test('P34c: kill switch ON or unreadable blocks memory recall completely', async () => {
+  for (const kill of ['on', 'unreadable'] as const) {
+    const gw = gateway();
+    const mem = fakeMemory({ block: 'Relevant memories:\n- Chai preference: adrak chai' });
+    const r = await handleMessage({ text: 'hello' }, deps({ kill, gateway: gw, memory: mem }));
+    assert.equal(r.status, 'killed');
+    assert.equal(mem.recalled.length, 0, `recall must not run when kill=${kill}`);
+    assert.equal(gw.calls.length, 0, `model must not run when kill=${kill}`);
+  }
+});
+

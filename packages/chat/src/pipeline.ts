@@ -230,7 +230,8 @@ export async function handleMessage(input: ChatInput, deps: ChatDependencies): P
       : privateHitCount > 0
         ? 'Private memory match mili, par typed purpose nahi tha; T2 text recall nahi kiya.'
         : 'Sirf T1/default memory dekhi; T2 ko bina typed purpose ke nahi bulaya.';
-  const prompt = buildSystemPrompt({ userText: safeText, framedData: [...framedData, ...historyFrame], memoryBlock: memoryRecall?.block, memoryReason });
+  await deps.onDecisionLog?.(`memory_recall: ${memoryReason}`);
+  const prompt = buildSystemPrompt({ userText: safeText, framedData: [...framedData, ...historyFrame], memoryBlock: memoryRecall?.block });
   const userAlreadyPersisted = Boolean(deps.userMessagePersisted || input.messageId);
   if (!userAlreadyPersisted) {
     await persistThreadMessage(deps, input, 'user', originalText);

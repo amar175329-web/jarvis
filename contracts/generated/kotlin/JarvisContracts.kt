@@ -75,6 +75,16 @@ object JarvisRoutes {
     const val PROJECTS_WORKSPACE_PROJECTS_DELETE = "/api/projects/workspace.projects.delete"
     const val PROJECTS_WORKSPACE_PROJECTS_LINK_ITEM = "/api/projects/workspace.projects.link-item"
     const val PROJECTS_WORKSPACE_PROJECTS_UNLINK_ITEM = "/api/projects/workspace.projects.unlink-item"
+    const val TASKS_INSIGHTS_OVERVIEW = "/api/tasks/insights.overview"
+    const val TASKS_BOARDS_LIST = "/api/tasks/boards.list"
+    const val TASKS_BOARDS_TASKS_AVAILABLE = "/api/tasks/boards.tasks.available"
+    const val TASKS_BOARDS_CREATE = "/api/tasks/boards.create"
+    const val TASKS_BOARDS_COLUMN_CREATE = "/api/tasks/boards.column.create"
+    const val TASKS_BOARDS_COLUMN_RENAME = "/api/tasks/boards.column.rename"
+    const val TASKS_BOARDS_TASK_LINK = "/api/tasks/boards.task.link"
+    const val TASKS_BOARDS_TASK_MOVE = "/api/tasks/boards.task.move"
+    const val TASKS_BOARDS_TASK_UNLINK = "/api/tasks/boards.task.unlink"
+    const val TASKS_BOARDS_DELETE = "/api/tasks/boards.delete"
 }
 
 @Serializable
@@ -785,6 +795,108 @@ data class TasksActivityLogsListResponse(
 )
 
 @Serializable
+data class TasksBoardsColumnCreateRequest(
+    @SerialName("board_id") val boardId: String,
+    @SerialName("name") val name: String,
+    @SerialName("confirmed") val confirmed: Boolean? = null
+)
+
+@Serializable
+data class TasksBoardsColumnCreateResponse(
+    @SerialName("column") val column: TasksBoardsColumnCreateResponseColumn
+)
+
+@Serializable
+data class TasksBoardsColumnRenameRequest(
+    @SerialName("column_id") val columnId: String,
+    @SerialName("name") val name: String,
+    @SerialName("confirmed") val confirmed: Boolean? = null
+)
+
+@Serializable
+data class TasksBoardsColumnRenameResponse(
+    @SerialName("renamed") val renamed: Boolean
+)
+
+@Serializable
+data class TasksBoardsCreateRequest(
+    @SerialName("name") val name: String,
+    @SerialName("confirmed") val confirmed: Boolean? = null
+)
+
+@Serializable
+data class TasksBoardsCreateResponse(
+    @SerialName("board") val board: TasksBoardsCreateResponseBoard
+)
+
+@Serializable
+data class TasksBoardsDeleteRequest(
+    @SerialName("board_id") val boardId: String,
+    @SerialName("confirmed") val confirmed: Boolean? = null
+)
+
+@Serializable
+data class TasksBoardsDeleteResponse(
+    @SerialName("deleted") val deleted: Boolean
+)
+
+@Serializable
+data class TasksBoardsListRequest(
+    @SerialName("confirmed") val confirmed: Boolean? = null
+)
+
+@Serializable
+data class TasksBoardsListResponse(
+    @SerialName("boards") val boards: List<TasksBoardsListResponseBoardsItem>
+)
+
+@Serializable
+data class TasksBoardsTaskLinkRequest(
+    @SerialName("board_id") val boardId: String,
+    @SerialName("column_id") val columnId: String,
+    @SerialName("task_id") val taskId: String,
+    @SerialName("confirmed") val confirmed: Boolean? = null
+)
+
+@Serializable
+data class TasksBoardsTaskLinkResponse(
+    @SerialName("link_id") val linkId: String?
+)
+
+@Serializable
+data class TasksBoardsTaskMoveRequest(
+    @SerialName("link_id") val linkId: String,
+    @SerialName("column_id") val columnId: String,
+    @SerialName("confirmed") val confirmed: Boolean? = null
+)
+
+@Serializable
+data class TasksBoardsTaskMoveResponse(
+    @SerialName("moved") val moved: Boolean
+)
+
+@Serializable
+data class TasksBoardsTasksAvailableRequest(
+    @SerialName("confirmed") val confirmed: Boolean? = null
+)
+
+@Serializable
+data class TasksBoardsTasksAvailableResponse(
+    @SerialName("tasks") val tasks: List<TasksBoardsTasksAvailableResponseTasksItem>
+)
+
+@Serializable
+data class TasksBoardsTaskUnlinkRequest(
+    @SerialName("link_id") val linkId: String,
+    @SerialName("confirmed") val confirmed: Boolean? = null
+)
+
+@Serializable
+data class TasksBoardsTaskUnlinkResponse(
+    @SerialName("unlinked") val unlinked: Boolean
+)
+
+@Serializable
 data class TasksHistoryMessagesListRequest(
     @SerialName("thread_id") val threadId: String,
     @SerialName("before_sequence") val beforeSequence: Int? = null,
@@ -809,6 +921,21 @@ data class TasksHistoryThreadsListRequest(
 data class TasksHistoryThreadsListResponse(
     @SerialName("threads") val threads: List<TasksHistoryThreadsListResponseThreadsItem>,
     @SerialName("next_before") val nextBefore: String? = null
+)
+
+@Serializable
+data class TasksInsightsOverviewRequest(
+    @SerialName("period_days") val periodDays: Double? = null,
+    @SerialName("confirmed") val confirmed: Boolean? = null
+)
+
+@Serializable
+data class TasksInsightsOverviewResponse(
+    @SerialName("period_days") val periodDays: Double,
+    @SerialName("tasks") val tasks: TasksInsightsOverviewResponseTasks,
+    @SerialName("activity") val activity: TasksInsightsOverviewResponseActivity,
+    @SerialName("truncated") val truncated: Boolean,
+    @SerialName("generated_at") val generatedAt: String
 )
 
 @Serializable
@@ -1453,6 +1580,76 @@ data class TasksActivityLogsListResponseItemsItem(
 )
 
 @Serializable
+data class TasksBoardsColumnCreateResponseColumn(
+    @SerialName("id") val id: String,
+    @SerialName("name") val name: String,
+    @SerialName("position") val position: Int
+)
+
+@Serializable
+data class TasksBoardsCreateResponseBoard(
+    @SerialName("id") val id: String,
+    @SerialName("name") val name: String
+)
+
+@Serializable
+enum class TasksBoardsListResponseBoardsItemColumnsItemCardsItemStatus {
+    @SerialName("todo") TODO,
+    @SerialName("doing") DOING,
+    @SerialName("done") DONE,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+data class TasksBoardsListResponseBoardsItemColumnsItemCardsItem(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String,
+    @SerialName("private") val private: Boolean,
+    @SerialName("status") val status: TasksBoardsListResponseBoardsItemColumnsItemCardsItemStatus? = null,
+    @SerialName("priority") val priority: Int? = null,
+    @SerialName("due_at") val dueAt: String? = null,
+    @SerialName("link_id") val linkId: String? = null,
+    @SerialName("position") val position: Int? = null
+)
+
+@Serializable
+data class TasksBoardsListResponseBoardsItemColumnsItem(
+    @SerialName("id") val id: String,
+    @SerialName("name") val name: String,
+    @SerialName("position") val position: Int,
+    @SerialName("cards") val cards: List<TasksBoardsListResponseBoardsItemColumnsItemCardsItem>
+)
+
+@Serializable
+data class TasksBoardsListResponseBoardsItem(
+    @SerialName("id") val id: String,
+    @SerialName("name") val name: String,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String,
+    @SerialName("columns") val columns: List<TasksBoardsListResponseBoardsItemColumnsItem>
+)
+
+@Serializable
+enum class TasksBoardsTasksAvailableResponseTasksItemStatus {
+    @SerialName("todo") TODO,
+    @SerialName("doing") DOING,
+    @SerialName("done") DONE,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+data class TasksBoardsTasksAvailableResponseTasksItem(
+    @SerialName("id") val id: String,
+    @SerialName("title") val title: String,
+    @SerialName("private") val private: Boolean,
+    @SerialName("status") val status: TasksBoardsTasksAvailableResponseTasksItemStatus? = null,
+    @SerialName("priority") val priority: Int? = null,
+    @SerialName("due_at") val dueAt: String? = null,
+    @SerialName("link_id") val linkId: String? = null,
+    @SerialName("position") val position: Int? = null
+)
+
+@Serializable
 enum class TasksHistoryMessagesListResponseMessagesItemRole {
     @SerialName("user") USER,
     @SerialName("assistant") ASSISTANT
@@ -1476,6 +1673,30 @@ data class TasksHistoryThreadsListResponseThreadsItem(
     @SerialName("private") val private: Boolean,
     @SerialName("created_at") val createdAt: String,
     @SerialName("updated_at") val updatedAt: String
+)
+
+@Serializable
+data class TasksInsightsOverviewResponseTasks(
+    @SerialName("total") val total: Int,
+    @SerialName("todo") val todo: Int,
+    @SerialName("doing") val doing: Int,
+    @SerialName("done") val done: Int,
+    @SerialName("cancelled") val cancelled: Int,
+    @SerialName("overdue") val overdue: Int,
+    @SerialName("completion_rate") val completionRate: Double
+)
+
+@Serializable
+data class TasksInsightsOverviewResponseActivityDailyItem(
+    @SerialName("date") val date: String,
+    @SerialName("count") val count: Int
+)
+
+@Serializable
+data class TasksInsightsOverviewResponseActivity(
+    @SerialName("total") val total: Int,
+    @SerialName("successful") val successful: Int,
+    @SerialName("daily") val daily: List<TasksInsightsOverviewResponseActivityDailyItem>
 )
 
 @Serializable

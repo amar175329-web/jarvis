@@ -142,4 +142,19 @@ test('S09 memory, notes-files, and projects contracts cover all 25 actions with 
   assert.ok(ROUTES['memory.memory.get'].output.safeParse({ id: id(), label: 'Private item', badge: 'private', updated_at: now }).success);
   assert.ok(!ROUTES['memory.memory.get'].output.safeParse({ id: id(), label: 'Private item', badge: 'private', updated_at: now, title: 'leak' }).success);
 });
+test('S10 insights and boards contracts cover all 10 actions strictly', () => {
+  const s10Keys = Object.keys(ROUTES).filter((k) => k === 'tasks.insights.overview' || k.startsWith('tasks.boards.'));
+  assert.equal(s10Keys.length, 10);
+  const bid = id(), cid = id(), tid = id(), lid = id();
+  assert.ok(ROUTES['tasks.insights.overview'].input.safeParse({ period_days: 7, confirmed: true }).success);
+  assert.ok(!ROUTES['tasks.insights.overview'].input.safeParse({ period_days: 90 }).success);
+  assert.ok(ROUTES['tasks.boards.create'].input.safeParse({ name: 'Sprint', confirmed: true }).success);
+  assert.ok(ROUTES['tasks.boards.column.create'].input.safeParse({ board_id: bid, name: 'Doing', confirmed: true }).success);
+  assert.ok(ROUTES['tasks.boards.column.rename'].input.safeParse({ column_id: cid, name: 'Review', confirmed: true }).success);
+  assert.ok(ROUTES['tasks.boards.task.link'].input.safeParse({ board_id: bid, column_id: cid, task_id: tid, confirmed: true }).success);
+  assert.ok(ROUTES['tasks.boards.task.move'].input.safeParse({ link_id: lid, column_id: cid, confirmed: true }).success);
+  assert.ok(ROUTES['tasks.boards.task.unlink'].input.safeParse({ link_id: lid, confirmed: true }).success);
+  assert.ok(ROUTES['tasks.boards.delete'].input.safeParse({ board_id: bid, confirmed: true }).success);
+});
+
 
